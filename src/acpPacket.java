@@ -1,7 +1,7 @@
 package acpcommander;
 
 /**
- * <p>Überschrift: acp_commander</p>
+ * <p>berschrift: acp_commander</p>
  *
  * <p>Beschreibung: Handling class for the Header part of ACP packets for the
  * Buffalo Linkstation (R). Out of the work of linkstationwiki.net</p>

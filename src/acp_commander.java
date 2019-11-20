@@ -1,7 +1,7 @@
 package acpcommander;
 
 /**
- * <p>Überschrift: acp_commander</p>
+ * <p>berschrift: acp_commander</p>
  *
  * <p>Beschreibung: Used to sent ACP-commands to Buffalo Linkstations (R).
  *  Out of the work of nas-central.org (linkstationwiki.net)</p>

@@ -1,7 +1,7 @@
 package acpcommander;
 
 /**
- * <p>Überschrift: acp_commander</p>
+ * <p>berschrift: acp_commander</p>
  *
  * <p>Beschreibung: Handling for ACP Replies from the Buffalo Linkstation (R). Out of the
  * work of linkstationwiki.net</p>

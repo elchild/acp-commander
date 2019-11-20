@@ -1,7 +1,7 @@
 package acpcommander;
 
 /**
- * <p>Überschrift: ACP</p>
+ * <p>berschrift: ACP</p>
  *
  * <p>Beschreibung: Core class for sending ACP commands to Buffalo Linkstation (R). Out
  * of the work of linkstationwiki.net</p>
