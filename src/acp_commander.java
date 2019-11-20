@@ -689,7 +689,7 @@ public class acp_commander {
                 outWarning(
                         "Changing of the IP can not be done with old buffer overflow " +
                         "method, but needs the correct admin password.\n" +
-                        "Changing to normal authentication method and asking for´" +
+                        "Changing to normal authentication method and asking for" +
                         "admin password");
                 _bugauthent = false;
             }
