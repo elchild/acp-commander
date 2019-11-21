@@ -1116,12 +1116,11 @@ public class acp_commander {
 
         if (_openbox) {
             _state = "ACP_OPENBOX";
-            // send ACPCmd to enable telnetd, send packet up to 3 times
-            System.out.println("start telnetd...\t" +
-                               myACP.Command("telnetd", 3)[1]);
-            // send ACPCmd to reset root passwd, send packet up to 3 times
-            System.out.println("Reset root pwd...\t" +
-                               myACP.Command("passwd -d root", 3)[1]);
+            System.out.println("Reset root pwd...\t" + myACP.Command("passwd -d root", 3)[1]);
+	    myACP.EnOneCmd();
+            myACP.Authent();
+	    System.out.println("start telnetd...\t" + myACP.Command("/bin/busybox telnetd&", 3)[1]);
+
             // Due to many questions in the forum...
             System.out.println(
                     "\nYou can now telnet to your box as user 'root' providing " +
