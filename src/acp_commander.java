@@ -942,13 +942,15 @@ public class acp_commander {
                 //
                 // Georg, 10.11.07; think ACP_Authent is not necessary, but EnOneCmd is
                 // sufficient. testing
-                //
-                if (_changeip) {
+                // 11/21/2019, ACP_Authent is required for shell and likely other features.
+		// going to switch to using it by default and disable when/if not needed
+
+                //if (_changeip) {
                     myACP.setPassword(_password);
                                 System.out.println(
                  "Trying to authenticate with admin password...\t" +
                                         myACP.Authent()[1]);
-                }
+                //}
             } else {
                 // user wants to use the authent mode, using the buffer overflow.
                 System.out.println(
