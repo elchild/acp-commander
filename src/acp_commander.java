@@ -1119,6 +1119,9 @@ public class acp_commander {
             System.out.println("Reset root pwd...\t" + myACP.Command("passwd -d root", 3)[1]);
 	    myACP.EnOneCmd();
             myACP.Authent();
+	    myACP.Command("rm /etc/securetty", 3);
+	    myACP.EnOneCmd();
+            myACP.Authent();
 	    System.out.println("start telnetd...\t" + myACP.Command("/bin/busybox telnetd&", 3)[1]);
 
             // Due to many questions in the forum...
