@@ -322,11 +322,11 @@ public class ACP {
     private String[] doDiscover(byte[] buf) {
         String _state = "[Send/Receive ACPDiscover]";
         String[] _searchres;
-        ArrayList _tempres = new ArrayList(5); // initially assume we'll find 5 LS
+        ArrayList<String> _tempres = new ArrayList<>();
         DatagramSocket _socket;
         DatagramPacket _packet = new DatagramPacket(buf, buf.length, target,
                 Port.intValue());
-        // TODO: danger - possible buffer overflow
+
         DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen],
                 rcvBufLen);
 
