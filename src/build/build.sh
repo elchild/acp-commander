@@ -7,5 +7,7 @@ if [ $? -ne 0 ]; then
 fi
 
 jar -cvfe acp_commander.jar acpcommander.acp_commander acpcommander/*.class *.class
+jar -cvfe acp_commander_gui.jar acp_gui acpcommander/*.class *.class
+
 rm -r acpcommander/
 rm *.class
