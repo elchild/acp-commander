@@ -76,130 +76,126 @@ package acpcommander;
  ASCII "ACP_STATE_FAILURE"; Case FFFFFFFF
  */
 
-import java.text.*;
+import java.text.MessageFormat;
 
 public class ACPRecvPacket extends ACPPacket {
 
-    // Fill the data for the ACPDiscoverReply packet formated into a string.
-    // Java does not support structures, so we'd have to create a class for each packet type
-    private String getACPDiscoverReply() {
-        String Reply = new String();
-        String Test = new String("Test");
+  // Fill the data for the ACPDiscoverReply packet formated into a string.
+  // Java does not support structures, so we'd have to create a class for each packet type
+  private String getACPDiscoverReply() {
+    String Reply = new String();
+    String Test = new String("Test");
 
-        // however using MessageFormat requires us to create at least an Object, anyway.
-        Object[] DiscoverReply = {
-                                 new String(Test) // TargetIP
-        };
-        Reply = Reply + MessageFormat.format("TargetIP = {0}", DiscoverReply);
+    // however using MessageFormat requires us to create at least an Object, anyway.
+    Object[] DiscoverReply = {
+      new String(Test) // TargetIP
+    };
+    Reply = Reply + MessageFormat.format("TargetIP = {0}", DiscoverReply);
 
+    return Reply;
+  }
 
-
-        return Reply;
+  // Copy the output of the cmdline into a string.
+  private String getACPCmdReply() {
+    // The output string of the cmdline starts at byte 40 of the packet
+    String Reply = new String();
+    int i = 40;
+    while ((packetbuf[i] != 0x00) & (i < packetbuf.length)) {
+      Reply = Reply + (char) packetbuf[i++];
     }
+    return Reply;
+  }
 
-    // Copy the output of the cmdline into a string.
-    private String getACPCmdReply() {
-        // The output string of the cmdline starts at byte 40 of the packet
-        String Reply = new String();
-        int i = 40;
-        while ((packetbuf[i] != 0x00) & (i < packetbuf.length)) {
-            Reply = Reply + (char) packetbuf[i++];
-        }
-        return Reply;
+  public String getString() {
+    String Reply = new String();
+    return Reply;
+  }
+
+  // ErrorCode in answer packet is in bytes 0x2c to 0x2f
+  public int getErrorCode() {
+    Byte ErrorCodeBytes = new Byte("");
+    System.arraycopy(packetbuf, 0x2c, ErrorCodeBytes, 0, 4);
+    return ErrorCodeBytes.intValue();
+  }
+
+  // Translate ErrorCode to meaningful string
+  public String getErrorMsg() {
+    int ErrorCode = getErrorCode();
+    String ErrorString;
+    switch (ErrorCode) {
+      // There should be an error state ACP_OK, TODO: Test
+      // case 0x00000000: { ErrorString = "ACP_OK"; }
+      case 0x80000000:
+        ErrorString = "ACP_STATE_MALLOC_ERROR";
+        break;
+      case 0x80000001:
+        ErrorString = "ACP_STATE_PASSWORD_ERROR";
+        break;
+      case 0x80000002:
+        ErrorString = "ACP_STATE_NO_CHANGE";
+        break;
+      case 0x80000003:
+        ErrorString = "ACP_STATE_MODE_ERROR";
+        break;
+      case 0x80000004:
+        ErrorString = "ACP_STATE_CRC_ERROR";
+        break;
+      case 0x80000005:
+        ErrorString = "ACP_STATE_NOKEY";
+        break;
+      case 0x80000006:
+        ErrorString = "ACP_STATE_DIFFMODEL";
+        break;
+      case 0x80000007:
+        ErrorString = "ACP_STATE_NOMODEM";
+        break;
+      case 0x80000008:
+        ErrorString = "ACP_STATE_COMMAND_ERROR";
+        break;
+      case 0x80000009:
+        ErrorString = "ACP_STATE_NOT_UPDATE";
+        break;
+      case 0x8000000A:
+        ErrorString = "ACP_STATE_PERMIT_ERROR";
+        break;
+      case 0x8000000B:
+        ErrorString = "ACP_STATE_OPEN_ERROR";
+        break;
+      case 0x8000000C:
+        ErrorString = "ACP_STATE_READ_ERROR";
+        break;
+      case 0x8000000D:
+        ErrorString = "ACP_STATE_WRITE_ERROR";
+        break;
+      case 0x8000000E:
+        ErrorString = "ACP_STATE_COMPARE_ERROR";
+        break;
+      case 0x8000000F:
+        ErrorString = "ACP_STATE_MOUNT_ERROR";
+        break;
+      case 0x80000010:
+        ErrorString = "ACP_STATE_PID_ERROR";
+        break;
+      case 0x80000011:
+        ErrorString = "ACP_STATE_FIRM_TYPE_ERROR";
+        break;
+      case 0x80000012:
+        ErrorString = "ACP_STATE_FORK_ERROR";
+        break;
+      case 0xFFFFFFFF:
+        ErrorString = "ACP_STATE_FAILURE";
+        break;
+      default:
+        ErrorString = "Unknown ACP Error Code";
     }
+    return ErrorString;
+  }
 
-    public String getString() {
-        String Reply = new String();
-        return Reply;
-    }
+  public void acpRecvPacket() {
+    // initialization shoud be done in acpPacket, via jbInit();
 
-
-    // ErrorCode in answer packet is in bytes 0x2c to 0x2f
-    public int getErrorCode() {
-        Byte ErrorCodeBytes = new Byte("");
-        System.arraycopy(packetbuf, 0x2c, ErrorCodeBytes, 0, 4);
-        return ErrorCodeBytes.intValue();
-    }
-
-    // Translate ErrorCode to meaningful string
-    public String getErrorMsg() {
-        int ErrorCode = getErrorCode();
-        String ErrorString;
-        switch (ErrorCode) {
-        // There should be an error state ACP_OK, TODO: Test
-        // case 0x00000000: { ErrorString = "ACP_OK"; }
-        case 0x80000000: {
-            ErrorString = "ACP_STATE_MALLOC_ERROR";
-        }
-        case 0x80000001: {
-            ErrorString = "ACP_STATE_PASSWORD_ERROR";
-        }
-        case 0x80000002: {
-            ErrorString = "ACP_STATE_NO_CHANGE";
-        }
-        case 0x80000003: {
-            ErrorString = "ACP_STATE_MODE_ERROR";
-        }
-        case 0x80000004: {
-            ErrorString = "ACP_STATE_CRC_ERROR";
-        }
-        case 0x80000005: {
-            ErrorString = "ACP_STATE_NOKEY";
-        }
-        case 0x80000006: {
-            ErrorString = "ACP_STATE_DIFFMODEL";
-        }
-        case 0x80000007: {
-            ErrorString = "ACP_STATE_NOMODEM";
-        }
-        case 0x80000008: {
-            ErrorString = "ACP_STATE_COMMAND_ERROR";
-        }
-        case 0x80000009: {
-            ErrorString = "ACP_STATE_NOT_UPDATE";
-        }
-        case 0x8000000A: {
-            ErrorString = "ACP_STATE_PERMIT_ERROR";
-        }
-        case 0x8000000B: {
-            ErrorString = "ACP_STATE_OPEN_ERROR";
-        }
-        case 0x8000000C: {
-            ErrorString = "ACP_STATE_READ_ERROR";
-        }
-        case 0x8000000D: {
-            ErrorString = "ACP_STATE_WRITE_ERROR";
-        }
-        case 0x8000000E: {
-            ErrorString = "ACP_STATE_COMPARE_ERROR";
-        }
-        case 0x8000000F: {
-            ErrorString = "ACP_STATE_MOUNT_ERROR";
-        }
-        case 0x80000010: {
-            ErrorString = "ACP_STATE_PID_ERROR";
-        }
-        case 0x80000011: {
-            ErrorString = "ACP_STATE_FIRM_TYPE_ERROR";
-        }
-        case 0x80000012: {
-            ErrorString = "ACP_STATE_FORK_ERROR";
-        }
-        case 0xFFFFFFFF: {
-            ErrorString = "ACP_STATE_FAILURE";
-        }
-        default: {
-            ErrorString = "Unknown ACP Error Code";
-        }
-        }
-        return ErrorString;
-    }
-
-    public void acpRecvPacket() {
-        // initialization shoud be done in acpPacket, via jbInit();
-
-        clearBuffer(0); // set the Buffers length to 0, so we can read the truely
-                        // recieved bytes once we get them.
-    }
-
+    clearBuffer(0);
+    // set the Buffers length to 0, so we can read the truely
+    // recieved bytes once we get them.
+  }
 }

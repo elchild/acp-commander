@@ -14,304 +14,303 @@ package acpcommander;
  * @version 0.4.1 (beta)
  */
 
-import java.net.*;
-import java.util.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 public class ACP {
-    private InetAddress target;
-    protected Integer Port = new Integer(22936);
-    private String connID; // connection ID, "unique" identifier for the connection
-    private String targetMAC; // MAC address of the LS, it reacts only if correct MAC or
-    // FF:FF:FF:FF:FF:FF is set in the packet
-    protected byte[] Key = new byte[4]; // Key for password encryption
-    // sent in reply to ACP discovery packet
-    protected String password;
-    private String ap_servd = "ap_servd";
-    private InetSocketAddress bind;
+  private InetAddress target;
+  protected Integer Port = new Integer(22936);
+  private String connID; // connection ID, "unique" identifier for the connection
+  private String targetMAC; // MAC address of the LS, it reacts only if correct MAC or
+  // FF:FF:FF:FF:FF:FF is set in the packet
+  protected byte[] Key = new byte[4]; // Key for password encryption
+  // sent in reply to ACP discovery packet
+  protected String password;
+  private String ap_servd = "ap_servd";
+  private InetSocketAddress bind;
 
-    protected int LastCmd = 0; // last ACP-Command sent to the LS
-    protected int LastError = 0; // Error Code in the last ACP packet rcvd
-    protected boolean HaveKey = false; // Did we get the encryption key, yet? - Send ACPDisc
-    protected boolean EnOneCmd = false; // Did we do EnOneCmd authentication, yet? - ACPEnOneCmd
-    protected boolean Authent = false; // Did we get authenticated, yet? - ACPAuthent
+  protected int LastCmd = 0; // last ACP-Command sent to the LS
+  protected int LastError = 0; // Error Code in the last ACP packet rcvd
+  protected boolean HaveKey = false; // Did we get the encryption key, yet? - Send ACPDisc
+  protected boolean EnOneCmd = false; // Did we do EnOneCmd authentication, yet? - ACPEnOneCmd
+  protected boolean Authent = false; // Did we get authenticated, yet? - ACPAuthent
 
-    /** set socket timeout to 1000 ms, rather high, but some users report timeout
-     * problems. Could also be UDP-related - try resending packets
-     *
-     * Especially BlinkLED, SaveConfig, LoadConfig have long reply times as reply is
-     * sent when the command has been executed. Same has to be considered for other cmds.
-     */
-    protected int Timeout = 5000;
-    protected int resendPackets = 2; // standard value for repeated sending of packets
+  /** set socket timeout to 1000 ms, rather high, but some users report timeout
+  * problems. Could also be UDP-related - try resending packets
+  * Especially BlinkLED, SaveConfig, LoadConfig have long reply times as reply is
+  * sent when the command has been executed. Same has to be considered for other cmds.
+  */
+  protected int Timeout = 5000;
+  protected int resendPackets = 2; // standard value for repeated sending of packets
 
-    public int DebugLevel = 0; // Debug level
+  public int DebugLevel = 0; // Debug level
 
-    protected int rcvBufLen = 4096; // standard length of receive buffer
+  protected int rcvBufLen = 4096; // standard length of receive buffer
+
+  public ACP() {
+  }
+
+  public ACP(String Target) {
+    this();
+    setTarget(Target);
+  }
+
+  public ACP(byte[] Target) {
+    this();
+    setTarget(Target);
+  }
 
 
-    public ACP() {
+  //
+  //  set/get for private variables
+  //
+  public String getConnID() {
+    return connID.toString();
+  }
+
+  public void setConnID(String ConnectionID) {
+    // TODO: input param checking!
+    connID = ConnectionID;
+  }
+
+  public void setConnID(byte[] ConnectionID) {
+    // TODO: input param checking!
+    connID = bufferToHex(ConnectionID, 0, 6);
+  }
+
+  public String getTargetMAC() {
+    return (targetMAC.toString());
+  }
+
+  public void setTargetMAC(String TargetMAC) {
+    // TODO: input param checking!
+    targetMAC = TargetMAC;
+  }
+
+  public byte[] getTargetKey() {
+    return (Key);
+  }
+
+  public void setTargetKey(byte[] _Key) {
+    // TODO: input param checking!
+    if (_Key.length != 4) {
+      outError("ACPException: Encryption key must be 4 bytes long!");
+      return;
     }
+    Key = _Key;
+    HaveKey = true;
+  }
 
-    public ACP(String Target) {
-        this();
-        setTarget(Target);
+  public void setTargetKey(String _Key) {
+    // TODO: input param checking!
+    setTargetKey(HexToByte(_Key));
+  }
+
+  public void setPassword(String _password) {
+    password = _password;
+  }
+
+  public InetAddress getTarget() {
+    return target;
+  }
+
+  public void setTarget(String Target) {
+    try {
+      target = InetAddress.getByName(Target);
+      Authent = false;
+      HaveKey = false;
+    } catch (UnknownHostException ex) {
+      outInfoSetTarget();
+      outError(ex.toString() + " [in setTarget]");
     }
+  }
 
-    public ACP(byte[] Target) {
-        this();
-        setTarget(Target);
+  public void setTarget(byte[] Target) {
+    try {
+      target = InetAddress.getByAddress(Target);
+      Authent = false;
+      HaveKey = false;
+    } catch (UnknownHostException ex) {
+      outInfoSetTarget();
+      outError(ex.toString() + " [in setTarget]");
     }
+  }
 
-
-    //
-    //  set/get for private variables
-    //
-    public String getConnID() {
-        return connID.toString();
+  public void setBroadcastIP(String Target) {
+    try {
+      target = InetAddress.getByName(Target);
+      setTargetMAC("FF:FF:FF:FF:FF:FF");
+      Authent = false;
+      HaveKey = false;
+    } catch (UnknownHostException ex) {
+      outError(ex.toString() + " [in setBroadcastIP]");
     }
+  }
 
-    public void setConnID(String ConnectionID) {
-        // TODO: input param checking!
-        connID = ConnectionID;
+  public void setBroadcastIP(byte[] Target) {
+    try {
+      target = InetAddress.getByAddress(Target);
+      setTargetMAC("FF:FF:FF:FF:FF:FF");
+      Authent = false;
+      HaveKey = false;
+    } catch (UnknownHostException ex) {
+      outError(ex.toString() + " [in setBroadcastIP]");
     }
+  }
 
-    public void setConnID(byte[] ConnectionID) {
-        // TODO: input param checking!
-        connID = bufferToHex(ConnectionID, 0, 6);
+  public void bind(InetSocketAddress localIP) {
+    bind = localIP;
+    if (localIP.isUnresolved()) {
+      outWarning("The bind address " + localIP
+          + " given with parameter -b could not be resolved to a local IP-Address.\n"
+          + "You must use this parameter with a valid IP-Address that belongs to the PC you run acp_commander on.\n");
+      bind = null;
     }
+  }
 
-    public String getTargetMAC() {
-        return (targetMAC.toString());
+  public void bind(String localIP) {
+    // bind socket to a local address (-b)
+    // Create a socket address from a hostname (_bind) and a port number. A port number
+    // of zero will let the system pick up an ephemeral port in a bind operation.
+    if (!localIP.equalsIgnoreCase("")) {
+      bind(new InetSocketAddress(localIP, 0));
+    } else {
+      bind = null;
     }
+  }
 
-    public void setTargetMAC(String TargetMAC) {
-        // TODO: input param checking!
-        targetMAC = TargetMAC;
+  int getDebugLevel() {
+    return DebugLevel;
+  }
+
+  //
+  // ACP functionallity
+  //
+
+  public String[] Find() {
+    // discover linkstations by sending an ACP-Discover package
+    // return on line of formatted string per found LS
+    return doDiscover(getACPDisc(connID, targetMAC));
+  }
+
+  public String[] Discover() {
+    // send ACP discover packet to Linkstation
+    // (if a broadcast address is used, only the first answer is returned)
+    return doSendRcv(getACPDisc(connID, targetMAC), 1);
+  }
+
+  public String[] Discover(boolean setTargetData) {
+    String[] result = Discover();
+
+    if (setTargetData) {
+      setTargetMAC(result[4]); // set MAC address according to discovery data
+      setTargetKey(result[8]); // set encryption key according to discovery data
     }
+    return result;
+  }
 
-    public byte[] getTargetKey() {
-        return (Key);
+  public String[] Command(String cmd, int maxResend) {
+    // send telnet-type command cmd to Linkstation by ACPcmd
+    if (maxResend <= 0) {
+      maxResend = resendPackets;
     }
+    return doSendRcv(getACPCmd(connID, targetMAC, cmd), maxResend);
+  }
 
-    public void setTargetKey(byte[] _Key) {
-        // TODO: input param checking!
-        if (_Key.length != 4) {
-            outError("ACPException: Encryption key must be 4 bytes long!");
-            return;
-        }
-        Key = _Key;
-        HaveKey = true;
-    }
+  public String[] Command(String cmd) {
+    // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
+    return doSendRcv(getACPCmd(connID, targetMAC, cmd), 1);
+  }
 
-    public void setTargetKey(String _Key) {
-        // TODO: input param checking!
-        setTargetKey(HexToByte(_Key));
-    }
+  public String[] Authent() {
+    byte[] _encrypted = encryptACPpassword(password, Key);
+    return Authent(_encrypted);
+  }
 
-    public void setPassword(String _password) {
-        password = _password;
-    }
+  public String[] Authent(byte[] enc_password) {
+    // authenticate to ACP protokoll
+    return doSendRcv(getACPAuth(connID, targetMAC, enc_password));
+  }
 
-    public InetAddress getTarget() {
-        return target;
-    }
+  public String[] AuthentBug() {
+    // authenticate to ACP protokoll using (supposed) buffer overflow
+    return doSendRcv(getACPAuthBug(connID, targetMAC));
+  }
 
-    public void setTarget(String Target) {
-        try {
-            target = InetAddress.getByName(Target);
-            Authent = false;
-            HaveKey = false;
-        } catch (UnknownHostException ex) {
-            outInfoSetTarget();
-            outError(ex.toString() + " [in setTarget]");
-        }
-    }
+  public String[] Shutdown() {
+    // ENOneCmd protected
+    return doSendRcv(getACPShutdown(connID, targetMAC));
+  }
 
-    public void setTarget(byte[] Target) {
-        try {
-            target = InetAddress.getByAddress(Target);
-            Authent = false;
-            HaveKey = false;
-        } catch (UnknownHostException ex) {
-            outInfoSetTarget();
-            outError(ex.toString() + " [in setTarget]");
-        }
-    }
+  public String[] Reboot() {
+    // ENOneCmd protected
+    return doSendRcv(getACPReboot(connID, targetMAC));
+  }
 
-    public void setBroadcastIP(String Target) {
-        try {
-            target = InetAddress.getByName(Target);
-            setTargetMAC("FF:FF:FF:FF:FF:FF");
-            Authent = false;
-            HaveKey = false;
-        } catch (UnknownHostException ex) {
-            outError(ex.toString() + " [in setBroadcastIP]");
-        }
-    }
+  public String[] EMMode() {
+    // ENOneCmd protected
+    return doSendRcv(getACPEMMode(connID, targetMAC));
+  }
 
-    public void setBroadcastIP(byte[] Target) {
-        try {
-            target = InetAddress.getByAddress(Target);
-            setTargetMAC("FF:FF:FF:FF:FF:FF");
-            Authent = false;
-            HaveKey = false;
-        } catch (UnknownHostException ex) {
-            outError(ex.toString() + " [in setBroadcastIP]");
-        }
-    }
+  public String[] NormMode() {
+    // ENOneCmd protected
+    return doSendRcv(getACPNormMode(connID, targetMAC));
+  }
 
-    public void bind(InetSocketAddress localIP) {
-        bind = localIP;
-        if (localIP.isUnresolved()) {
-            outWarning("The bind address " + localIP +
-                       " given with parameter -b could not be resolved to a local IP-Address.\n" +
-                       "You must use this parameter with a valid IP-Address that belongs to the PC you run acp_commander on.\n");
-            bind = null;
-        }
-    }
+  public String[] BlinkLED() {
+    return doSendRcv(getACPBlinkLED(connID, targetMAC));
+  }
 
-    public void bind(String localIP) {
-        // bind socket to a local address (-b)
-        // Create a socket address from a hostname (_bind) and a port number. A port number
-        // of zero will let the system pick up an ephemeral port in a bind operation.
-        if (!localIP.equalsIgnoreCase("")) {
-            bind(new InetSocketAddress(localIP, 0));
-        } else {
-            bind = null;
-        }
-    }
+  public String[] EnOneCmd() {
+    return EnOneCmdENC(encryptACPpassword(ap_servd, Key));
+  }
 
-    int getDebugLevel() {
-        return DebugLevel;
-    }
+  public String[] EnOneCmdENC(byte[] encPassword) {
+    return doSendRcv(getACPEnOneCmd(connID, targetMAC, encPassword));
+  }
 
-    //
-    // ACP functionallity
-    //
+  public String[] SaveConfig() {
+    // set timeout to 1 min
+    int _mytimeout = Timeout;
+    Timeout = 60000;
+    String[] result = doSendRcv(getACPSaveConfig(connID, targetMAC));
+    Timeout = _mytimeout;
+    return result;
+  }
 
-    public String[] Find() {
-        // discover linkstations by sending an ACP-Discover package
-        // return on line of formatted string per found LS
-        return doDiscover(getACPDisc(connID, targetMAC));
-    }
+  public String[] LoadConfig() {
+    // set timeout to 1 min
+    int _mytimeout = Timeout;
+    Timeout = 60000;
+    String[] result = doSendRcv(getACPLoadConfig(connID, targetMAC));
+    Timeout = _mytimeout;
+    return result;
+  }
 
-    public String[] Discover() {
-        // send ACP discover packet to Linkstation
-        // (if a broadcast address is used, only the first answer is returned)
-        return doSendRcv(getACPDisc(connID, targetMAC), 1);
-    }
-
-    public String[] Discover(boolean setTargetData) {
-        String[] result = Discover();
-
-        if (setTargetData) {
-            setTargetMAC(result[4]); // set MAC address according to discovery data
-            setTargetKey(result[8]); // set encryption key according to discovery data
-        }
-        return result;
-    }
-
-    public String[] Command(String cmd, int maxResend) {
-        // send telnet-type command cmd to Linkstation by ACPcmd
-        if (maxResend <= 0) {
-            maxResend = resendPackets;
-        }
-        return doSendRcv(getACPCmd(connID, targetMAC, cmd), maxResend);
-    }
-
-    public String[] Command(String cmd) {
-        // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
-        return doSendRcv(getACPCmd(connID, targetMAC, cmd), 1);
-    }
-
-    public String[] Authent() {
-        byte[] _encrypted = encryptACPpassword(password, Key);
-        return Authent(_encrypted);
-    }
-
-    public String[] Authent(byte[] enc_password) {
-        // authenticate to ACP protokoll
-        return doSendRcv(getACPAuth(connID, targetMAC, enc_password));
-    }
-
-    public String[] AuthentBug() {
-        // authenticate to ACP protokoll using (supposed) buffer overflow
-        return doSendRcv(getACPAuthBug(connID, targetMAC));
-    }
-
-    public String[] Shutdown() {
-        // ENOneCmd protected
-        return doSendRcv(getACPShutdown(connID, targetMAC));
-    }
-
-    public String[] Reboot() {
-        // ENOneCmd protected
-        return doSendRcv(getACPReboot(connID, targetMAC));
-    }
-
-    public String[] EMMode() {
-        // ENOneCmd protected
-        return doSendRcv(getACPEMMode(connID, targetMAC));
-    }
-
-    public String[] NormMode() {
-        // ENOneCmd protected
-        return doSendRcv(getACPNormMode(connID, targetMAC));
-    }
-
-    public String[] BlinkLED() {
-        return doSendRcv(getACPBlinkLED(connID, targetMAC));
-    }
-
-    public String[] EnOneCmd() {
-        return EnOneCmdENC(encryptACPpassword(ap_servd, Key));
-    }
-
-    public String[] EnOneCmdENC(byte[] encPassword) {
-        return doSendRcv(getACPEnOneCmd(connID, targetMAC, encPassword));
-    }
-
-    public String[] SaveConfig() {
-        // set timeout to 1 min
-        int _mytimeout = Timeout;
-        Timeout = 60000;
-        String[] result = doSendRcv(getACPSaveConfig(connID, targetMAC));
-        Timeout = _mytimeout;
-        return result;
-    }
-
-    public String[] LoadConfig() {
-        // set timeout to 1 min
-        int _mytimeout = Timeout;
-        Timeout = 60000;
-        String[] result = doSendRcv(getACPLoadConfig(connID, targetMAC));
-        Timeout = _mytimeout;
-        return result;
-    }
-
-    public String[] DebugMode() {
-        return doSendRcv(getACPDebugMode(connID, targetMAC));
-    }
+  public String[] DebugMode() {
+    return doSendRcv(getACPDebugMode(connID, targetMAC));
+  }
 
 
-    public String[] MultiLang(byte Language) {
-        // interface to switch web GUI language
-        // ENOneCmd protected
-        // 0 .. Japanese
-        // 1 .. English
-        // 2 .. German
-        // default .. English
-        return doSendRcv(getACPMultiLang(connID, targetMAC, Language));
-    }
+  public String[] MultiLang(byte Language) {
+    // interface to switch web GUI language
+    // ENOneCmd protected
+    // 0 .. Japanese
+    // 1 .. English
+    // 2 .. German
+    // default .. English
+    return doSendRcv(getACPMultiLang(connID, targetMAC, Language));
+  }
 
-    public String[] ChangeIP(byte[] newIP, byte[] newMask, boolean useDHCP) {
-        // change IP address
-
-        byte[] _encrypted = encryptACPpassword(password, Key);
-
-        return doSendRcv(getACPChangeIP(connID, targetMAC, newIP, newMask,
-                                        useDHCP, _encrypted));
-    }
+  public String[] ChangeIP(byte[] newIP, byte[] newMask, boolean useDHCP) {
+    // change IP address
+    byte[] _encrypted = encryptACPpassword(password, Key);
+    return doSendRcv(getACPChangeIP(connID, targetMAC, newIP, newMask, useDHCP, _encrypted));
+  }
 
     //--- End of public routines ---
 

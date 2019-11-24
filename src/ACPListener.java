@@ -14,33 +14,33 @@ package acpcommander;
  * @version 0.1
  */
 
+import java.io.IOException;
 import java.lang.Runnable;
-import java.net.*;
-import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 
 public class ACPListener implements Runnable {
-    private ACPConnection ACPConn;
-    private DatagramSocket socket;
-    private int MaxPacketLen = 500;  // maximum packet length we expect/accept
+  private ACPConnection ACPConn;
+  private DatagramSocket socket;
+  private int MaxPacketLen = 500;  // maximum packet length we expect/accept
 
-
-    public ACPListener(ACPConnection _Connection, int Port, int TimeOut) {
-        try {
-            socket = new DatagramSocket(Port);
-            socket.setSoTimeout(TimeOut);
-        } catch (SocketException ex) {
-        }
-
-        ACPConn = _Connection;
+  public ACPListener(ACPConnection _Connection, int Port, int TimeOut) {
+    try {
+      socket = new DatagramSocket(Port);
+      socket.setSoTimeout(TimeOut);
+    } catch (SocketException ex) {
     }
+    ACPConn = _Connection;
+  }
 
-    public void run() {
-        DatagramPacket receive = new DatagramPacket(new byte[MaxPacketLen], MaxPacketLen);
-        try {
-            socket.receive(receive);
-        } catch (IOException ex) {
-        }
-        // pass the received packet to our ACPConnection for handling
-        ACPConn.receivePacket(receive);
+  public void run() {
+    DatagramPacket receive = new DatagramPacket(new byte[MaxPacketLen], MaxPacketLen);
+    try {
+      socket.receive(receive);
+    } catch (IOException ex) {
     }
+    // pass the received packet to our ACPConnection for handling
+    ACPConn.receivePacket(receive);
+  }
 }

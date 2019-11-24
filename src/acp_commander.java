@@ -14,64 +14,43 @@ package acpcommander;
  * @version 0.4.1 (beta)
  */
 
-/**
- * History
- * 0.x (idea: copy scripts to //target/share/acp_commander, chmod 0700, call, display log)
- *     (usage of ACP commands without *exact* knowledge of protocol could lead to disasters)
- *     (rootfs option to fix boxes "stuck in EMmode", see longer thread in forum)
- *     add installer support,                                       TODO
- *     scripts option download scripts installer.sh, fixrootfs.sh
- *             from linkstationwiki                                 TODO
- *     better handling of incoming packets                          TODO
- *     change preferences file to local properties file             TODO
- *
- * 0.4 added correct password encryption                            DONE
- *     addons, install addons.tar from local or linkstationwiki     DONE
- *     reboot, rebootEM and rootfs,                                 DONE
- *     better handling of incoming packets (still a lot to do ;) )
- *     added some infos and hints on Exceptions to assist uses
- *     work on help/usage, new order of parameters
- * 0.3 discover LS, bind to local address
- *     blink, load/save config (out of authenticate research)
- *     better handling of incoming packets
- *     worked over handling of received packets, get password encryption key
- *     Hex dump of incoming packets (debug level >= 3 for debugging/research
- *     Change IP (resets admin password as encryption is unknown)
- *     Added user hint for the openbox command that password has been reset for user root.
- *     Added load/save of preferences.
- * 0.2 added interactive shell and clear /boot
- * 0.1 initial version
- */
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.prefs.*;
+import java.net.InetAddress;
+import java.net.URL;
+
+import java.util.Random;
+
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
+import java.util.prefs.Preferences;
 
 
 public class acp_commander {
-    private static String _version = "0.4.1 (beta)";
-    private static String _prefFilename = new String("acp_commander.cfg");
-    private static int _stdport = 22936;
-    private static int _timeout = 5000; // set socket timeout to 5000 ms, some user report timeout problems
+  private static String _version = "0.4.1 (beta)";
+  private static String _prefFilename = new String("acp_commander.cfg");
+  private static int _stdport = 22936;
+  private static int _timeout = 5000; // set socket timeout to 5000 ms, some user report timeout problems
 
 
-    private static int _debug = 0; // determins degree of additional output, increasing with value
-    private static String _state; // where are we in the code, mostly for exceptions output :-(
+  private static int _debug = 0; // determins degree of additional output, increasing with value
+  private static String _state; // where are we in the code, mostly for exceptions output :-(
+
+  private static void outTitle() {
+    System.out.println(
+      "ACP_commander out of the nas-central.org (linkstationwiki.net) project.\n" +
+      "Used to send ACP-commands to Buffalo linkstation(R) LS-PRO.\n\n" +
+      "WARNING: This is experimental software that might brick your linkstation!\n\n");
+  }
 
 
-    private static void outTitle() {
-        System.out.println(
-                "ACP_commander out of the nas-central.org (linkstationwiki.net) project.\n" +
-                "Used to send ACP-commands to Buffalo linkstation(R) LS-PRO.\n\n" +
-                "WARNING: This is experimental software that might brick your linkstation!\n\n");
-    }
-
-
-    //
-    // help(), long version with explanations
-    //
-    private static void help() {
+  // help(), long version with explanations
+  private static void help() {
         // How do I get the fileversion set in the project description?
         outTitle();
 

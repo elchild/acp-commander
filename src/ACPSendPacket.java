@@ -54,50 +54,51 @@ import acpcommander.ACPPacket;
 
 public class ACPSendPacket extends ACPPacket {
 
-    public void makeACPDiscover() {
-        setCommand ("8020");
+  public void makeACPDiscover() {
+    setCommand("8020");
+  }
+
+  public void makeACPEnOneCmd(String passwordHex) {
+    setACPSpecialCmd((byte) 0x0d); // ACP-EnOneCmd: specialCmd, 0x0D
+  }
+
+  public void makeACPAuth(String passwordHex) {
+    setACPSpecialCmd((byte) 0x0c);
+    System.arraycopy(HexToByte(passwordHex), 0, packetbuf, 40, 8);
+    // the encrypted password as hexstring
+  }
+
+  public void makeACPAuthBug() {
+    // sending a ACP_Auth packet with the command word set to 0x8a10 instead of 0x80a0
+    // will disable authentication on the linkstation and allow sending ACP commands.
+    // This works independent form the actually set password on the linkstation.
+    // Reason is probably a buffer overflow in buffalos ClientServer_util on the
+    // linkstation that handles the ACP stuff, there.
+    makeACPAuth("14:bd:36:a7:a7:81:86:f1");
+    setCommand("8a10");
+  }
+
+  public void makeACPCmd(String CmdLine) throws Exception {
+    // length check for input param CmdLine
+    if (CmdLine.length() > 210) {
+      throw new Exception("ACPCommand: Commandline too long!");
     }
 
-    public void makeACPEnOneCmd(String passwordHex) {
-        setACPSpecialCmd((byte) 0x0d); // ACP-EnOneCmd: specialCmd, 0x0D
-    }
+    setCommand("8a10", (byte) (CmdLine.length() + 12));
+    packetbuf[32] = (byte) CmdLine.length();
+    packetbuf[36] = (byte) 0x03; // type
+    // TODO: what does the type field mean/cause?
 
-    public void makeACPAuth(String passwordHex) {
-        setACPSpecialCmd((byte) 0x0c);
-        System.arraycopy(HexToByte(passwordHex), 0, packetbuf, 40, 8); // the encrypted password as hexstring
-    }
-
-    public void makeACPAuthBug() {
-        // sending a ACP_Auth packet with the command word set to 0x8a10 instead of 0x80a0
-        // will disable authentication on the linkstation and allow sending ACP commands.
-        // This works independent form the actually set password on the linkstation.
-        // Reason is probably a buffer overflow in buffalos ClientServer_util on the
-        // linkstation that handles the ACP stuff, there.
-        makeACPAuth("14:bd:36:a7:a7:81:86:f1");
-        setCommand("8a10");
-    }
-
-    public void makeACPCmd(String CmdLine) throws Exception {
-        // length check for input param CmdLine
-        if (CmdLine.length() > 210) {
-            throw new Exception("ACPCommand: Commandline too long!");
-        }
-
-        setCommand("8a10", (byte) (CmdLine.length() + 12));
-        packetbuf[32] = (byte) CmdLine.length();
-        packetbuf[36] = (byte) 0x03; // type
-        // TODO: what does the type field mean/cause?
-
-        System.arraycopy(CmdLine.getBytes(), 0, packetbuf, 40, CmdLine.length());
-    }
+    System.arraycopy(CmdLine.getBytes(), 0, packetbuf, 40, CmdLine.length());
+  }
 
 
-    public void setACPSpecialCmd(byte SpecialCmd) {
-        setCommand("80a0");
-        setSpecialCmd(SpecialCmd);
-    }
+  public void setACPSpecialCmd(byte SpecialCmd) {
+    setCommand("80a0");
+    setSpecialCmd(SpecialCmd);
+  }
 
-    public void acpSendPacket() {
-        // initialization shoud be done in acpPacket, via jbInit();
-    }
+  public void acpSendPacket() {
+    // initialization shoud be done in acpPacket, via jbInit();
+  }
 }
