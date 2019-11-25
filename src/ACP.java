@@ -1308,14 +1308,13 @@ public class ACP {
         String pureHex = hexstr.replaceAll(":", "");
         byte[] bts = new byte[pureHex.length() / 2];
         for (int i = 0; i < bts.length; i++) {
-            bts[i] = (byte) Integer.parseInt(pureHex.substring(2 * i, 2 * i + 2),
-                                             16);
+            bts[i] = (byte) Integer.parseInt(pureHex.substring(2 * i, 2 * i + 2),16);
         }
         return (bts);
     }
 
 
-    private String bufferToHex(byte buffer[], int startOffset,
+    public String bufferToHex(byte buffer[], int startOffset,
                                int length) {
         StringBuffer hexString = new StringBuffer(2 * length);
         int endOffset = startOffset + length;
