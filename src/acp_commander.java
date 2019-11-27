@@ -63,12 +63,10 @@ public class acp_commander {
                            "                default = FF:FF:FF:FF:FF:FF.\n" +
                            "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n" +
                            "                only use this option together with -i.\n" +
-// version 0.4
                            "   -ba      ... use bug/bufferoverflow on LS to bypass usual password\n" +
                            "                authentication. Standard until acp_commander 0.4." +
                            "   -pw passwd . your LS admin password. If not given, but required\n" +
                            "                you'll be asked for it.\n" +
-// end mods of version 0.4
                            "   -i ID    ... define a connection identifier, if not given, a random one will\n" +
                            "                be used. (With param MAC the senders MAC address will be used.)\n" +
                            "                Successfull authenitfications are stored in conjunction with a \n" +
@@ -89,38 +87,14 @@ public class acp_commander {
                            "   -cb      ... clear \\boot, get rid of ACP_STATE_ERROR after firmware update\n" +
                            "                output of df follows for control\n" +
                            "   -ip newIP... change IP to newIP (basic support).\n" +
-                           "   -save    ... save configuration\n" +
-                           "   -load    ... load configuration\n" +
                            "   -blink   ... blink LED's and play some tones\n" +
                            "\n" +
-                           "   -savepref... write out acp_commander.preferences (XML) for editing.\n" +
-                           "   -loadpref... load acp_commander.preferences (XML) and store values\n" +
-                           "                in default place.\n" +
-// version 0.4
                            "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n" +
-                           "   -addons  ... install addons.tar from local or linkstationwiki.\n" +
                            "   -diag    ... run some diagnostics on LS settings (lang, backup).\n" +
-                           /*
-                                                    // copy installer.sh and firmware to \\target\share\acp_commander, chmod 700 and run it
-                           "   -install file|dir  install the firmware given in a zip|tar|tgz archive\n" +
-                           "   -iboot   ... update u-boot use in combination with -install\n" +
-                           "   -ir      ... reboot after putting new firmware files in place\n" +
-                           */
                            "   -emmode  ... Linkstation reboots next into EM-mode.\n" +
                            "   -normmode .. Linkstation reboots next into normal mode.\n" +
                            "   -reboot  ... reboot Linkstation.\n" +
                            "   -shutdown .. shut Linkstation down.\n" +
-                           // copy fixrootfs.sh to \\target\share\acp_commander, chmod 0700 and run it
-                           // "   -fixrootfs  ... reboot Linkstation into rootfs (fix necessary files in EM-mode)\n" +
-
-                           // -scripts will write installer.sh, fixrootfs.sh into current directory using
-                           // alternative: download from downloads.linkstationwiki
-                           // flags -i and -rootfs will also generate these files if they are not present
-                           // if they are present the files are not rewritten to allow user modifications.
-
-                           // "   -scripts ... write scripts installer.sh, fixrootfs.sh to local directory.\n" +
-
-// end mods of version 0.4
                            "\n" +
                            "   -d1...-d3 .. set debug level, generate additional output\n" +
                            "                debug level >= 3: HEX/ASCII dump of incoming packets\n" +
@@ -131,7 +105,6 @@ public class acp_commander {
                            "*)  this is not the MAC address the packet is sent to, but the address within\n" +
                            "    the ACP packet. The linkstation will only react to ACP packets if they\n" +
                            "    carry the correct (its) MAC-address or FF:FF:FF:FF:FF:FF\n" +
-//                "\n"+
                            "\n" +
                            "This program is the result of the work done at nas-central.org (linkstationwiki.net),\n" +
                            "which is not related with Buffalo(R) in any way.\n\n" +
@@ -153,10 +126,8 @@ public class acp_commander {
                            "   -t target .. IP or network name of the Linkstation.\n" +
                            "   -m MAC   ... define targets mac address set in the ACP package.\n" +
                            "   -na      ... no authentication, skip the ACP_AUTH packet.\n" +
-// version 0.4
                            "   -ba      ... use bug/bufferoverflow on LS to bypass password authent.\n" +
                            "   -pw passwd . your LS admin password.\n" +
-// end mods of version 0.4
                            "   -i ID    ... define a connection identifier, standard: random value.\n" +
                            "   -p port  ... define alternative target port, default = " +
                            _stdport + "\n" +
@@ -168,24 +139,13 @@ public class acp_commander {
                            "   -s       ... interactive shell.\n" +
                            "   -cb      ... clear \\boot, output of df follows for control of success.\n" +
                            "   -ip newIP... change IP to newIP, clears also admin password.\n" +
-                           "   -save    ... save configuration.\n" +
-                           "   -load    ... load configuration.\n" +
                            "   -blink   ... blink LED's and play some tones.\n" +
-// version 0.4
                            "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n" +
-                           "   -addons  ... install addons.tar from local or linkstationwiki.\n" +
                            "   -diag    ... run some diagnostics on LS settings (lang, backup).\n" +
-                           /*
-                                                    // copy installer.sh and firmware to \\target\share\acp_commander, chmod 700 and run it
-                           "   -install file|dir  install the firmware given in a zip|tar|tgz archive\n" +
-                           "   -iboot   ... update u-boot use in combination with -install\n" +
-                           "   -ir      ... reboot after putting new firmware files in place\n" +
-                           */
                            "   -emmode  ... Linkstation boots next into EM-mode.\n" +
                            "   -normmode .. Linkstation boots next into normal mode.\n" +
                            "   -reboot  ... reboot Linkstation.\n" +
                            "   -shutdown .. shut Linkstation down.\n" +
-// end mods of version 0.4
                            "\n" +
                            "   -d1 | -d2 .. set debug level, generate additional output\n" +
                            "   -q       ... quiet, surpress header, does not work with -h or -v\n" +
@@ -294,35 +254,6 @@ public class acp_commander {
     //  TODO
     //
 
-    private static Preferences loadPreferences() {
-        Preferences myprefs = myPreferences();
-
-        try {
-            // if file does not exist, create it with default values
-            if (!new File(_prefFilename).exists()) {
-                savePreferences(myprefs);
-            }
-
-            myprefs.importPreferences(new FileInputStream(_prefFilename));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidPreferencesFormatException e) {
-            e.printStackTrace();
-        }
-
-        return myprefs;
-    }
-
-    private static void savePreferences(Preferences myprefs) {
-        try {
-            myprefs.exportSubtree(new FileOutputStream(_prefFilename));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (BackingStoreException e) {
-            e.printStackTrace();
-        }
-    }
-
     private static Preferences myPreferences() {
         Preferences myprefs = Preferences.userRoot().node("acp_commander");
         if (myprefs.get("acp-commander.version", "-").equals("-")) {
@@ -421,7 +352,6 @@ public class acp_commander {
 
         String _cmd = new String("");
         String _newip = new String(""); // new ip address
-        String _FWfile = new String(""); // Firmware file for installation
         String _password = new String(""); // admin password
         Integer _setgui = new Integer(1); // set gui to language 0=jap, 1=eng, 2=ger
 
@@ -431,21 +361,14 @@ public class acp_commander {
         boolean _bugauthent = false; // use old authentication method with bufferoverflow
         boolean _shell = false;
         boolean _clearboot = false;
-        boolean _installfw = false; // install new firmware
-        boolean _installboot = false; // install new uboot
-        boolean _scripts = false; // write script files
         boolean _emmode = false; // next reboot into EM-Mode
         boolean _normmode = false; // next reboot into rootFS-Mode
         boolean _reboot = false; // reboot LS
         boolean _shutdown = false; // shut LS down
-        boolean _fixrootfs = false; // fix root file system
         boolean _findLS = false; // discover/find (search) Linkstations
         boolean _blink = false; // blink LED's and play some tones
-        boolean _save = false; // save config into /boot (tar)
-        boolean _load = false; // load config from /boot
         boolean _changeip = false; // change ip
         boolean _gui = false; // set web gui language 0=jap, 1=eng, 2=ger
-        boolean _addons = false; // install addons.tar
         boolean _diag = false; // run diagnostics
         boolean _test = false; // for testing purposes
 
@@ -475,21 +398,6 @@ public class acp_commander {
                 outTitle();
             }
         } // if noparam, usage, help, version ...
-
-        if (hasParam("-loadpref", args)) {
-            System.out.println("Loading from preferences file...");
-            myprefs = loadPreferences();
-            try {
-                myprefs.flush();
-            } catch (BackingStoreException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (hasParam("-savepref", args)) {
-            System.out.println("Writing out preferences file...");
-            savePreferences(myprefs);
-        }
 
         if (hasParam(new String[] {"-d1", "-d2", "-d3"}, args)) {
             if (hasParam("-d1", args)) {
@@ -575,27 +483,6 @@ public class acp_commander {
             _diag = true;
         }
 
-        if (hasParam("-addons", args)) {
-            _addons = true;
-            _authent = true;
-        }
-
-        if (hasParam("-install", args)) {
-            System.out.println("Found param -install");
-            _authent = true;
-            _installfw = true;
-            _FWfile = getParamValue("-install", args, "");
-        }
-
-        if (hasParam("-iboot", args)) {
-            if (_installfw) { // make sure parameter -install is handled before this!
-                _installboot = true;
-            } else {
-                outWarning(
-                        "You specified '-iboot' without firmware installation (-i file) --> ignored");
-            }
-        }
-
         if (hasParam("-reboot", args)) {
             _authent = true;
             _reboot = true;
@@ -618,15 +505,6 @@ public class acp_commander {
             }
         }
 
-        if (hasParam("-fixrootfs", args)) {
-            _authent = true;
-            _fixrootfs = true;
-        }
-
-        if (hasParam("-scripts", args)) {
-            _scripts = true;
-        }
-
         if (hasParam("-f", args)) {
             // we use -f (find) rather than -d (discover) to avoid any conflicts with debug options
             _findLS = true;
@@ -647,16 +525,6 @@ public class acp_commander {
             outDebug("Command-line parameter -blink given", 2);
             _authent = true; // blink needs autenticate
             _blink = true;
-        }
-
-        if (hasParam("-save", args)) {
-            outDebug("Command-line parameter -save given", 2);
-            _save = true;
-        }
-
-        if (hasParam("-load", args)) {
-            outDebug("Command-line parameter -load given", 2);
-            _load = true;
         }
 
         if (hasParam("-ip", args)) {
@@ -733,20 +601,6 @@ public class acp_commander {
             ;
         }
 
-        /**
-         * checking for all parameters becomes difficult...
-         *
-                 // add option -na for greater effect! ;)
-         if ((!_openbox) & (_cmd.equals("")) & (!_shell) & (!_clearboot) &
-            (!_findLS)) {
-            outWarning(
-         "Nothing to do! None of the options -o, -c, -s, -cb or -f are given.");
-            // might send an authentification packet, though.
-                 }
-         *
-         *
-         **/
-
         if ((!_authent) & (_connID == "")) {
             outWarning("Using a random connection ID without authentification!");
         }
@@ -810,14 +664,6 @@ public class acp_commander {
                 }
             }
             outDebug("Using cmd-line:\n>>" + _cmd + "\n", 1);
-        }
-
-        if (_save & _load) {
-            // save and load of config in same call doesn't make much sense - abort for safety!
-            // we don't know what user intents to do first.
-            outError(
-                    "You called acp_commander with both with the -safe and -load option.\n" +
-                    "Use separate calls if you intent some manipulation. For safety, program is aborted!\n");
         }
 
         if (_changeip) {
@@ -960,117 +806,6 @@ public class acp_commander {
 
         }
 
-        if (_addons) {
-            _state = "install addons.tar";
-            System.out.println("Installing addons.tar ...");
-
-            FileSystem fs = new FileSystem();
-            try {
-                // filename for addons and url if it's not present locally
-                boolean addons_copied = false;
-                String addons_file = "addons.tar";
-                String addons_url =
-                        "http://downloads.nas-central.org/Uploads/LSPro/Binaries/";
-                // remote share directory
-                String acp_dir = new String("//" + _target +
-                                            "/share/acp_commander/");
-                // local directory for ACP-commands
-                String acp_ldir = new String(
-                        "/mnt/disk1/share/acp_commander/");
-
-                // create acp_commander dir on target
-                System.out.print("creating directory...");
-                fs.mkdir(acp_dir);
-                System.out.println("\tOK");
-
-                // copy addons.tar to acp_commander dir on tartget, look for local file first
-                if (new File(addons_file).exists()) {
-                    System.out.println("Found local file <" + addons_file + ">");
-                    fs.copyFile(addons_file, acp_dir + addons_file);
-                    addons_copied = true;
-                } else {
-                    System.out.println("Didn't find <" + addons_file +
-                                       "> locally, looking at\n" + addons_url);
-//                        if (new File(addons_url+addons_file).exists()) {
-                    fs.copyFile(new URL(addons_url + addons_file),
-                                acp_dir + addons_file);
-                    addons_copied = true;
-                    /*                        } else {
-                     System.out.println("Could not find <"+ addons_file +
-                     "> at linkstationwiki either. Aborting!\n");
-                                            }
-                     */
-                }
-                if (addons_copied) {
-                    System.out.println("untaring ...\t" +
-                                       myACP.Command("/bin/tar -xzv -C / -f " +
-                            acp_ldir +
-                            addons_file + " > " +
-                            acp_ldir + "untar.log", 3)[1]);
-                    System.out.println(
-                            "Untaring complete, you can review the log in \n" +
-                            acp_dir + "untar.log");
-                }
-
-            } catch (java.io.IOException ioE) {
-                ioE.printStackTrace();
-            }
-        }
-
-        if (_installfw) {
-            _state = "install FW";
-            System.out.println("Firmware installation...");
-            FileSystem fs = new FileSystem();
-            try {
-                // remote share directory
-                String acp_dir = new String("//" + _target +
-                                            "/share/acp_commander/");
-                // local directory for ACP-commands
-                String acp_ldir = new String("/mnt/disk1/share/acp_commander/");
-
-                // create acp_commander dir on target
-                System.out.print("creating directory...");
-//                    if (new File (acp_dir).exists()) {
-//                        System.out.println("dir exists, skipping");
-//                    }
-//                    else { fs.mkdir(acp_dir); }
-                fs.mkdir(acp_dir);
-                System.out.println("\tOK");
-
-                // copy installer script
-                System.out.print("copying script to target...");
-                fs.copyFile("install.sh", acp_dir + "install.sh");
-                System.out.println("\tOK");
-
-                // copy installer script
-                System.out.print("copying firmware to target...");
-//                    fs.copyFile("install.sh", acp_dir+ "install.sh");
-                System.out.println("\tOK");
-
-                // send ACPCmd to chmod 744 install.sh, send packet up to 3 times
-                System.out.println("chmod 744 install.sh...\t" +
-                                   myACP.Command("chmod 744 " + acp_ldir +
-                                                 "install.sh", 3)[1]);
-
-                // Increase timeout to 10 min = 600000 ms
-                // call install.sh with new firmware file as parameter, output into install.log
-                int _mytimeout = myACP.Timeout;
-                myACP.Timeout = 600000;
-                System.out.println("calling install.sh...\t" +
-                                   myACP.Command(acp_ldir + "install.sh " +
-                                                 acp_ldir + " > " + acp_ldir +
-                                                 "install.log", 3)[1]);
-                myACP.Timeout = _mytimeout;
-
-                // display install.log
-                System.out.println("\nLogfile of installation process:");
-                fs.display(acp_dir + "install.log");
-
-            } catch (java.io.IOException ioE) {
-                ioE.printStackTrace();
-            }
-        }
-
         if (_test) {
             _state = "TEST"; // Test@Georg
             System.out.println("Performing test sequence...");
@@ -1128,18 +863,6 @@ public class acp_commander {
             _state = "blink";
             // blink LED's and play tones via ACP-command
             System.out.println("BlinkLED...\t" + myACP.BlinkLED()[1]);
-        }
-
-        if (_save) {
-            _state = "save config";
-            // save configuration into /boot (tar)
-            System.out.println("Save Config...\t" + myACP.SaveConfig()[1]);
-        }
-
-        if (_load) {
-            _state = "load config";
-            // load configuration from /boot (tar)
-            System.out.println("Load Config...\t" + myACP.LoadConfig()[1]);
         }
 
         if (_gui) {
