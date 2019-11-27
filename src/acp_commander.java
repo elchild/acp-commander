@@ -903,21 +903,23 @@ public class acp_commander {
         if (_shell) {
             _state = "shell";
             String cmdln = new String("");
+            String pwd = new String("/");
             BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
             System.out.print(
                     "Enter telnet commands to LS, enter 'exit' to leave\n");
 
             // get first commandline
             try {
-                System.out.print("/root>");
+                System.out.print(pwd + ">");
                 cmdln = keyboard.readLine();
 
                 while ((cmdln != null) && (!cmdln.equals("exit"))) {
                     // send command and display answer
                     //only first cmd working for some reason.
-                    System.out.print(myACP.Command(cmdln)[1]);
+                    System.out.println(myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > ~/.pwd")[1]);
+                    pwd = myACP.Command("cat ~/.pwd")[1].split("\n",2)[0];
                     // get next commandline
-                    System.out.print(">");
+                    System.out.print(pwd + ">");
                     cmdln = keyboard.readLine();
                 }
             } catch (java.io.IOException IOE) {}
