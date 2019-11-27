@@ -223,6 +223,8 @@ public class ACP {
 
   public String[] Command(String cmd) {
     // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
+    EnOneCmd();
+    Authent();
     return doSendRcv(getACPCmd(connID, targetMAC, cmd), 1);
   }
 

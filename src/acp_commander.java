@@ -831,17 +831,14 @@ public class acp_commander {
         if (_openbox) {
             _state = "ACP_OPENBOX";
             System.out.println("Reset root pwd...\t" + myACP.Command("passwd -d root", 3)[1]);
-	    myACP.EnOneCmd();
-            myACP.Authent();
 	    myACP.Command("rm /etc/securetty", 3);
-	    myACP.EnOneCmd();
-            myACP.Authent();
 	    System.out.println("start telnetd...\t" + myACP.Command("/bin/busybox telnetd&", 3)[1]);
 
             // Due to many questions in the forum...
             System.out.println(
                     "\nYou can now telnet to your box as user 'root' providing " +
-                    "no / an empty password.");
+                    "no / an empty password. Please change your root password to" +
+                    "something secure.");
         }
 
         if (_clearboot) {
@@ -906,8 +903,7 @@ public class acp_commander {
         if (_shell) {
             _state = "shell";
             String cmdln = new String("");
-            BufferedReader keyboard = new BufferedReader(new
-                    InputStreamReader(System.in));
+            BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
             System.out.print(
                     "Enter telnet commands to LS, enter 'exit' to leave\n");
 
@@ -915,15 +911,14 @@ public class acp_commander {
             try {
                 System.out.print("/root>");
                 cmdln = keyboard.readLine();
-                System.out.print("\n");
 
                 while ((cmdln != null) && (!cmdln.equals("exit"))) {
                     // send command and display answer
-                    System.out.println(myACP.Command(cmdln)[1] + "\n");
+                    //only first cmd working for some reason.
+                    System.out.print(myACP.Command(cmdln)[1]);
                     // get next commandline
                     System.out.print(">");
                     cmdln = keyboard.readLine();
-                    System.out.print("\n");
                 }
             } catch (java.io.IOException IOE) {}
         }
