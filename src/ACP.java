@@ -787,7 +787,7 @@ public class ACP {
 
     // creates an ACPReboot packet, ACP_EN_ONECMD protected
     private byte[] getACPReboot(String ConnID, String targetMAC) {
-        byte[] buf = new byte[72];
+        byte[] buf = new byte[32];
         setACPHeader(buf, "80a0", ConnID, targetMAC, (byte) (0x28));
         buf[32] = 0x01; // type ACPReboot
 
