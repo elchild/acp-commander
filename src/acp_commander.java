@@ -916,12 +916,12 @@ public class acp_commander {
                 while ((cmdln != null) && (!cmdln.equals("exit"))) {
                     // send command and display answer
                     //only first cmd working for some reason.
-                    output = myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > ~/.pwd")[1];
+                    output = myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd")[1];
                     if (output.equals("OK (ACP_STATE_OK)")) {
                       output = "";
                     }
                     System.out.print(output);
-                    pwd = myACP.Command("cat ~/.pwd")[1].split("\n",2)[0];
+                    pwd = myACP.Command("cat /tmp/.pwd")[1].split("\n",2)[0];
                     // get next commandline
                     System.out.print(pwd + ">");
                     cmdln = keyboard.readLine();
