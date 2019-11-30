@@ -838,7 +838,7 @@ public class acp_commander {
             System.out.println(
                     "\nYou can now telnet to your box as user 'root' providing " +
                     "no / an empty password. Please change your root password to" +
-                    "something secure.");
+                    " something secure.");
         }
 
         if (_clearboot) {
@@ -904,9 +904,9 @@ public class acp_commander {
             _state = "shell";
             String cmdln = new String("");
             String pwd = new String("/");
+            String output = new String("");
             BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print(
-                    "Enter telnet commands to LS, enter 'exit' to leave\n");
+            System.out.print("Enter telnet commands to LS, enter 'exit' to leave\n");
 
             // get first commandline
             try {
@@ -916,7 +916,11 @@ public class acp_commander {
                 while ((cmdln != null) && (!cmdln.equals("exit"))) {
                     // send command and display answer
                     //only first cmd working for some reason.
-                    System.out.println(myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > ~/.pwd")[1]);
+                    output = myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > ~/.pwd")[1];
+                    if (output.equals("OK (ACP_STATE_OK)")) {
+                      output = "";
+                    }
+                    System.out.print(output);
                     pwd = myACP.Command("cat ~/.pwd")[1].split("\n",2)[0];
                     // get next commandline
                     System.out.print(pwd + ">");

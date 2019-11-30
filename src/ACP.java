@@ -194,7 +194,7 @@ public class ACP {
   public String[] Find() {
     // discover linkstations by sending an ACP-Discover package
     // return on line of formatted string per found LS
-    return doDiscover(getACPDisc(connID, targetMAC));
+    return doDiscover();
   }
 
   public String[] Discover() {
@@ -215,6 +215,8 @@ public class ACP {
 
   public String[] Command(String cmd, int maxResend) {
     // send telnet-type command cmd to Linkstation by ACPcmd
+    EnOneCmd();
+    Authent();
     if (maxResend <= 0) {
       maxResend = resendPackets;
     }
@@ -320,21 +322,25 @@ public class ACP {
     // ACP-Interface functions (private)
     //
 
-    private String[] doDiscover(byte[] buf) {
+    private String[] doDiscover() {
         String _state = "[Send/Receive ACPDiscover]";
+        byte[] buf = getACPDisc(connID, targetMAC);
+        byte[] buf2 = getACPDisc2(connID, targetMAC);
         String[] _searchres;
         ArrayList<String> _tempres = new ArrayList<>();
         DatagramSocket _socket;
-        DatagramPacket _packet = new DatagramPacket(buf, buf.length, target,
-                Port.intValue());
 
-        DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen],
-                rcvBufLen);
+        DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, Port.intValue());
+        DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
+
+        DatagramPacket _packet2 = new DatagramPacket(buf2, buf2.length, target, Port.intValue());
 
         try {
             _socket = getSocket(); // TODO bind functionality is missing here
 
             _socket.send(_packet);
+            _socket.send(_packet2);
+
             long _LastSendTime = System.currentTimeMillis();
             while (System.currentTimeMillis() - _LastSendTime < Timeout) {
                 _socket.receive(_receive);
@@ -393,12 +399,9 @@ public class ACP {
         int sendcount = 0;
         boolean SendAgain = true;
         DatagramSocket _socket;
-        DatagramPacket _packet = new DatagramPacket(buf, buf.length,
-                target,
-                Port.intValue());
+        DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, Port.intValue());
         // TODO: danger - possible buffer overflow/data loss with fixed packet length
-        DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen],
-                rcvBufLen);
+        DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
 
         do {
             sendcount++;
@@ -417,8 +420,12 @@ public class ACP {
                 // TODO: better error handling
                 result = new String[2];
                 if (sendcount >= repeatSend) {
-                    result[1] = "Exception: SocketTimeoutException (" +
-                                SToE.getMessage() + ") " + _state;
+                    result[1] = "Exception: SocketTimeoutException (" + SToE.getMessage() + ") " + _state;
+
+                    if (result[1].indexOf("Packet:8020") > 0) {
+                      return doSendRcv(getACPDisc2(connID, targetMAC), 1);
+                    }
+
                     outInfoTimeout();
                     outError(result[1]);
                 } else {
@@ -429,9 +436,8 @@ public class ACP {
             } catch (java.net.SocketException SE) {
                 // TODO: better error handling
                 result = new String[2];
-                result[1] = "Exception: SocketException (" + SE.getMessage() +
-                            ") " +
-                            _state;
+                result[1] = "Exception: SocketException (" + SE.getMessage() + ") " + _state;
+
                 outInfoSocket();
                 outError(result[1]);
             } catch (java.io.IOException IOE) {
@@ -621,6 +627,9 @@ public class ACP {
         case 0x8B20:
             CmdString = "ACP_FILESEND_END";
             break;
+        case 0x8E00:
+            CmdString = "ACP_Discover";
+            break;
 
             // Answers to ACP-Commands
             // Currently missing, but defined in clientUtil_server:
@@ -787,7 +796,7 @@ public class ACP {
 
     // creates an ACPReboot packet, ACP_EN_ONECMD protected
     private byte[] getACPReboot(String ConnID, String targetMAC) {
-        byte[] buf = new byte[32];
+        byte[] buf = new byte[72];
         setACPHeader(buf, "80a0", ConnID, targetMAC, (byte) (0x28));
         buf[32] = 0x01; // type ACPReboot
 
@@ -888,6 +897,14 @@ public class ACP {
     private byte[] getACPDisc(String ConnID, String targetMAC) {
         byte[] buf = new byte[72];
         setACPHeader(buf, "8020", ConnID, targetMAC, (byte) 0x28);
+
+        return (buf);
+    }
+
+    //newer version of discovery packet required by some devs
+    private byte[] getACPDisc2(String ConnID, String targetMAC) {
+        byte[] buf = new byte[32];
+        setACPHeader(buf, "8E00", ConnID, targetMAC, (byte) 0x00);
 
         return (buf);
     }
@@ -1239,6 +1256,10 @@ public class ACP {
             if (result[1].equalsIgnoreCase("**no message**")) {
                 result[1] = "OK (" + getErrorMsg(buf) + ")";
             }
+            break;
+        case 0xce00: // ACP discovery
+            outDebug("received ACP Discovery reply", 1);
+            result = rcvACPDisc(buf, _debug);
             break;
         default:
             result = new String[2]; //handling needed ?
