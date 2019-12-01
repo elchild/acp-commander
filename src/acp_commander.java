@@ -1,9 +1,7 @@
 package acpcommander;
 
 /**
- * <p>berschrift: acp_commander</p>
- *
- * <p>Beschreibung: Used to sent ACP-commands to Buffalo Linkstations (R).
+ * <p>Beschreibung: Used to sent ACP-commands to Buffalo(R) devices.
  *  Out of the work of nas-central.org (linkstationwiki.net)</p>
  *
  * <p>Copyright: Copyright (c) 2006, GPL</p>
@@ -32,69 +30,56 @@ import java.util.prefs.Preferences;
 
 
 public class acp_commander {
-  private static String _version = "0.4.1 (beta)";
-  private static String _prefFilename = new String("acp_commander.cfg");
+  private static String _version = "0.5";
   private static int _stdport = 22936;
   private static int _timeout = 5000; // set socket timeout to 5000 ms, some user report timeout problems
-
 
   private static int _debug = 0; // determins degree of additional output, increasing with value
   private static String _state; // where are we in the code, mostly for exceptions output :-(
 
   private static void outTitle() {
     System.out.println(
-      "ACP_commander out of the nas-central.org (linkstationwiki.net) project.\n" +
-      "Used to send ACP-commands to Buffalo linkstation(R) LS-PRO.\n\n" +
-      "WARNING: This is experimental software that might brick your linkstation!\n\n");
+      "ACP_commander based on the nas-central.org (linkstationwiki.net) project.\n");
   }
 
-
-  // help(), long version with explanations
-  private static void help() {
-        // How do I get the fileversion set in the project description?
-        outTitle();
-
-        System.out.println("Version " + _version + "\n");
-
-        System.out.println("Usage:  acp_commander [options] -t target\n\n" +
+  private static void outUsage() {
+    System.out.println("Usage:  acp_commander [options] -t target\n\n" +
                            "options are:\n" +
-                           "   -t target .. IP or network name of the Linkstation\n" +
+                           "   -t target .. IP or network name of the Device\n" +
                            "   -m MAC   ... define targets mac address set in the ACP package *),\n" +
                            "                default = FF:FF:FF:FF:FF:FF.\n" +
                            "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n" +
                            "                only use this option together with -i.\n" +
-                           "   -ba      ... use bug/bufferoverflow on LS to bypass usual password\n" +
-                           "                authentication. Standard until acp_commander 0.4." +
-                           "   -pw passwd . your LS admin password. If not given, but required\n" +
+                           "   -ba      ... use bug on older device to bypass usual password authentication.\n" +
+                           "   -pw passwd . your admin password. If not given, but required\n" +
                            "                you'll be asked for it.\n" +
                            "   -i ID    ... define a connection identifier, if not given, a random one will\n" +
                            "                be used. (With param MAC the senders MAC address will be used.)\n" +
                            "                Successfull authenitfications are stored in conjunction with a \n" +
                            "                given connection ID. So you may reuse a previously used one.\n" +
                            "                Using a lot of different id's in a chain of commands might\n" +
-                           "                cause a lot of overhead at the linkstation.\n" +
+                           "                cause a lot of overhead at the device.\n" +
                            "   -p port  ... define alternative target port, default = " +
                            _stdport + "\n" +
                            "   -b localIP.. bind socket to local address. Use if acp_commander\n" +
-                           "                can not find your linkstation (might use wrong adapter).\n" +
-
+                           "                can not find your device (might use wrong adapter).\n" +
                            "\n" +
-                           "   -f       ... find linkstation(s) by sending an ACP_DISCOVER package\n" +
-                           "   -o       ... open the linkstation by sending 'telnetd' and 'passwd -d root',\n" +
+                           "   -f       ... find device(s) by sending an ACP_DISCOVER package\n" +
+                           "   -o       ... open the device by sending 'telnetd' and 'passwd -d root',\n" +
                            "                thus enabling telnet and clearing the root password\n" +
-                           "   -c cmd   ... sends the given shell command cmd to the linkstation.\n" +
-                           "   -s       ... interactive shell\n" +
+                           "   -c cmd   ... sends the given shell command cmd to the device.\n" +
+                           "   -s       ... rudimentry interactive shell\n" +
                            "   -cb      ... clear \\boot, get rid of ACP_STATE_ERROR after firmware update\n" +
                            "                output of df follows for control\n" +
                            "   -ip newIP... change IP to newIP (basic support).\n" +
                            "   -blink   ... blink LED's and play some tones\n" +
                            "\n" +
                            "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n" +
-                           "   -diag    ... run some diagnostics on LS settings (lang, backup).\n" +
-                           "   -emmode  ... Linkstation reboots next into EM-mode.\n" +
-                           "   -normmode .. Linkstation reboots next into normal mode.\n" +
-                           "   -reboot  ... reboot Linkstation.\n" +
-                           "   -shutdown .. shut Linkstation down.\n" +
+                           "   -diag    ... run some diagnostics on device settings (lang, backup).\n" +
+                           "   -emmode  ... Device reboots next into EM-mode.\n" +
+                           "   -normmode .. Device reboots next into normal mode.\n" +
+                           "   -reboot  ... reboot device.\n" +
+                           "   -shutdown .. shutdown device.\n" +
                            "\n" +
                            "   -d1...-d3 .. set debug level, generate additional output\n" +
                            "                debug level >= 3: HEX/ASCII dump of incoming packets\n" +
@@ -103,98 +88,50 @@ public class acp_commander {
                            "   -u       ... (shorter) usage \n" +
                            "\n" +
                            "*)  this is not the MAC address the packet is sent to, but the address within\n" +
-                           "    the ACP packet. The linkstation will only react to ACP packets if they\n" +
+                           "    the ACP packet. The device will only react to ACP packets if they\n" +
                            "    carry the correct (its) MAC-address or FF:FF:FF:FF:FF:FF\n" +
                            "\n" +
-                           "This program is the result of the work done at nas-central.org (linkstationwiki.net),\n" +
-                           "which is not related with Buffalo(R) in any way.\n\n" +
-                           "Experimental software, use with care, it might brick your Linkstation!\n\n" +
-                           "If this helps you, please consider donating to www.linkstationwiki.net\n");
+                           "This program is based on the work done at nas-central.org (linkstationwiki.net),\n" +
+                           "which is not related with Buffalo(R) in any way.\n"
+                            + "report issues/enhancement requests at https://github.com/1000001101000/acp-commander");
+  }
 
+
+  // help(), long version with explanations
+  private static void help() {
+    outTitle();
+
+    System.out.println("Version " + _version + "\n");
+
+    outUsage();
+  }
+
+  private static void usage() {
+    help();
+  }
+
+  private static String getParamValue(String name, String[] args) {
+   // not looking at the last argument, as it would have no following parameter
+    for (int i = 0; i < args.length - 1; ++i) {
+      if (args[i].equals(name)) {
+        return args[i + 1];
+      }
     }
-
-    //
-    // usage(), give parameters with brief explanation
-    //
-    private static void usage() {
-        // How do I get the fileversion set in the project description?
-        outTitle();
-        System.out.println("Version " + _version + "\n");
-
-        System.out.println("Usage:  acp_commander [options] -t target\n\n" +
-                           "options are:\n" +
-                           "   -t target .. IP or network name of the Linkstation.\n" +
-                           "   -m MAC   ... define targets mac address set in the ACP package.\n" +
-                           "   -na      ... no authentication, skip the ACP_AUTH packet.\n" +
-                           "   -ba      ... use bug/bufferoverflow on LS to bypass password authent.\n" +
-                           "   -pw passwd . your LS admin password.\n" +
-                           "   -i ID    ... define a connection identifier, standard: random value.\n" +
-                           "   -p port  ... define alternative target port, default = " +
-                           _stdport + "\n" +
-                           "   -b localIP.. bind to local address.\n" +
-                           "\n" +
-                           "   -f       ... find linkstation(s).\n" +
-                           "   -o       ... open the linkstation by sending 'telnetd' and 'passwd -d root'.\n" +
-                           "   -c cmd   ... sends the given shell command cmd to the linkstation.\n" +
-                           "   -s       ... interactive shell.\n" +
-                           "   -cb      ... clear \\boot, output of df follows for control of success.\n" +
-                           "   -ip newIP... change IP to newIP, clears also admin password.\n" +
-                           "   -blink   ... blink LED's and play some tones.\n" +
-                           "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n" +
-                           "   -diag    ... run some diagnostics on LS settings (lang, backup).\n" +
-                           "   -emmode  ... Linkstation boots next into EM-mode.\n" +
-                           "   -normmode .. Linkstation boots next into normal mode.\n" +
-                           "   -reboot  ... reboot Linkstation.\n" +
-                           "   -shutdown .. shut Linkstation down.\n" +
-                           "\n" +
-                           "   -d1 | -d2 .. set debug level, generate additional output\n" +
-                           "   -q       ... quiet, surpress header, does not work with -h or -v\n" +
-                           "   -h | -v  ... extended help \n" +
-                           "   -u       ... usage (this output)\n" +
-                           "\n" +
-                           "*)  this is not the MAC address the packet is sent to, but the address within\n" +
-                           "    the ACP packet. The linkstation will only react to ACP packets if they\n" +
-                           "    carry the correct (its) MAC-address or FF:FF:FF:FF:FF:FF\n" +
-//                "\n"+
-                           "\n" +
-                           "This program is the result of the work done at nas-central.org (linkstationwiki.net),\n" +
-                           "which is not related with Buffalo(R) in any way.\n\n" +
-                           "Experimental software, use with care, it might brick your Linkstation!\n");
-
-    }
-
-    //
-    // Helper functions, should be moved to own classes
-    //
-
-
-    // read parameters from command line...
-
-    // private static String getParamValue(String name, String[] args)
-    // retreive the value passed to parameter "name" within the arguments "args"
-    private static String getParamValue(String name, String[] args) {
-        // not looking at the last argument, as it would have no following parameter
-        for (int i = 0; i < args.length - 1; ++i) {
-            if (args[i].equals(name)) {
-                return args[i + 1];
-            }
-        }
-        return null;
-    }
+    return null;
+  }
 
     // private static String getParamValue(String name, String[] args, String defvalue)
     // retreive the value passed to parameter "name" within the arguments "args",
     // returns "defvalue" if argument "name" could not be found.
-    private static String getParamValue(String name, String[] args,
-                                        String defvalue) {
-        // not looking at the last argument, as it would have no following parameter
-        for (int i = 0; i < args.length - 1; ++i) {
-            if (args[i].equals(name)) {
-                return args[i + 1];
-            }
-        }
-        return defvalue;
+  private static String getParamValue(String name, String[] args, String defvalue) {
+    // not looking at the last argument, as it would have no following parameter
+    for (int i = 0; i < args.length - 1; ++i) {
+      if (args[i].equals(name)) {
+        return args[i + 1];
+      }
     }
+    return defvalue;
+  }
 
     // private static boolean hasParam(String name, String[] args)
     // checks wether parameter "name" is specified in "args"
@@ -248,12 +185,6 @@ public class acp_commander {
         System.out.println("WARNING: " + message);
     }
 
-    //
-    //  Preferences interface functions
-    //  Preferences should be stored in local file acp_commander.cfg
-    //  TODO
-    //
-
     private static Preferences myPreferences() {
         Preferences myprefs = Preferences.userRoot().node("acp_commander");
         if (myprefs.get("acp-commander.version", "-").equals("-")) {
@@ -287,20 +218,6 @@ public class acp_commander {
         return myprefs;
     }
 
-    //
-    //  File system functions
-    //
-
-    public static void copyFileURL(String source, URL src, String target) throws
-            IOException {
-        // TODO complete function
-    }
-
-
-    //
-    //  HexString functions
-    //
-
     private static byte[] HexToByte(String hexstr) {
         String pureHex = hexstr.replaceAll(":", "");
         byte[] bts = new byte[pureHex.length() / 2];
@@ -311,9 +228,7 @@ public class acp_commander {
         return (bts);
     }
 
-
-    private static String bufferToHex(byte buffer[], int startOffset,
-                                      int length) {
+    private static String bufferToHex(byte buffer[], int startOffset, int length) {
         StringBuffer hexString = new StringBuffer(2 * length);
         int endOffset = startOffset + length;
 
@@ -363,9 +278,9 @@ public class acp_commander {
         boolean _clearboot = false;
         boolean _emmode = false; // next reboot into EM-Mode
         boolean _normmode = false; // next reboot into rootFS-Mode
-        boolean _reboot = false; // reboot LS
-        boolean _shutdown = false; // shut LS down
-        boolean _findLS = false; // discover/find (search) Linkstations
+        boolean _reboot = false; // reboot device
+        boolean _shutdown = false; // shut device down
+        boolean _findLS = false; // discover/find (search) devices
         boolean _blink = false; // blink LED's and play some tones
         boolean _changeip = false; // change ip
         boolean _gui = false; // set web gui language 0=jap, 1=eng, 2=ger
@@ -576,12 +491,6 @@ public class acp_commander {
                     "Command-line argument -c given, but command line is empty!");
         }
 
-        //
-        // Georg, 10.11.07; think ACP_Authent is not necessary, but EnOneCmd is
-        // sufficient. Seems that the admin password is necessary for following
-        // ChangeIP (password is sent in packet)
-        //
-
         if (_changeip & _password.equals("")) {
             // we need to authenticate, but will not use the buffer overflow, need to know
             // the password.
@@ -728,7 +637,7 @@ public class acp_commander {
 
         if (_findLS) {
             _state = "ACP_DISCOVER";
-            // discover linkstations by sending an ACP-Discover package
+            // discover devices by sending both types of ACP-Discover packet
             int _foundLS = 0;
 
             System.out.println("Sending ACP-Disover packet...");
@@ -736,14 +645,14 @@ public class acp_commander {
             for (int i = 0; i < foundLS.length; i++) {
                 System.out.println(foundLS[i]);
             }
-            System.out.println("Found " + foundLS.length + " linkstation(s).");
+            System.out.println("Found " + foundLS.length + " device(s).");
         }
 
         if (_authent) {
             _state = "ACP_AUTHENT";
             /**
              * authentication must be on of our first actions, as it has been done before
-             * other commands can be sent to the LS.
+             * other commands can be sent to the device.
              */
             if (!_bugauthent) {
                 /**
@@ -764,11 +673,6 @@ public class acp_commander {
                 System.out.println("Trying to authenticate EnOneCmd...\t" +
                                    myACP.EnOneCmd()[1]);
 
-                //
-                // Georg, 10.11.07; think ACP_Authent is not necessary, but EnOneCmd is
-                // sufficient. testing
-                // 11/21/2019, ACP_Authent is required for shell and likely other features.
-		// going to switch to using it by default and disable when/if not needed
 
                 //if (_changeip) {
                     myACP.setPassword(_password);
@@ -876,8 +780,7 @@ public class acp_commander {
             String _result = myACP.EMMode()[1];
             System.out.println(_result);
             if (_result.equals("ACP_STATE_OK")) {
-                System.out.println(
-                        "At your next reboot your LS will boot into EM mode.");
+                System.out.println("At your next reboot your LS will boot into EM mode.");
             }
         }
 
@@ -888,8 +791,7 @@ public class acp_commander {
             String _result = myACP.NormMode()[1];
             System.out.println(_result);
             if (_result.equals("ACP_STATE_OK")) {
-                System.out.println(
-                        "At your next reboot your LS will boot into normal mode.");
+                System.out.println("At your next reboot your LS will boot into normal mode.");
             }
         }
 
@@ -906,7 +808,7 @@ public class acp_commander {
             String pwd = new String("/");
             String output = new String("");
             BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("Enter telnet commands to LS, enter 'exit' to leave\n");
+            System.out.print("Enter telnet commands to device, enter 'exit' to leave\n");
 
             // get first commandline
             try {
@@ -965,24 +867,13 @@ public class acp_commander {
             _state = "reboot";
 
             System.out.println("Rebooting...:\t" + myACP.Reboot()[1]);
-            System.out.println(
-                    "\nPlease note, that the current (Oct. 2007) jtymod-" +
-                    "Firmware can not be rebooted by software.\n" +
-                    "Please reboot your LS by holding the power button.");
         }
 
         // shutdown
         if (_shutdown) {
             _state = "shutdown";
 
-            System.out.println("Sending SHUTDOWN command...:\t" +
-                               myACP.Shutdown()[1]);
-            System.out.println(
-                    "\nPlease note, that the current (Oct. 2007) jtymod-" +
-                    "Firmware can not be shut down by software.\n" +
-                    "Please shut down your LS by holding the power button.");
+            System.out.println("Sending SHUTDOWN command...:\t" + myACP.Shutdown()[1]);
         }
-
     }
-
 }
