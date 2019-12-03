@@ -50,7 +50,6 @@ public class acp_commander {
                            "                default = FF:FF:FF:FF:FF:FF.\n" +
                            "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n" +
                            "                only use this option together with -i.\n" +
-                           "   -ba      ... use bug on older device to bypass usual password authentication.\n" +
                            "   -pw passwd . your admin password. If not given, but required\n" +
                            "                you'll be asked for it.\n" +
                            "   -i ID    ... define a connection identifier, if not given, a random one will\n" +
@@ -273,7 +272,6 @@ public class acp_commander {
         // flags what to do, set during parsing the command line arguments
         boolean _openbox = false;
         boolean _authent = false;
-        boolean _bugauthent = false; // use old authentication method with bufferoverflow
         boolean _shell = false;
         boolean _clearboot = false;
         boolean _emmode = false; // next reboot into EM-Mode
@@ -447,27 +445,11 @@ public class acp_commander {
             _newip = getParamValue("-ip", args, "");
             _changeip = true;
             _authent = true; // changeip requires autenticate
-            if (_bugauthent) {
-                outWarning(
-                        "Changing of the IP can not be done with old buffer overflow " +
-                        "method, but needs the correct admin password.\n" +
-                        "Changing to normal authentication method and asking for" +
-                        "admin password");
-                _bugauthent = false;
-            }
         }
 
         if (hasParam("-pw", args)) {
             outDebug("Command-line parameter -pw given", 2);
             _password = getParamValue("-pw", args, "");
-        }
-
-        if (hasParam("-ba", args)) {
-            // use bufferoverflow in clientUtil_server to bypass password authentication
-            outDebug("Using parameter -ba (bug/bufferoverflow authentication)",
-                     2);
-            _bugauthent = true;
-            _authent = true; // not strictly necessary, as it should be set until here
         }
 
         if (hasParam("-na", args)) {
@@ -654,7 +636,6 @@ public class acp_commander {
              * authentication must be on of our first actions, as it has been done before
              * other commands can be sent to the device.
              */
-            if (!_bugauthent) {
                 /**
                  * Buffalos standard authentication procedure:
                  * 1 - send ACPDiscover to get key for password encryption
@@ -680,17 +661,6 @@ public class acp_commander {
                  "Trying to authenticate with admin password...\t" +
                                         myACP.Authent()[1]);
                 //}
-            } else {
-                // user wants to use the authent mode, using the buffer overflow.
-                System.out.println(
-                        "WARNING: We're bypassing buffalos authentication" +
-                        " procedure with (unknown) possible side effects.\n" +
-                        "To avoid possible problems reboot *before* flashing your box " +
-                        "with the LSUpdater.exe.");
-                // autenticate session using (supposed) buffer overflow in LS-PRO firmware
-                System.out.println("Authenticate:\t" + myACP.AuthentBug()[1]);
-
-            }
         }
 
         if (_diag) {

