@@ -13,20 +13,12 @@ package acpcommander;
  */
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
 import java.net.InetAddress;
-import java.net.URL;
 
 import java.util.Random;
-
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.InvalidPreferencesFormatException;
-import java.util.prefs.Preferences;
 
 
 public class acp_commander {
@@ -184,39 +176,6 @@ public class acp_commander {
         System.out.println("WARNING: " + message);
     }
 
-    private static Preferences myPreferences() {
-        Preferences myprefs = Preferences.userRoot().node("acp_commander");
-        if (myprefs.get("acp-commander.version", "-").equals("-")) {
-            // there seems to be no existing prefs, write default values
-            System.out.println(
-                    "there seems to be no existing prefs, write default values");
-            myprefs = defaultPreferences(myprefs);
-        }
-
-        return myprefs;
-    }
-
-    private static Preferences defaultPreferences(Preferences myprefs) {
-        myprefs.put("acp-commander.version", _version);
-        myprefs.putBoolean("acp-commander.experimental", false);
-        myprefs.putInt("debug.level", 0);
-        //Scripts
-        myprefs.put("scripts.url",
-                    "http://downloads.nas-central.org/Users/Georg/");
-        myprefs.put("scripts.install", "installer.sh");
-        myprefs.put("scripts.normmode", "normmode.sh");
-        // Target
-        myprefs.putInt("target.port", _stdport);
-        myprefs.put("target.ip", "");
-        myprefs.put("target.mac", "");
-        myprefs.put("target.connid", "");
-        // Local
-        myprefs.put("local.bind", "");
-        myprefs.putInt("local.timeout", _timeout);
-
-        return myprefs;
-    }
-
     private static byte[] HexToByte(String hexstr) {
         String pureHex = hexstr.replaceAll(":", "");
         byte[] bts = new byte[pureHex.length() / 2];
@@ -250,18 +209,15 @@ public class acp_commander {
 
 
     public static void main(String[] args) {
-        // preferences, load preferences file
-        Preferences myprefs = myPreferences();
-
-        _debug = myprefs.getInt("debug.level", _debug);
-        _timeout = myprefs.getInt("local.timeout", _timeout);
+        _debug = _debug;
+        _timeout = _timeout;
 
         // variables
-        String _mac = myprefs.get("target.mac", new String(""));
-        String _connID = myprefs.get("target.connid", new String(""));
-        String _target = myprefs.get("target.ip", new String(""));
-        Integer _port = new Integer(myprefs.getInt("target.port", _stdport));
-        String _bind = myprefs.get("local.bind", new String("")); // local address used for binding socket
+        String _mac = new String("");
+        String _connID = new String("");
+        String _target = new String("");
+        Integer _port = new Integer(_stdport);
+        String _bind = new String(""); // local address used for binding socket
 
         String _cmd = new String("");
         String _newip = new String(""); // new ip address
