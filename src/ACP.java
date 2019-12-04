@@ -34,7 +34,7 @@ public class ACP {
   protected int LastCmd = 0; // last ACP-Command sent to the LS
   protected int LastError = 0; // Error Code in the last ACP packet rcvd
   protected boolean HaveKey = false; // Did we get the encryption key, yet? - Send ACPDisc
-  protected boolean EnOneCmd = false; // Did we do EnOneCmd authentication, yet? - ACPEnOneCmd
+  //protected boolean EnOneCmd = false; // Did we do EnOneCmd authentication, yet? - ACPEnOneCmd
   protected boolean Authent = false; // Did we get authenticated, yet? - ACPAuthent
 
   /** set socket timeout to 1000 ms, rather high, but some users report timeout
