@@ -50,8 +50,8 @@ public class acp_commander {
                            "                default = FF:FF:FF:FF:FF:FF.\n" +
                            "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n" +
                            "                only use this option together with -i.\n" +
-                           "   -pw passwd . your admin password. If not given, but required\n" +
-                           "                you'll be asked for it.\n" +
+                           "   -pw passwd . your admin password. A default password will be tried if ommited.\n" +
+                           "                if authentication fails you will be prompted for your password\n" +
                            "   -i ID    ... define a connection identifier, if not given, a random one will\n" +
                            "                be used. (With param MAC the senders MAC address will be used.)\n" +
                            "                Successfull authenitfications are stored in conjunction with a \n" +
@@ -221,8 +221,7 @@ public class acp_commander {
         String pureHex = hexstr.replaceAll(":", "");
         byte[] bts = new byte[pureHex.length() / 2];
         for (int i = 0; i < bts.length; i++) {
-            bts[i] = (byte) Integer.parseInt(pureHex.substring(2 * i, 2 * i + 2),
-                                             16);
+            bts[i] = (byte) Integer.parseInt(pureHex.substring(2 * i, 2 * i + 2), 16);
         }
         return (bts);
     }
@@ -420,6 +419,7 @@ public class acp_commander {
 
         if (hasParam("-f", args)) {
             // we use -f (find) rather than -d (discover) to avoid any conflicts with debug options
+            _authent = false;
             _findLS = true;
         }
 
@@ -471,25 +471,6 @@ public class acp_commander {
         if (hasParam("-c", args) & ((_cmd == null) | (_cmd.equals("")))) {
             outError(
                     "Command-line argument -c given, but command line is empty!");
-        }
-
-        if (_changeip & _password.equals("")) {
-            // we need to authenticate, but will not use the buffer overflow, need to know
-            // the password.
-            System.out.println(_password);
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.
-                    in));
-
-            try {
-                System.out.print("Please enter your admin password for \"" +
-                                 _target +
-                                 "\":\n");
-                PasswordMaskingThread thread = new PasswordMaskingThread();
-                thread.start();
-                _password = thread.getPassword();
-//                _password = br.readLine();
-            } catch (Exception E) {}
-            ;
         }
 
         if ((!_authent) & (_connID == "")) {
@@ -643,24 +624,33 @@ public class acp_commander {
                  * 3 - send ACPSpecial-Authent with encrypted admin password
                  */
 
-                System.out.println("Starting authentication procedure...");
-                String _clearpwd = new String("ap_servd");
-                byte[] _encrypted = new byte[8];
-
                 System.out.println("Sending Discover packet...\t");
                 String[] _discover = myACP.Discover(true);
                 System.out.println(_discover[1]);
 
-                System.out.println("Trying to authenticate EnOneCmd...\t" +
-                                   myACP.EnOneCmd()[1]);
+                System.out.println("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1]);
 
+               if (_password.equals("")) {
+                 //if password blank, try "password" otherwise prompt
+                 System.out.println("Password not specified, trying default password.");
+                 _password = "password";
+               }
 
-                //if (_changeip) {
-                    myACP.setPassword(_password);
-                                System.out.println(
-                 "Trying to authenticate with admin password...\t" +
-                                        myACP.Authent()[1]);
-                //}
+               myACP.setPassword(_password);
+
+               if (!myACP.Authent()[1].equals("ACP_STATE_OK")) {
+                 System.out.println(_password);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+                 try {
+                   System.out.print("Please enter your admin password for \"" +_target +"\":\n");
+                   PasswordMaskingThread thread = new PasswordMaskingThread();
+                   thread.start();
+                   _password = thread.getPassword();
+                   myACP.setPassword(_password);
+                   myACP.Authent();
+                 } catch (Exception E) {}
+               }
         }
 
         if (_diag) {
