@@ -473,7 +473,7 @@ public class acp_commander {
                     "Command-line argument -c given, but command line is empty!");
         }
 
-        if ((!_authent) & (_connID == "")) {
+        if ((!_authent) & (_connID.equals(""))) {
             outWarning("Using a random connection ID without authentification!");
         }
 
