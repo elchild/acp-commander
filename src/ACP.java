@@ -1315,28 +1315,12 @@ public class ACP {
         return (bts);
     }
 
+    public static String bufferToHex(byte buffer[], int startOffset, int length) {
+        StringBuilder sb = new StringBuilder(length * 2);
 
-    public String bufferToHex(byte buffer[], int startOffset,
-                               int length) {
-        StringBuffer hexString = new StringBuffer(2 * length);
-        int endOffset = startOffset + length;
-
-        for (int i = startOffset; i < endOffset; i++) {
-            appendHexPair(buffer[i], hexString);
+        for (int i = startOffset; i < (startOffset + length); i++) {
+          sb.append(String.format("%02x", buffer[i]));
         }
-        return hexString.toString();
+        return sb.toString().toUpperCase();
     }
-
-    private void appendHexPair(byte b, StringBuffer hexString) {
-        char highNibble = kHexChars[(b & 0xF0) >> 4];
-        char lowNibble = kHexChars[b & 0x0F];
-
-        hexString.append(highNibble);
-        hexString.append(lowNibble);
-    }
-
-    private final char kHexChars[] = {'0', '1', '2', '3', '4', '5', '6',
-                                     '7', '8', '9', 'A', 'B', 'C', 'D',
-                                     'E', 'F'};
-
 }

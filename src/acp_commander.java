@@ -176,38 +176,6 @@ public class acp_commander {
         System.out.println("WARNING: " + message);
     }
 
-    private static byte[] HexToByte(String hexstr) {
-        String pureHex = hexstr.replaceAll(":", "");
-        byte[] bts = new byte[pureHex.length() / 2];
-        for (int i = 0; i < bts.length; i++) {
-            bts[i] = (byte) Integer.parseInt(pureHex.substring(2 * i, 2 * i + 2), 16);
-        }
-        return (bts);
-    }
-
-    private static String bufferToHex(byte buffer[], int startOffset, int length) {
-        StringBuffer hexString = new StringBuffer(2 * length);
-        int endOffset = startOffset + length;
-
-        for (int i = startOffset; i < endOffset; i++) {
-            appendHexPair(buffer[i], hexString);
-        }
-        return hexString.toString();
-    }
-
-    private static void appendHexPair(byte b, StringBuffer hexString) {
-        char highNibble = kHexChars[(b & 0xF0) >> 4];
-        char lowNibble = kHexChars[b & 0x0F];
-
-        hexString.append(highNibble);
-        hexString.append(lowNibble);
-    }
-
-    private static final char kHexChars[] = {'0', '1', '2', '3', '4', '5', '6',
-                                            '7', '8', '9', 'A', 'B', 'C', 'D',
-                                            'E', 'F'};
-
-
     public static void main(String[] args) {
         _debug = _debug;
         _timeout = _timeout;
@@ -439,7 +407,7 @@ public class acp_commander {
             Random generator = new Random();
             byte[] temp_connID = new byte[6];
             generator.nextBytes(temp_connID);
-            _connID = bufferToHex(temp_connID, 0, 6);
+            _connID = ACP.bufferToHex(temp_connID, 0, 6);
             System.out.println("Using random connID value = " + _connID);
         } else {
             if (_connID.equalsIgnoreCase("mac")) {
