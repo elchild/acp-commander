@@ -595,14 +595,11 @@ public class acp_commander {
                myACP.setPassword(_password);
 
                if (!myACP.Authent()[1].equals("ACP_STATE_OK")) {
-                 System.out.println(_password);
-                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+                 java.io.Console console = System.console();
 
                  try {
-                   System.out.print("Please enter your admin password for \"" +_target +"\":\n");
-                   PasswordMaskingThread thread = new PasswordMaskingThread();
-                   thread.start();
-                   _password = thread.getPassword();
+                   _password = new String(console.readPassword("admin password: "));
                    myACP.setPassword(_password);
                    myACP.Authent();
                  } catch (Exception E) {}
