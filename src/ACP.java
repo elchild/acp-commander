@@ -42,7 +42,7 @@ public class ACP {
   * Especially BlinkLED, SaveConfig, LoadConfig have long reply times as reply is
   * sent when the command has been executed. Same has to be considered for other cmds.
   */
-  protected int Timeout = 5000;
+  protected int Timeout = 3000;
   protected int resendPackets = 2; // standard value for repeated sending of packets
 
   public int DebugLevel = 0; // Debug level
@@ -195,22 +195,6 @@ public class ACP {
     return doDiscover();
   }
 
-  public String[] Discover() {
-    // send ACP discover packet to Linkstation
-    // (if a broadcast address is used, only the first answer is returned)
-    return doSendRcv(getACPDisc(connID, targetMAC), 1);
-  }
-
-  public String[] Discover(boolean setTargetData) {
-    String[] result = Discover();
-
-    if (setTargetData) {
-      setTargetMAC(result[4]); // set MAC address according to discovery data
-      setTargetKey(result[8]); // set encryption key according to discovery data
-    }
-    return result;
-  }
-
   public String[] Command(String cmd, int maxResend) {
     // send telnet-type command cmd to Linkstation by ACPcmd
     EnOneCmd();
@@ -259,7 +243,11 @@ public class ACP {
   }
 
   public String[] BlinkLED() {
-    return doSendRcv(getACPBlinkLED(connID, targetMAC));
+    int _mytimeout = Timeout;
+    Timeout = 60000;
+    String[] result = doSendRcv(getACPBlinkLED(connID, targetMAC));
+    Timeout = _mytimeout;
+    return result;
   }
 
   public String[] EnOneCmd() {
@@ -318,7 +306,7 @@ public class ACP {
         String _state = "[Send/Receive ACPDiscover]";
         byte[] buf = getACPDisc(connID, targetMAC);
         byte[] buf2 = getACPDisc2(connID, targetMAC);
-        String[] _searchres;
+        String[] _searchres = new String[1];
         ArrayList<String> _tempres = new ArrayList<>();
         DatagramSocket _socket;
 
@@ -374,7 +362,13 @@ public class ACP {
         for (int i = 0; i < _tempres.size(); i++) {
             result[i] = (String) _tempres.get(i);
         }
-        return result;
+
+        //probably not good practice and should be refactored
+        if (target.toString().split("/",2)[1].equals("255.255.255.255"))
+        {
+          return result;
+        }
+        return _searchres;
     }
 
     // send ACP packet and handle answer
@@ -413,10 +407,6 @@ public class ACP {
                 result = new String[2];
                 if (sendcount >= repeatSend) {
                     result[1] = "Exception: SocketTimeoutException (" + SToE.getMessage() + ") " + _state;
-
-                    if (result[1].indexOf("Packet:8020") > 0) {
-                      return doSendRcv(getACPDisc2(connID, targetMAC), 1);
-                    }
 
                     outInfoTimeout();
                     outError(result[1]);

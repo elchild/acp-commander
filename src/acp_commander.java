@@ -536,10 +536,6 @@ public class acp_commander {
                  * 3 - send ACPSpecial-Authent with encrypted admin password
                  */
 
-                outDebug("Sending Discover packet...\t",1);
-                String[] _discover = myACP.Discover(true);
-                outDebug(_discover[1],1);
-
                 outDebug("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1],1);
 
                if (_password.equals("")) {
