@@ -119,412 +119,412 @@ public class acp_commander {
 
     // private static boolean hasParam(String name, String[] args)
     // checks wether parameter "name" is specified in "args"
-    private static boolean hasParam(String name, String[] args) {
-        for (int i = 0; i < args.length; ++i) {
-            if (args[i].equals(name)) {
-                return true;
-            }
-        }
-        return false;
+  private static boolean hasParam(String name, String[] args) {
+    for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals(name)) {
+        return true;
+      }
     }
+    return false;
+  }
 
     // private static boolean hasParam(String[] names, String[] args) {
     // checks wether one of the parameters in "names" is specified in "args"
-    private static boolean hasParam(String[] names, String[] args) {
-        for (int i = 0; i < args.length; ++i) {
-            for (int j = 0; j < names.length; ++j) {
-                if (args[i].equals(names[j])) {
-                    return true;
-                }
-            }
+  private static boolean hasParam(String[] names, String[] args) {
+    for (int i = 0; i < args.length; ++i) {
+      for (int j = 0; j < names.length; ++j) {
+        if (args[i].equals(names[j])) {
+          return true;
         }
-        return false;
+      }
     }
+    return false;
+  }
 
     // private static void outDebug(String message, int debuglevel)
     // if parameter "debuglevel" <= _debug the debug message is written to System.out
-    private static void outDebug(String message, int debuglevel) {
+  private static void outDebug(String message, int debuglevel) {
         // negative debuglevels are considered as errors!
-        if (debuglevel < 0) {
-            outError(message);
-            return;
-        }
-
-        if (debuglevel <= _debug) {
-            System.out.println(message);
-        }
+    if (debuglevel < 0) {
+      outError(message);
+      return;
     }
+
+    if (debuglevel <= _debug) {
+      System.out.println(message);
+    }
+  }
 
     // private static void outError(String message)
     // writes an Errormessage to System.err and exits program, called by outDebug for
     // negative debuglevels
-    private static void outError(String message) {
-        System.err.println("ERROR: " + message);
-        System.exit( -1);
-    }
+  private static void outError(String message) {
+    System.err.println("ERROR: " + message);
+    System.exit( -1);
+  }
 
     // private static void outWarning(String message)
     // writes the warning to System.out
-    private static void outWarning(String message) {
-        System.out.println("WARNING: " + message);
-    }
+  private static void outWarning(String message) {
+    System.out.println("WARNING: " + message);
+  }
 
-    public static void main(String[] args) {
-        _debug = _debug;
-        _timeout = _timeout;
+  public static void main(String[] args) {
+    _debug = _debug;
+    _timeout = _timeout;
 
         // variables
-        String _mac = new String("");
-        String _connID = new String("");
-        String _target = new String("");
-        Integer _port = new Integer(_stdport);
-        String _bind = new String(""); // local address used for binding socket
+    String _mac = new String("");
+    String _connID = new String("");
+    String _target = new String("");
+    Integer _port = new Integer(_stdport);
+    String _bind = new String(""); // local address used for binding socket
 
-        String _cmd = new String("");
-        String _newip = new String(""); // new ip address
-        String _password = new String(""); // admin password
-        Integer _setgui = new Integer(1); // set gui to language 0=jap, 1=eng, 2=ger
+    String _cmd = new String("");
+    String _newip = new String(""); // new ip address
+    String _password = new String(""); // admin password
+    Integer _setgui = new Integer(1); // set gui to language 0=jap, 1=eng, 2=ger
 
         // flags what to do, set during parsing the command line arguments
-        boolean _openbox = false;
-        boolean _authent = false;
-        boolean _shell = false;
-        boolean _clearboot = false;
-        boolean _emmode = false; // next reboot into EM-Mode
-        boolean _normmode = false; // next reboot into rootFS-Mode
-        boolean _reboot = false; // reboot device
-        boolean _shutdown = false; // shut device down
-        boolean _findLS = false; // discover/find (search) devices
-        boolean _blink = false; // blink LED's and play some tones
-        boolean _changeip = false; // change ip
-        boolean _gui = false; // set web gui language 0=jap, 1=eng, 2=ger
-        boolean _diag = false; // run diagnostics
-        boolean _test = false; // for testing purposes
+    boolean _openbox = false;
+    boolean _authent = false;
+    boolean _shell = false;
+    boolean _clearboot = false;
+    boolean _emmode = false; // next reboot into EM-Mode
+    boolean _normmode = false; // next reboot into rootFS-Mode
+    boolean _reboot = false; // reboot device
+    boolean _shutdown = false; // shut device down
+    boolean _findLS = false; // discover/find (search) devices
+    boolean _blink = false; // blink LED's and play some tones
+    boolean _changeip = false; // change ip
+    boolean _gui = false; // set web gui language 0=jap, 1=eng, 2=ger
+    boolean _diag = false; // run diagnostics
+    boolean _test = false; // for testing purposes
 
         //
         // Parsing the command line parameters.
         //
-        _state = "CmdLnParse";
+    _state = "CmdLnParse";
 
         // catch various standard options for help. Only -h and -v are official, though
-        if ((args.length == 0) |
+    if ((args.length == 0) |
             (hasParam(new String[] {"-u", "-usage", "--usage", "/u",
-                      "-h", "--h", "-v", "--v", "-?", "--?", "/h", "/?",
-                      "-help", "--help",
-                      "-version", "--version"}, args))) {
+"-h", "--h", "-v", "--v", "-?", "--?", "/h", "/?",
+"-help", "--help",
+"-version", "--version"}, args))) {
             // if none or usage parameter is given only output of shorter usage
             // otherwise longer help with explanations is presented
-            if ((args.length == 0) |
+      if ((args.length == 0) |
                 (hasParam(new String[] {"-u", "-usage", "--usage", "/u"}, args))) {
-                usage();
-                return;
-            } else {
-                help();
-                return;
-            } // if usage | help
-        }
+        usage();
+        return;
+      } else {
+        help();
+        return;
+      } // if usage | help
+    }
 
-        if (hasParam(new String[] {"-d1", "-d2", "-d3"}, args)) {
-            if (hasParam("-d1", args)) {
-                _debug = 1;
-            }
-            if (hasParam("-d2", args)) {
-                _debug = 2;
-            }
-            if (hasParam("-d3", args)) {
-                _debug = 3;
-            }
-            System.out.println("Debug level set to " + _debug);
-        }
+    if (hasParam(new String[] {"-d1", "-d2", "-d3"}, args)) {
+      if (hasParam("-d1", args)) {
+        _debug = 1;
+      }
+      if (hasParam("-d2", args)) {
+        _debug = 2;
+      }
+      if (hasParam("-d3", args)) {
+        _debug = 3;
+      }
+      System.out.println("Debug level set to " + _debug);
+    }
 
-        if (hasParam("-test", args)) {
-            _authent = true;
-            _test = true;
-        }
+    if (hasParam("-test", args)) {
+      _authent = true;
+      _test = true;
+    }
 
-        if (hasParam("-t", args)) {
-            outDebug("Target parameter -t found", 2);
-            _target = getParamValue("-t", args, "");
-        } else {
-            if (hasParam("-f", args)) {
-                _target = "255.255.255.255"; // if no target is specified for find, use broadcast
-            } else {
-                if (_target.equals("")) {
-                    outError(
+    if (hasParam("-t", args)) {
+      outDebug("Target parameter -t found", 2);
+      _target = getParamValue("-t", args, "");
+    } else {
+      if (hasParam("-f", args)) {
+        _target = "255.255.255.255"; // if no target is specified for find, use broadcast
+      } else {
+        if (_target.equals("")) {
+          outError(
                             "You didn't specify a target! Parameter '-t target' is missing");
-                    return;
-                }
-            }
+          return;
         }
+      }
+    }
 
-        if (hasParam("-p", args)) {
-            outDebug("Port parameter -p given", 2);
-            _port = new Integer(getParamValue("-p", args, _port.toString()));
-        }
+    if (hasParam("-p", args)) {
+      outDebug("Port parameter -p given", 2);
+      _port = new Integer(getParamValue("-p", args, _port.toString()));
+    }
 
-        if (hasParam("-m", args)) {
-            outDebug("MAC-Address parameter -m given", 2);
-            _mac = getParamValue("-m", args, _mac);
-        }
+    if (hasParam("-m", args)) {
+      outDebug("MAC-Address parameter -m given", 2);
+      _mac = getParamValue("-m", args, _mac);
+    }
 
-        if (hasParam("-o", args)) {
-            outDebug("Using parameter -o (openbox)", 1);
-            _authent = true;
-            _openbox = true;
-        }
+    if (hasParam("-o", args)) {
+      outDebug("Using parameter -o (openbox)", 1);
+      _authent = true;
+      _openbox = true;
+    }
 
-        if (hasParam("-c", args)) {
+    if (hasParam("-c", args)) {
             // send a telnet-command via ACP_CMD
-            outDebug("Command-line parameter -c given", 2);
-            _authent = true;
-            _cmd = getParamValue("-c", args, "");
-        }
+      outDebug("Command-line parameter -c given", 2);
+      _authent = true;
+      _cmd = getParamValue("-c", args, "");
+    }
 
-        if (hasParam("-cb", args)) {
+    if (hasParam("-cb", args)) {
             // clear boot, removes unneccessary files from /boot to free space
-            outDebug("Command-line parameter -cb given", 2);
-            _authent = true;
-            _clearboot = true;
-        }
+      outDebug("Command-line parameter -cb given", 2);
+      _authent = true;
+      _clearboot = true;
+    }
 
-        if (hasParam("-i", args)) {
-            outDebug("ConnectionID parameter -i given", 2);
-            _connID = getParamValue("-i", args, _connID);
-        }
+    if (hasParam("-i", args)) {
+      outDebug("ConnectionID parameter -i given", 2);
+      _connID = getParamValue("-i", args, _connID);
+    }
 
-        if (hasParam("-s", args)) {
-            _authent = true;
-            _shell = true;
-        }
+    if (hasParam("-s", args)) {
+      _authent = true;
+      _shell = true;
+    }
 
-        if (hasParam("-gui", args)) {
-            _authent = true;
-            _gui = true;
-            _setgui = new Integer(getParamValue("-gui", args, _setgui.toString()));
-        }
+    if (hasParam("-gui", args)) {
+      _authent = true;
+      _gui = true;
+      _setgui = new Integer(getParamValue("-gui", args, _setgui.toString()));
+    }
 
-        if (hasParam("-diag", args)) {
-            _authent = true;
-            _diag = true;
-        }
+    if (hasParam("-diag", args)) {
+      _authent = true;
+      _diag = true;
+    }
 
-        if (hasParam("-reboot", args)) {
-            _authent = true;
-            _reboot = true;
-        }
+    if (hasParam("-reboot", args)) {
+      _authent = true;
+      _reboot = true;
+    }
 
-        if (hasParam("-normmode", args)) {
-            _authent = true;
-            _normmode = true;
-        }
+    if (hasParam("-normmode", args)) {
+      _authent = true;
+      _normmode = true;
+    }
 
-        if (hasParam("-emmode", args)) {
-            _authent = true;
-            _emmode = true;
-            if (_normmode) {
-                outWarning(
+    if (hasParam("-emmode", args)) {
+      _authent = true;
+      _emmode = true;
+      if (_normmode) {
+        outWarning(
                         "You specified both '-emmode' and '-normmode' " +
                         "for normal reboot\n" +
                         "--> '-rebootem' will be ignored");
-                _emmode = false;
-            }
-        }
+        _emmode = false;
+      }
+    }
 
-        if (hasParam("-f", args)) {
+    if (hasParam("-f", args)) {
             // we use -f (find) rather than -d (discover) to avoid any conflicts with debug options
-            _authent = false;
-            _findLS = true;
-        }
+      _authent = false;
+      _findLS = true;
+    }
 
-        if (hasParam("-b", args)) {
-            outDebug("bind to local address parameter -b found", 2);
-            _bind = getParamValue("-b", args, "");
-            if (_bind.equalsIgnoreCase("")) {
-                outError(
+    if (hasParam("-b", args)) {
+      outDebug("bind to local address parameter -b found", 2);
+      _bind = getParamValue("-b", args, "");
+      if (_bind.equalsIgnoreCase("")) {
+        outError(
                         "You didn't specify a (correct) local address for parameter '-b'");
-                return;
+        return;
 
-            }
-        }
+      }
+    }
 
-        if (hasParam("-blink", args)) {
-            outDebug("Command-line parameter -blink given", 2);
-            _authent = true; // blink needs autenticate
-            _blink = true;
-        }
+    if (hasParam("-blink", args)) {
+      outDebug("Command-line parameter -blink given", 2);
+      _authent = true; // blink needs autenticate
+      _blink = true;
+    }
 
-        if (hasParam("-ip", args)) {
-            outDebug("Command-line parameter -ip given", 2);
-            _newip = getParamValue("-ip", args, "");
-            _changeip = true;
-            _authent = true; // changeip requires autenticate
-        }
+    if (hasParam("-ip", args)) {
+      outDebug("Command-line parameter -ip given", 2);
+      _newip = getParamValue("-ip", args, "");
+      _changeip = true;
+      _authent = true; // changeip requires autenticate
+    }
 
-        if (hasParam("-pw", args)) {
-            outDebug("Command-line parameter -pw given", 2);
-            _password = getParamValue("-pw", args, "");
-        }
+    if (hasParam("-pw", args)) {
+      outDebug("Command-line parameter -pw given", 2);
+      _password = getParamValue("-pw", args, "");
+    }
 
-        if (hasParam("-na", args)) {
+    if (hasParam("-na", args)) {
             // disable authenticate
-            outDebug("Using parameter -na (no authentication)", 2);
-            _authent = false;
-        }
+      outDebug("Using parameter -na (no authentication)", 2);
+      _authent = false;
+    }
 
         //
         // Catch some errors.
         //
 
-        _state = "ErrCatch";
+    _state = "ErrCatch";
 
-        if (!_findLS & ((_target.equals("")) | (_target == null))) {
-            outError("No target specified or target is null!");
-        }
+    if (!_findLS & ((_target.equals("")) | (_target == null))) {
+      outError("No target specified or target is null!");
+    }
 
-        if (hasParam("-c", args) & ((_cmd == null) | (_cmd.equals("")))) {
-            outError(
+    if (hasParam("-c", args) & ((_cmd == null) | (_cmd.equals("")))) {
+      outError(
                     "Command-line argument -c given, but command line is empty!");
-        }
+    }
 
-        if ((!_authent) & (_connID.equals("") & !_findLS)) {
-            outWarning("Using a random connection ID without authentification!");
-        }
+    if ((!_authent) & (_connID.equals("") & !_findLS)) {
+      outWarning("Using a random connection ID without authentification!");
+    }
 
-        if (_connID.equals("")) {
+    if (_connID.equals("")) {
             // TODO
             // generate random connection ID
-            Random generator = new Random();
-            byte[] temp_connID = new byte[6];
-            generator.nextBytes(temp_connID);
-            _connID = ACP.bufferToHex(temp_connID, 0, 6);
-            outDebug("Using random connID value = " + _connID,1);
-        } else {
-            if (_connID.equalsIgnoreCase("mac")) {
+      Random generator = new Random();
+      byte[] temp_connID = new byte[6];
+      generator.nextBytes(temp_connID);
+      _connID = ACP.bufferToHex(temp_connID, 0, 6);
+      outDebug("Using random connID value = " + _connID,1);
+    } else {
+      if (_connID.equalsIgnoreCase("mac")) {
                 // TODO
                 // get local MAC and set it as connection ID
-                _connID = "00:50:56:c0:00:08";
-                outWarning("Using local MAC not implemented, yet!\n" +
+        _connID = "00:50:56:c0:00:08";
+        outWarning("Using local MAC not implemented, yet!\n" +
                            "Using default connID value (" + _connID + ")");
-            } else {
+      } else {
                 // TODO
                 // check given connection id for length and content
-                _connID.replaceAll(":", "");
-                if (_connID.length() != 12) {
-                    outError(
+        _connID.replaceAll(":", "");
+        if (_connID.length() != 12) {
+          outError(
                             "Given connection ID has invalid length (not 6 bytes long)");
-                }
-            }
         }
+      }
+    }
 
-        if (_mac.equals("")) {
+    if (_mac.equals("")) {
             // set default MAC
-            _mac = "FF:FF:FF:FF:FF:FF";
-        } else {
-            if (_mac.equalsIgnoreCase("mac")) {
+      _mac = "FF:FF:FF:FF:FF:FF";
+    } else {
+      if (_mac.equalsIgnoreCase("mac")) {
                 // TODO
                 // get targets MAC and set it
-                _mac = "FF:FF:FF:FF:FF:FF";
-                outWarning("Using targets MAC is not implemented, yet!\n" +
+        _mac = "FF:FF:FF:FF:FF:FF";
+        outWarning("Using targets MAC is not implemented, yet!\n" +
                            "Using default value (" + _mac + ")");
-            } else {
+      } else {
                 // TODO
                 // check given MAC for length and content
-                _mac = _mac.replaceAll(":", "");
-                if (_mac.length() != 12) {
-                    outError("Given MAC has invalid length (not 6 bytes long)");
-                } else {
-                    System.out.println("Using MAC: " + _mac);
-                }
-            }
+        _mac = _mac.replaceAll(":", "");
+        if (_mac.length() != 12) {
+          outError("Given MAC has invalid length (not 6 bytes long)");
+        } else {
+          System.out.println("Using MAC: " + _mac);
         }
+      }
+    }
 
-        if (!_cmd.equals("")) {
+    if (!_cmd.equals("")) {
             // check for leading and trailing "
-            if (_cmd.startsWith("\"")) {
-                _cmd = _cmd.substring(1, _cmd.length());
+      if (_cmd.startsWith("\"")) {
+        _cmd = _cmd.substring(1, _cmd.length());
 
                 // only check cmd-line end for " if it starts with one
-                if (_cmd.endsWith("\"")) {
-                    _cmd = _cmd.substring(0, _cmd.length() - 1);
-                }
-            }
-            outDebug("Using cmd-line:\n>>" + _cmd + "\n", 1);
+        if (_cmd.endsWith("\"")) {
+          _cmd = _cmd.substring(0, _cmd.length() - 1);
         }
+      }
+      outDebug("Using cmd-line:\n>>" + _cmd + "\n", 1);
+    }
 
-        if (_changeip) {
-            if (_newip.equals("")) {
-                outError("You didn't specify a new IP to be set.");
-            }
+    if (_changeip) {
+      if (_newip.equals("")) {
+        outError("You didn't specify a new IP to be set.");
+      }
 
-            try {
-                InetAddress _testip;
-                _testip = InetAddress.getByName(_newip);
-                if (_testip.isAnyLocalAddress()) {
-                    outError("'" + _newip +
+      try {
+        InetAddress _testip;
+        _testip = InetAddress.getByName(_newip);
+        if (_testip.isAnyLocalAddress()) {
+          outError("'" + _newip +
                              "' is recognized as local IP. You must specify an untaken IP");
-                }
-
-            } catch (java.net.UnknownHostException Ex) {
-                outError("'" + _newip +
-                         "' is not recognized as a valid IP for the use as new IP to be set.");
-            }
-            ;
         }
+
+      } catch (java.net.UnknownHostException Ex) {
+        outError("'" + _newip +
+                         "' is not recognized as a valid IP for the use as new IP to be set.");
+      }
+            ;
+    }
 
         //
         // variable definition
         //
-        _state = "VarPrep - NewLib";
+    _state = "VarPrep - NewLib";
 
-        ACP myACP = new ACP(_target);
-        myACP.DebugLevel = _debug;
-        myACP.Port = _port;
-        myACP.setConnID(_connID);
-        myACP.setTargetMAC(_mac);
-        myACP.bind(_bind);
+    ACP myACP = new ACP(_target);
+    myACP.DebugLevel = _debug;
+    myACP.Port = _port;
+    myACP.setConnID(_connID);
+    myACP.setTargetMAC(_mac);
+    myACP.bind(_bind);
 
         //
         // Generate some output.
         //
-        try {
-            _state = "initial status output";
-            outDebug("Using target:\t" + myACP.getTarget().getHostName() +
+    try {
+      _state = "initial status output";
+      outDebug("Using target:\t" + myACP.getTarget().getHostName() +
                                "/" + myACP.getTarget().getHostAddress(),1);
-            if (myACP.Port.intValue() != _stdport) {
-                System.out.println("Using port:\t" + myACP.Port.toString() +
+      if (myACP.Port.intValue() != _stdport) {
+        System.out.println("Using port:\t" + myACP.Port.toString() +
                                    "\t (this is NOT the standard port)");
-            } else {
-                outDebug("Using port:\t" + myACP.Port.toString(), 1);
-            }
-            outDebug("Using MAC-Address:\t" + myACP.getTargetMAC(), 1);
+      } else {
+        outDebug("Using port:\t" + myACP.Port.toString(), 1);
+      }
+      outDebug("Using MAC-Address:\t" + myACP.getTargetMAC(), 1);
 
-        } catch
-                (java.lang.NullPointerException NPE) {
-            outError("NullPointerException in " + _state + ".\n" +
+    } catch
+    (java.lang.NullPointerException NPE) {
+      outError("NullPointerException in " + _state + ".\n" +
                      "Usually this is thrown when the target can not be resolved. " +
                      "Check, if the specified target \"" + _target +
                      "\" is correct!");
-        }
+    }
 
         //
         // lets go
         //
 
-        if (_findLS) {
-            _state = "ACP_DISCOVER";
+    if (_findLS) {
+      _state = "ACP_DISCOVER";
             // discover devices by sending both types of ACP-Discover packet
-            int _foundLS = 0;
+      int _foundLS = 0;
 
-            outDebug("Sending ACP-Disover packet...",1);
-            String[] foundLS = myACP.Find();
-            for (int i = 0; i < foundLS.length; i++) {
-                System.out.println(foundLS[i]);
-            }
-            System.out.println("Found " + foundLS.length + " device(s).");
-        }
+      outDebug("Sending ACP-Disover packet...",1);
+      String[] foundLS = myACP.Find();
+      for (int i = 0; i < foundLS.length; i++) {
+        System.out.println(foundLS[i]);
+      }
+      System.out.println("Found " + foundLS.length + " device(s).");
+    }
 
-        if (_authent) {
-            _state = "ACP_AUTHENT";
+    if (_authent) {
+      _state = "ACP_AUTHENT";
             /**
              * authentication must be on of our first actions, as it has been done before
              * other commands can be sent to the device.
@@ -536,50 +536,50 @@ public class acp_commander {
                  * 3 - send ACPSpecial-Authent with encrypted admin password
                  */
 
-                outDebug("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1],1);
+      outDebug("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1],1);
 
-               if (_password.equals("")) {
+      if (_password.equals("")) {
                  //if password blank, try "password" otherwise prompt
-                 outDebug("Password not specified, trying default password.",1);
-                 _password = "password";
-               }
+        outDebug("Password not specified, trying default password.",1);
+        _password = "password";
+      }
 
-               myACP.setPassword(_password);
+      myACP.setPassword(_password);
 
-               if (!myACP.Authent()[1].equals("ACP_STATE_OK")) {
+      if (!myACP.Authent()[1].equals("ACP_STATE_OK")) {
 
-                 java.io.Console console = System.console();
+        java.io.Console console = System.console();
 
-                 try {
-                   _password = new String(console.readPassword("admin password: "));
-                   myACP.setPassword(_password);
-                   myACP.Authent();
-                 } catch (Exception E) {}
-               }
-        }
+        try {
+          _password = new String(console.readPassword("admin password: "));
+          myACP.setPassword(_password);
+          myACP.Authent();
+        } catch (Exception E) {}
+      }
+    }
 
-        if (_diag) {
-            _state = "diagnostics";
+    if (_diag) {
+      _state = "diagnostics";
             // do some diagnostics on LS
-            System.out.println("\nRunning diagnostics...");
+      System.out.println("\nRunning diagnostics...");
 
             // display status of backup jobs /etc/melco/backup*:status=
-            System.out.print("status of backup jobs:\n");
-            String[] BackupState = myACP.Command(
+      System.out.print("status of backup jobs:\n");
+      String[] BackupState = myACP.Command(
                     "grep status= /etc/melco/backup*", 3);
-            System.out.println(BackupState[1]);
+      System.out.println(BackupState[1]);
 
             // display language for WebGUI /etc/melco/info:lang=
-            System.out.print("language setting of WebGUI:\t"
+      System.out.print("language setting of WebGUI:\t"
                              + myACP.Command("grep lang= /etc/melco/info", 3)[1]);
 
-        }
+    }
 
-        if (_test) {
-            _state = "TEST"; // Test@Georg
-            System.out.println("Performing test sequence...");
+    if (_test) {
+      _state = "TEST"; // Test@Georg
+      System.out.println("Performing test sequence...");
 
-            try {
+      try {
 //                System.out.println("ACPTest 8000:\t" + myACP.ACPTest("8000")[1]);  //no
 //                System.out.println("ACPTest 8010:\t" + myACP.ACPTest("8010")[1]);  //no
 //                System.out.println("ACPTest 8040:\t" + myACP.ACPTest("8040")[1]);  //ACP_PING
@@ -591,156 +591,156 @@ public class acp_commander {
 //                System.out.println("ACPTest 8D00:\t" + myACP.ACPTest("8D00")[1]);  //ACP_EREASE_USER
 //                System.out.println("ACPTest 8E00:\t" + myACP.ACPTest("8E00")[1]);  //no
 //                System.out.println("ACPTest 8F00:\t" + myACP.ACPTest("8F00")[1]);  //no
-            } catch (Exception ex) {
-            }
+      } catch (Exception ex) {
+      }
 //                 System.out.println("DebugMode:\t"+myACP.DebugMode()[1]);
 //                 System.out.println("Shutdown:\t"+myACP.Shutdown()[1]);
-        }
+    }
 
-        if (_openbox) {
-            _state = "ACP_OPENBOX";
-            System.out.println("Reset root pwd...\t" + myACP.Command("passwd -d root", 3)[1]);
+    if (_openbox) {
+      _state = "ACP_OPENBOX";
+      System.out.println("Reset root pwd...\t" + myACP.Command("passwd -d root", 3)[1]);
 	    myACP.Command("rm /etc/securetty", 3);
 	    System.out.println("start telnetd...\t" + myACP.Command("/bin/busybox telnetd&", 3)[1]);
 
             // Due to many questions in the forum...
-            System.out.println(
+      System.out.println(
                     "\nYou can now telnet to your box as user 'root' providing " +
                     "no / an empty password. Please change your root password to" +
                     " something secure.");
-        }
+    }
 
-        if (_clearboot) {
-            _state = "clearboot";
+    if (_clearboot) {
+      _state = "clearboot";
             // clear /boot; full /boot is the reason for most ACP_STATE_FAILURE messages
             // send packet up to 3 times
-            System.out.println("Sending clear /boot command sequence...\t" +
+      System.out.println("Sending clear /boot command sequence...\t" +
                                myACP.Command(
                                        "cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img" +
                                        " hddrootfs.buffalo.org hddrootfs.buffalo.updated.done",
                                        3)[
                                1]);
             // show result of df to verify success, send packet up to 3 times
-            System.out.println("Output of df for verification...\t" +
+      System.out.println("Output of df for verification...\t" +
                                myACP.Command("df", 3)[1]);
-        }
+    }
 
-        if (_blink) {
-            _state = "blink";
+    if (_blink) {
+      _state = "blink";
             // blink LED's and play tones via ACP-command
-            System.out.println("BlinkLED...\t" + myACP.BlinkLED()[1]);
-        }
+      System.out.println("BlinkLED...\t" + myACP.BlinkLED()[1]);
+    }
 
-        if (_gui) {
-            _state = "set webgui language";
+    if (_gui) {
+      _state = "set webgui language";
             // set WebGUI language
-            System.out.println("Setting WebGUI language...\t" +
+      System.out.println("Setting WebGUI language...\t" +
                                myACP.MultiLang(_setgui.byteValue())[1]);
-        }
+    }
 
-        if (_emmode) {
-            _state = "Set EM-Mode";
+    if (_emmode) {
+      _state = "Set EM-Mode";
             // send EM-Mode command
-            System.out.println("Sending EM-Mode command...\t");
-            String _result = myACP.EMMode()[1];
-            System.out.println(_result);
-            if (_result.equals("ACP_STATE_OK")) {
-                System.out.println("At your next reboot your LS will boot into EM mode.");
-            }
-        }
+      System.out.println("Sending EM-Mode command...\t");
+      String _result = myACP.EMMode()[1];
+      System.out.println(_result);
+      if (_result.equals("ACP_STATE_OK")) {
+        System.out.println("At your next reboot your LS will boot into EM mode.");
+      }
+    }
 
-        if (_normmode) {
-            _state = "Set Norm-Mode";
+    if (_normmode) {
+      _state = "Set Norm-Mode";
             // send Norm-Mode command
-            System.out.print("Sending Norm-Mode command...\t");
-            String _result = myACP.NormMode()[1];
-            System.out.println(_result);
-            if (_result.equals("ACP_STATE_OK")) {
-                System.out.println("At your next reboot your LS will boot into normal mode.");
-            }
-        }
+      System.out.print("Sending Norm-Mode command...\t");
+      String _result = myACP.NormMode()[1];
+      System.out.println(_result);
+      if (_result.equals("ACP_STATE_OK")) {
+        System.out.println("At your next reboot your LS will boot into normal mode.");
+      }
+    }
 
-        if (!_cmd.equals("")) {
-            _state = "ACP_CMD";
+    if (!_cmd.equals("")) {
+      _state = "ACP_CMD";
             // send custom command via ACP
-            String _cmdresult = myACP.Command(_cmd)[1];
-            outDebug(">" + _cmd + "\n",1);
-            System.out.print(_cmdresult);
-        }
+      String _cmdresult = myACP.Command(_cmd)[1];
+      outDebug(">" + _cmd + "\n",1);
+      System.out.print(_cmdresult);
+    }
 
         // create a telnet style shell, leave with "exit"
-        if (_shell) {
-            _state = "shell";
-            String cmdln = new String("");
-            String pwd = new String("/");
-            String output = new String("");
-            BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("Enter commands to device, enter 'exit' to leave\n");
+    if (_shell) {
+      _state = "shell";
+      String cmdln = new String("");
+      String pwd = new String("/");
+      String output = new String("");
+      BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
+      System.out.print("Enter commands to device, enter 'exit' to leave\n");
 
             // get first commandline
-            try {
-                System.out.print(pwd + ">");
-                cmdln = keyboard.readLine();
+      try {
+        System.out.print(pwd + ">");
+        cmdln = keyboard.readLine();
 
-                while ((cmdln != null) && (!cmdln.equals("exit"))) {
+        while ((cmdln != null) && (!cmdln.equals("exit"))) {
                     // send command and display answer
                     //only first cmd working for some reason.
-                    output = myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd")[1];
-                    if (output.equals("OK (ACP_STATE_OK)")) {
-                      output = "";
-                    }
-                    System.out.print(output);
-                    pwd = myACP.Command("cat /tmp/.pwd")[1].split("\n",2)[0];
+          output = myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd")[1];
+          if (output.equals("OK (ACP_STATE_OK)")) {
+            output = "";
+          }
+          System.out.print(output);
+          pwd = myACP.Command("cat /tmp/.pwd")[1].split("\n",2)[0];
                     // get next commandline
-                    System.out.print(pwd + ">");
-                    cmdln = keyboard.readLine();
-                }
-            } catch (java.io.IOException IOE) {}
+          System.out.print(pwd + ">");
+          cmdln = keyboard.readLine();
         }
+      } catch (java.io.IOException IOE) {}
+    }
 
         /**
          * changeip should be one of the last things we do as it will be the last we can do
          * for this sequence.
          */
 
-        if (_changeip) {
-            _state = "changeip";
+    if (_changeip) {
+      _state = "changeip";
 
-            try {
-                int _mytimeout = myACP.Timeout;
-                myACP.Timeout = 10000;
+      try {
+        int _mytimeout = myACP.Timeout;
+        myACP.Timeout = 10000;
 
-                System.out.println("Changeing IP:\t" +
+        System.out.println("Changeing IP:\t" +
                                    myACP.ChangeIP(InetAddress.getByName(_newip).
                                                   getAddress(),
                                                   new byte[] {(byte) 255,
-                                                  (byte) 255, (byte) 255,
-                                                  (byte) 0}, true)[1]);
+(byte) 255, (byte) 255,
+(byte) 0}, true)[1]);
 
-                myACP.Timeout = _mytimeout;
-                System.out.println(
+        myACP.Timeout = _mytimeout;
+        System.out.println(
                         "\nPlease note, that the current support for the change of the IP "+
                         "is currently very rudimentary.\nThe IP has been set to the given, "+
                         "fixed IP. However DNS and gateway have not been set. Use the "+
                         "WebGUI to make appropriate settings.");
-            } catch (java.net.UnknownHostException NetE) {
-                outError(NetE.toString() + "[in changeIP]");
-            }
+      } catch (java.net.UnknownHostException NetE) {
+        outError(NetE.toString() + "[in changeIP]");
+      }
 
-        }
+    }
 
         // reboot
-        if (_reboot) {
-            _state = "reboot";
+    if (_reboot) {
+      _state = "reboot";
 
-            System.out.println("Rebooting...:\t" + myACP.Reboot()[1]);
-        }
+      System.out.println("Rebooting...:\t" + myACP.Reboot()[1]);
+    }
 
         // shutdown
-        if (_shutdown) {
-            _state = "shutdown";
+    if (_shutdown) {
+      _state = "shutdown";
 
-            System.out.println("Sending SHUTDOWN command...:\t" + myACP.Shutdown()[1]);
-        }
+      System.out.println("Sending SHUTDOWN command...:\t" + myACP.Shutdown()[1]);
     }
+  }
 }
