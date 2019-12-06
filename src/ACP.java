@@ -292,7 +292,6 @@ public class ACP {
     return doSendRcv(getACPDebugMode(connID, targetMAC));
   }
 
-
   public String[] MultiLang(byte Language) {
     // interface to switch web GUI language
     // ENOneCmd protected
@@ -1110,13 +1109,13 @@ public class ACP {
             result[_FWversion] = buf[187] + buf[188] + "." +
                                  buf[189] + buf[190];
 
-            result[_out] = ("Found:\t" + result[_hostname] +
-                            " (" + result[_ip] + ") " +
-                            "\t" + result[_productstr] + " (ID=" +
-                            result[_productid] + ") " +
-                            "\tmac: " + result[_mac] +
-                            "\tFirmware=  " + result[_FWversion] +
-                            "\tKey=" + result[_key]
+            result[_out] = (result[_hostname] + "\t"
+                            + result[_ip].replace("/","") + "\t"
+                            + String.format("%-" + 20 + "s", result[_productstr]) + "\t"
+                            + "ID=" + result[_productid] + "\t"
+                            + "mac: " + result[_mac] + "\t"
+                            + "FW=  " + result[_FWversion] + "\t"
+                            //+ "Key=" + result[_key] + "\t"
                            );
         } catch (java.net.UnknownHostException UnkHostE) {
             outError(UnkHostE.getMessage());
