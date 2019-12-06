@@ -29,11 +29,6 @@ public class acp_commander {
   private static int _debug = 0; // determins degree of additional output, increasing with value
   private static String _state; // where are we in the code, mostly for exceptions output :-(
 
-  private static void outTitle() {
-    System.out.println(
-      "ACP_commander based on the nas-central.org (linkstationwiki.net) project.\n");
-  }
-
   private static void outUsage() {
     System.out.println("Usage:  acp_commander [options] -t target\n\n" +
                            "options are:\n" +
@@ -90,8 +85,6 @@ public class acp_commander {
 
   // help(), long version with explanations
   private static void help() {
-    outTitle();
-
     System.out.println("Version " + _version + "\n");
 
     outUsage();
@@ -229,11 +222,7 @@ public class acp_commander {
                 help();
                 return;
             } // if usage | help
-        } else {
-            if (!hasParam("-q", args)) {
-                outTitle();
-            }
-        } // if noparam, usage, help, version ...
+        }
 
         if (hasParam(new String[] {"-d1", "-d2", "-d3"}, args)) {
             if (hasParam("-d1", args)) {
@@ -397,7 +386,7 @@ public class acp_commander {
                     "Command-line argument -c given, but command line is empty!");
         }
 
-        if ((!_authent) & (_connID.equals(""))) {
+        if ((!_authent) & (_connID.equals("") & !_findLS)) {
             outWarning("Using a random connection ID without authentification!");
         }
 
@@ -408,7 +397,7 @@ public class acp_commander {
             byte[] temp_connID = new byte[6];
             generator.nextBytes(temp_connID);
             _connID = ACP.bufferToHex(temp_connID, 0, 6);
-            System.out.println("Using random connID value = " + _connID);
+            outDebug("Using random connID value = " + _connID,1);
         } else {
             if (_connID.equalsIgnoreCase("mac")) {
                 // TODO
@@ -499,9 +488,8 @@ public class acp_commander {
         //
         try {
             _state = "initial status output";
-            System.out.println("Using target:\t" +
-                               myACP.getTarget().getHostName() +
-                               "/" + myACP.getTarget().getHostAddress());
+            outDebug("Using target:\t" + myACP.getTarget().getHostName() +
+                               "/" + myACP.getTarget().getHostAddress(),1);
             if (myACP.Port.intValue() != _stdport) {
                 System.out.println("Using port:\t" + myACP.Port.toString() +
                                    "\t (this is NOT the standard port)");
@@ -527,7 +515,7 @@ public class acp_commander {
             // discover devices by sending both types of ACP-Discover packet
             int _foundLS = 0;
 
-            System.out.println("Sending ACP-Disover packet...");
+            outDebug("Sending ACP-Disover packet...",1);
             String[] foundLS = myACP.Find();
             for (int i = 0; i < foundLS.length; i++) {
                 System.out.println(foundLS[i]);
@@ -548,15 +536,15 @@ public class acp_commander {
                  * 3 - send ACPSpecial-Authent with encrypted admin password
                  */
 
-                System.out.println("Sending Discover packet...\t");
+                outDebug("Sending Discover packet...\t",1);
                 String[] _discover = myACP.Discover(true);
-                System.out.println(_discover[1]);
+                outDebug(_discover[1],1);
 
-                System.out.println("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1]);
+                outDebug("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1],1);
 
                if (_password.equals("")) {
                  //if password blank, try "password" otherwise prompt
-                 System.out.println("Password not specified, trying default password.");
+                 outDebug("Password not specified, trying default password.",1);
                  _password = "password";
                }
 
@@ -678,8 +666,10 @@ public class acp_commander {
 
         if (!_cmd.equals("")) {
             _state = "ACP_CMD";
-            // send custom telnet command via ACP
-            System.out.println(">" + _cmd + "\n" + myACP.Command(_cmd)[1]);
+            // send custom command via ACP
+            String _cmdresult = myACP.Command(_cmd)[1];
+            outDebug(">" + _cmd + "\n",1);
+            System.out.print(_cmdresult);
         }
 
         // create a telnet style shell, leave with "exit"
@@ -689,7 +679,7 @@ public class acp_commander {
             String pwd = new String("/");
             String output = new String("");
             BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("Enter telnet commands to device, enter 'exit' to leave\n");
+            System.out.print("Enter commands to device, enter 'exit' to leave\n");
 
             // get first commandline
             try {
