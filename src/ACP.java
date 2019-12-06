@@ -448,46 +448,6 @@ public class ACP {
         return result;
     }
 
-    // only send packet, don't wait for reply
-    private void doSend(byte[] buf) {
-        String _ACPcmd = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
-        String _state = "[ACP Send/Receive (Packet:" + _ACPcmd + " = " +
-                        getCmdString(buf) + ")]";
-        String[] result;
-        DatagramSocket _socket;
-
-        try {
-            _socket = new DatagramSocket(); // TODO bind functionality is missing here
-            DatagramPacket _packet = new DatagramPacket(buf, buf.length,
-                    target,
-                    Port.intValue());
-
-            _socket.send(_packet);
-
-        } catch (java.net.SocketTimeoutException SToE) {
-            // TODO: better error handling
-            result = new String[2];
-            result[1] = "Exception: SocketTimeoutException (" + SToE.getMessage() +
-                        ") "
-                        + _state;
-            outInfoTimeout();
-            outError(result[1]);
-        } catch (java.net.SocketException SE) {
-            // TODO: better error handling
-            result = new String[2];
-            result[1] = "Exception: SocketException (" + SE.getMessage() + ") " +
-                        _state;
-            outInfoSocket();
-            outError(result[1]);
-        } catch (java.io.IOException IOE) {
-            // TODO: better error handling
-            result = new String[2];
-            result[1] = "Exception: IOException (" + IOE.getMessage() + ") " +
-                        _state;
-            outError(result[1]);
-        }
-    }
-
     private DatagramSocket getSocket() throws java.net.SocketException {
         DatagramSocket _socket;
         if (bind != null) {
