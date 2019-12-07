@@ -13,10 +13,12 @@ package acpcommander;
  */
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import java.net.InetAddress;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Random;
 
@@ -664,7 +666,7 @@ public class acp_commander {
       String cmdln = String.valueOf("");
       String pwd = String.valueOf("/");
       String output = String.valueOf("");
-      BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
+      BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
       System.out.print("Enter commands to device, enter 'exit' to leave\n");
 
       // get first commandline
