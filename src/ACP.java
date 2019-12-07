@@ -31,12 +31,6 @@ public class ACP {
   private String ap_servd = "ap_servd";
   private InetSocketAddress bind;
 
-  protected int LastCmd = 0; // last ACP-Command sent to the LS
-  protected int LastError = 0; // Error Code in the last ACP packet rcvd
-  protected boolean HaveKey = false; // Did we get the encryption key, yet? - Send ACPDisc
-  //protected boolean EnOneCmd = false; // Did we do EnOneCmd authentication, yet? - ACPEnOneCmd
-  protected boolean Authent = false; // Did we get authenticated, yet? - ACPAuthent
-
   /** set socket timeout to 1000 ms, rather high, but some users report timeout
   * problems. Could also be UDP-related - try resending packets
   * Especially BlinkLED, SaveConfig, LoadConfig have long reply times as reply is
@@ -102,7 +96,6 @@ public class ACP {
       return;
     }
     System.arraycopy(_Key,0,Key,0,_Key.length);
-    HaveKey = true;
   }
 
   public void setTargetKey(String _Key) {
@@ -121,8 +114,6 @@ public class ACP {
   public void setTarget(String Target) {
     try {
       target = InetAddress.getByName(Target);
-      Authent = false;
-      HaveKey = false;
     } catch (UnknownHostException ex) {
       outInfoSetTarget();
       outError(ex.toString() + " [in setTarget]");
@@ -132,8 +123,6 @@ public class ACP {
   public void setTarget(byte[] Target) {
     try {
       target = InetAddress.getByAddress(Target);
-      Authent = false;
-      HaveKey = false;
     } catch (UnknownHostException ex) {
       outInfoSetTarget();
       outError(ex.toString() + " [in setTarget]");
@@ -144,8 +133,6 @@ public class ACP {
     try {
       target = InetAddress.getByName(Target);
       setTargetMAC("FF:FF:FF:FF:FF:FF");
-      Authent = false;
-      HaveKey = false;
     } catch (UnknownHostException ex) {
       outError(ex.toString() + " [in setBroadcastIP]");
     }
@@ -155,8 +142,6 @@ public class ACP {
     try {
       target = InetAddress.getByAddress(Target);
       setTargetMAC("FF:FF:FF:FF:FF:FF");
-      Authent = false;
-      HaveKey = false;
     } catch (UnknownHostException ex) {
       outError(ex.toString() + " [in setBroadcastIP]");
     }
@@ -1136,7 +1121,6 @@ public class ACP {
 
     //@georg check!
     // value = 0xFFFFFFFF if ERROR occured
-    LastError = getErrorCode(buf);
     ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1) +
           bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
     if (ACPstatus.equalsIgnoreCase("FFFFFFFF")) {
