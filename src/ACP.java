@@ -430,7 +430,7 @@ public class ACP {
         outError(result[1]);
       }
 
-    } while ((sendcount < repeatSend) & SendAgain); // repeat until max retries reached
+    } while ((sendcount < repeatSend) && SendAgain); // repeat until max retries reached
 
     result = rcvACP(_receive.getData(), DebugLevel); // get search results
 
