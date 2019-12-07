@@ -209,9 +209,9 @@ public class acp_commander {
     // catch various standard options for help. Only -h and -v are official, though
     if ((args.length == 0) |
             (hasParam(new String[] {"-u", "-usage", "--usage", "/u",
-        "-h", "--h", "-v", "--v", "-?", "--?", "/h", "/?",
-        "-help", "--help",
-        "-version", "--version"}, args))) {
+              "-h", "--h", "-v", "--v", "-?", "--?", "/h", "/?",
+              "-help", "--help",
+              "-version", "--version"}, args))) {
       // if none or usage parameter is given only output of shorter usage
       // otherwise longer help with explanations is presented
       if ((args.length == 0) |
@@ -711,11 +711,8 @@ public class acp_commander {
         myACP.Timeout = 10000;
 
         System.out.println("Changeing IP:\t" +
-                                   myACP.ChangeIP(InetAddress.getByName(_newip).
-                                                  getAddress(),
-                                                  new byte[] {(byte) 255,
-            (byte) 255, (byte) 255,
-            (byte) 0}, true)[1]);
+              myACP.ChangeIP(InetAddress.getByName(_newip).getAddress(),
+              new byte[] {(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true)[1]);
 
         myACP.Timeout = _mytimeout;
         System.out.println(
