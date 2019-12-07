@@ -876,12 +876,6 @@ public class ACP {
 
   // create a correct ACPAuth packet
   private byte[] getACPAuth(String ConnID, String targetMAC,
-                  String password) {
-    return getACPAuth(ConnID, targetMAC, HexToByte(password));
-  }
-
-  // create a correct ACPAuth packet
-  private byte[] getACPAuth(String ConnID, String targetMAC,
                   byte[] password) {
     byte[] buf = new byte[72];
     setACPHeader(buf, "80a0", ConnID, targetMAC, (byte) 0x28);
