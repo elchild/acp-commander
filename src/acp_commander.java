@@ -94,16 +94,6 @@ public class acp_commander {
     help();
   }
 
-  private static String getParamValue(String name, String[] args) {
-    // not looking at the last argument, as it would have no following parameter
-    for (int i = 0; i < args.length - 1; ++i) {
-      if (args[i].equals(name)) {
-        return args[i + 1];
-      }
-    }
-    return null;
-  }
-
   // private static String getParamValue(String name, String[] args, String defvalue)
   // retreive the value passed to parameter "name" within the arguments "args",
   // returns "defvalue" if argument "name" could not be found.
