@@ -1124,9 +1124,9 @@ public class ACP {
     }
 
     String[] result;
-    String ACPreply = new String();
+    String ACPreply;
     int ACPtype = 0;
-    String ACPstatus = new String();
+    String ACPstatus;
 
     // get type of ACP answer both as long and hexstring
     ACPtype = (buf[8] & 0xFF) + (buf[9] & 0xFF) * 256; // &0xFF necessary to avoid neg. values
