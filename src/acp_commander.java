@@ -408,7 +408,7 @@ public class acp_commander {
       } else {
         // TODO
         // check given connection id for length and content
-        _connID.replaceAll(":", "");
+        _connID = _connID.replaceAll(":", "");
         if (_connID.length() != 12) {
           outError(
                             "Given connection ID has invalid length (not 6 bytes long)");
