@@ -164,16 +164,16 @@ public class acp_commander {
     _timeout = _timeout;
 
     // variables
-    String _mac = new String("");
-    String _connID = new String("");
-    String _target = new String("");
+    String _mac = String.valueOf("");
+    String _connID = String.valueOf("");
+    String _target = String.valueOf("");
     Integer _port = new Integer(_stdport);
-    String _bind = new String(""); // local address used for binding socket
+    String _bind = String.valueOf("");
 
-    String _cmd = new String("");
-    String _newip = new String(""); // new ip address
-    String _password = new String(""); // admin password
-    Integer _setgui = new Integer(1); // set gui to language 0=jap, 1=eng, 2=ger
+    String _cmd = String.valueOf("");
+    String _newip = String.valueOf("");
+    String _password = String.valueOf("");
+    Integer _setgui = Integer.valueOf(1); // set gui to language 0=jap, 1=eng, 2=ger
 
     // flags what to do, set during parsing the command line arguments
     boolean _openbox = false;
@@ -249,7 +249,7 @@ public class acp_commander {
 
     if (hasParam("-p", args)) {
       outDebug("Port parameter -p given", 2);
-      _port = new Integer(getParamValue("-p", args, _port.toString()));
+      _port = Integer.valueOf(getParamValue("-p", args, _port.toString()));
     }
 
     if (hasParam("-m", args)) {
@@ -290,7 +290,7 @@ public class acp_commander {
     if (hasParam("-gui", args)) {
       _authent = true;
       _gui = true;
-      _setgui = new Integer(getParamValue("-gui", args, _setgui.toString()));
+      _setgui = Integer.valueOf(getParamValue("-gui", args, _setgui.toString()));
     }
 
     if (hasParam("-diag", args)) {
@@ -661,9 +661,9 @@ public class acp_commander {
     // create a telnet style shell, leave with "exit"
     if (_shell) {
       _state = "shell";
-      String cmdln = new String("");
-      String pwd = new String("/");
-      String output = new String("");
+      String cmdln = String.valueOf("");
+      String pwd = String.valueOf("/");
+      String output = String.valueOf("");
       BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
       System.out.print("Enter commands to device, enter 'exit' to leave\n");
 

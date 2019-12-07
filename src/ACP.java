@@ -455,7 +455,7 @@ public class ACP {
 
   private String getCmdString(byte[] buf) {
     int ACPCmd = getCommand(buf);
-    String CmdString = new String("");
+    String CmdString = String.valueOf("");
 
     switch (ACPCmd) {
         // ACP_Commands
