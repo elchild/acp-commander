@@ -377,16 +377,16 @@ public class acp_commander {
 
     _state = "ErrCatch";
 
-    if (!_findLS & ((_target.equals("")) | (_target == null))) {
+    if (!_findLS && ((_target.equals("")) || (_target == null))) {
       outError("No target specified or target is null!");
     }
 
-    if (hasParam("-c", args) & ((_cmd == null) | (_cmd.equals("")))) {
+    if (hasParam("-c", args) && ((_cmd == null) || (_cmd.equals("")))) {
       outError(
                     "Command-line argument -c given, but command line is empty!");
     }
 
-    if ((!_authent) & (_connID.equals("") & !_findLS)) {
+    if ((!_authent) && (_connID.equals("") && !_findLS)) {
       outWarning("Using a random connection ID without authentification!");
     }
 
