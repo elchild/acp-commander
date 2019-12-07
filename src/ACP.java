@@ -90,7 +90,9 @@ public class ACP {
   }
 
   public byte[] getTargetKey() {
-    return (Key);
+    byte[] result = new byte[Key.length];
+    System.arraycopy(Key,0,result,0,Key.length);
+    return (result);
   }
 
   public void setTargetKey(byte[] _Key) {
@@ -99,7 +101,7 @@ public class ACP {
       outError("ACPException: Encryption key must be 4 bytes long!");
       return;
     }
-    Key = _Key;
+    System.arraycopy(_Key,0,Key,0,_Key.length);
     HaveKey = true;
   }
 
