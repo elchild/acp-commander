@@ -36,7 +36,7 @@ public class ACP {
   * Especially BlinkLED, SaveConfig, LoadConfig have long reply times as reply is
   * sent when the command has been executed. Same has to be considered for other cmds.
   */
-  protected int Timeout = 3000;
+  protected int Timeout = 1000;
   protected int resendPackets = 2; // standard value for repeated sending of packets
 
   public int DebugLevel = 0; // Debug level
