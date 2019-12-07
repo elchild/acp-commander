@@ -17,6 +17,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class ACP {
@@ -30,6 +31,7 @@ public class ACP {
   protected String password;
   private String ap_servd = "ap_servd";
   private InetSocketAddress bind;
+  private Charset defaultCharset = Charset.forName("UTF-8");
 
   /** set socket timeout to 1000 ms, rather high, but some users report timeout
   * problems. Could also be UDP-related - try resending packets
@@ -884,7 +886,7 @@ public class ACP {
     buf[32] = (byte) (cmd.length());
     buf[36] = 0x03; // type
 
-    System.arraycopy(cmd.getBytes(), 0, buf, 40, cmd.length());
+    System.arraycopy(cmd.getBytes(defaultCharset), 0, buf, 40, cmd.length());
 
     return (buf);
   }
@@ -909,7 +911,7 @@ public class ACP {
         sub_length = 8;
       }
 
-      System.arraycopy(_password.substring(i * 8).getBytes(), 0,
+      System.arraycopy(_password.substring(i * 8).getBytes(defaultCharset), 0,
                  sub_passwd, 0, sub_length);
       if (sub_length < 8) {
         sub_passwd[sub_length] = (byte) 0x00; // end of string must be 0x00
