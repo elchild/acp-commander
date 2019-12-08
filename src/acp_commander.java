@@ -457,7 +457,7 @@ public class acp_commander {
 
     ACP myACP = new ACP(_target);
     myACP.debuglevel = _debug;
-    myACP.Port = _port;
+    myACP.port = _port;
     myACP.setconnid(_connID);
     myACP.setTargetMAC(_mac);
     myACP.bind(_bind);
@@ -469,11 +469,11 @@ public class acp_commander {
       _state = "initial status output";
       outDebug("Using target:\t" + myACP.getTarget().getHostName()
                  + "/" + myACP.getTarget().getHostAddress(),1);
-      if (myACP.Port.intValue() != _stdport) {
-        System.out.println("Using port:\t" + myACP.Port.toString()
+      if (myACP.port.intValue() != _stdport) {
+        System.out.println("Using port:\t" + myACP.port.toString()
                          + "\t (this is NOT the standard port)");
       } else {
-        outDebug("Using port:\t" + myACP.Port.toString(), 1);
+        outDebug("Using port:\t" + myACP.port.toString(), 1);
       }
       outDebug("Using MAC-Address:\t" + myACP.getTargetMAC(), 1);
 

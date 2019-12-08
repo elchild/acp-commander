@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 public class ACP {
   private InetAddress target;
-  protected Integer Port = new Integer(22936);
+  protected Integer port = new Integer(22936);
   private String connID; // connection ID, "unique" identifier for the connection
   private String targetmac; // MAC address of the LS, it reacts only if correct MAC or
   // FF:FF:FF:FF:FF:FF is set in the packet
@@ -300,10 +300,10 @@ public class ACP {
     ArrayList<String> _tempres = new ArrayList<>();
     DatagramSocket _socket;
 
-    DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, Port.intValue());
+    DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, port.intValue());
     DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
 
-    DatagramPacket _packet2 = new DatagramPacket(buf2, buf2.length, target, Port.intValue());
+    DatagramPacket _packet2 = new DatagramPacket(buf2, buf2.length, target, port.intValue());
 
     try {
       _socket = getSocket(); // TODO bind functionality is missing here
@@ -374,7 +374,7 @@ public class ACP {
     int sendcount = 0;
     boolean SendAgain = true;
     DatagramSocket _socket;
-    DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, Port.intValue());
+    DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, port.intValue());
     // TODO: danger - possible buffer overflow/data loss with fixed packet length
     DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
 
@@ -1179,11 +1179,11 @@ public class ACP {
   private void outInfoTimeout() {
     System.out.println(
             "A SocketTimeoutException usually indicates bad firewall settings.\n"
-            + "Check especially for *UDP* port " + Port.toString()
+            + "Check especially for *UDP* port " + port.toString()
             + " and make sure that the connection to your LS is working.");
-    if (Port.intValue() != 22936) {
+    if (port.intValue() != 22936) {
       outWarning("The Timeout could also be caused as you specified "
-                + "(parameter -p) to use port " + Port.toString()
+                + "(parameter -p) to use port " + port.toString()
                 + " which differs from standard port 22936.");
     }
   }
@@ -1192,7 +1192,7 @@ public class ACP {
     System.out.println(
             "A SocketException often indicates bad firewall settings.\n"
             + "The acp_commander / your java enviroment needs to send/recevie on UDP port "
-            + Port.toString() + ".");
+            + port.toString() + ".");
   }
 
   private void outInfoSetTarget() {
