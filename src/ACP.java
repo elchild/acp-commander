@@ -23,13 +23,13 @@ import java.util.ArrayList;
 public class ACP {
   private InetAddress target;
   protected Integer port = new Integer(22936);
-  private String connID; // connection ID, "unique" identifier for the connection
+  private String connid; // connection ID, "unique" identifier for the connection
   private String targetmac; // MAC address of the LS, it reacts only if correct MAC or
   // FF:FF:FF:FF:FF:FF is set in the packet
   protected byte[] Key = new byte[4]; // Key for password encryption
   // sent in reply to ACP discovery packet
   protected String password;
-  private String ap_servd = "ap_servd";
+  private String apservd = "ap_servd";
   private InetSocketAddress bind;
   private Charset defaultCharset = Charset.forName("UTF-8");
 
@@ -63,26 +63,26 @@ public class ACP {
   //  set/get for private variables
   //
   public String getconnid() {
-    return connID.toString();
+    return connid.toString();
   }
 
   public void setconnid(String connectionid) {
     // TODO: input param checking!
-    connID = connectionid;
+    connid = connectionid;
   }
 
   public void setconnid(byte[] connectionid) {
     // TODO: input param checking!
-    connID = bufferToHex(connectionid, 0, 6);
+    connid = bufferToHex(connectionid, 0, 6);
   }
 
-  public String getTargetMAC() {
+  public String gettargetmac() {
     return (targetmac.toString());
   }
 
-  public void setTargetMAC(String TargetMAC) {
+  public void settargetmac(String newtargetmac) {
     // TODO: input param checking!
-    targetmac = TargetMAC;
+    targetmac = newtargetmac;
   }
 
   public byte[] getTargetKey() {
@@ -134,7 +134,7 @@ public class ACP {
   public void setbroadcastip(String Target) {
     try {
       target = InetAddress.getByName(Target);
-      setTargetMAC("FF:FF:FF:FF:FF:FF");
+      settargetmac("FF:FF:FF:FF:FF:FF");
     } catch (UnknownHostException ex) {
       outError(ex.toString() + " [in setbroadcastip]");
     }
@@ -143,7 +143,7 @@ public class ACP {
   public void setbroadcastip(byte[] Target) {
     try {
       target = InetAddress.getByAddress(Target);
-      setTargetMAC("FF:FF:FF:FF:FF:FF");
+      settargetmac("FF:FF:FF:FF:FF:FF");
     } catch (UnknownHostException ex) {
       outError(ex.toString() + " [in setbroadcastip]");
     }
@@ -192,14 +192,14 @@ public class ACP {
     if (maxResend <= 0) {
       maxResend = resendPackets;
     }
-    return doSendRcv(getacpcmd(connID, targetmac, cmd), maxResend);
+    return doSendRcv(getacpcmd(connid, targetmac, cmd), maxResend);
   }
 
   public String[] command(String cmd) {
     // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
     enonecmd();
     authent();
-    return doSendRcv(getacpcmd(connID, targetmac, cmd), 1);
+    return doSendRcv(getacpcmd(connid, targetmac, cmd), 1);
   }
 
   public String[] authent() {
@@ -209,50 +209,50 @@ public class ACP {
 
   public String[] authent(byte[] enc_password) {
     // authenticate to ACP protokoll
-    return doSendRcv(getacpauth(connID, targetmac, enc_password));
+    return doSendRcv(getacpauth(connid, targetmac, enc_password));
   }
 
   public String[] shutdown() {
     // ENOneCmd protected
-    return doSendRcv(getacpshutdown(connID, targetmac));
+    return doSendRcv(getacpshutdown(connid, targetmac));
   }
 
   public String[] reboot() {
     // ENOneCmd protected
-    return doSendRcv(getacpreboot(connID, targetmac));
+    return doSendRcv(getacpreboot(connid, targetmac));
   }
 
   public String[] EMMode() {
     // ENOneCmd protected
-    return doSendRcv(getacpEMMode(connID, targetmac));
+    return doSendRcv(getacpEMMode(connid, targetmac));
   }
 
   public String[] normmode() {
     // ENOneCmd protected
-    return doSendRcv(getacpnormmode(connID, targetmac));
+    return doSendRcv(getacpnormmode(connid, targetmac));
   }
 
   public String[] blinkled() {
     int _mytimeout = Timeout;
     Timeout = 60000;
-    String[] result = doSendRcv(getacpblinkled(connID, targetmac));
+    String[] result = doSendRcv(getacpblinkled(connid, targetmac));
     Timeout = _mytimeout;
     return result;
   }
 
   public String[] enonecmd() {
-    return enonecmdenc(encryptacppassword(ap_servd, Key));
+    return enonecmdenc(encryptacppassword(apservd, Key));
   }
 
   public String[] enonecmdenc(byte[] encPassword) {
-    return doSendRcv(getacpenonecmd(connID, targetmac, encPassword));
+    return doSendRcv(getacpenonecmd(connid, targetmac, encPassword));
   }
 
   public String[] saveconfig() {
     // set timeout to 1 min
     int _mytimeout = Timeout;
     Timeout = 60000;
-    String[] result = doSendRcv(getacpsaveconfig(connID, targetmac));
+    String[] result = doSendRcv(getacpsaveconfig(connid, targetmac));
     Timeout = _mytimeout;
     return result;
   }
@@ -261,13 +261,13 @@ public class ACP {
     // set timeout to 1 min
     int _mytimeout = Timeout;
     Timeout = 60000;
-    String[] result = doSendRcv(getacploadconfig(connID, targetmac));
+    String[] result = doSendRcv(getacploadconfig(connid, targetmac));
     Timeout = _mytimeout;
     return result;
   }
 
   public String[] debugmode() {
-    return doSendRcv(getacpdebugmode(connID, targetmac));
+    return doSendRcv(getacpdebugmode(connid, targetmac));
   }
 
   public String[] multilang(byte Language) {
@@ -277,13 +277,13 @@ public class ACP {
     // 1 .. English
     // 2 .. German
     // default .. English
-    return doSendRcv(getacpmultilang(connID, targetmac, Language));
+    return doSendRcv(getacpmultilang(connid, targetmac, Language));
   }
 
   public String[] changeip(byte[] newip, byte[] newMask, boolean usedhcp) {
     // change IP address
     byte[] _encrypted = encryptacppassword(password, Key);
-    return doSendRcv(getacpchangeip(connID, targetmac, newip, newMask, usedhcp, _encrypted));
+    return doSendRcv(getacpchangeip(connid, targetmac, newip, newMask, usedhcp, _encrypted));
   }
 
   //--- End of public routines ---
@@ -294,8 +294,8 @@ public class ACP {
 
   private String[] doDiscover() {
     String _state = "[Send/Receive ACPDiscover]";
-    byte[] buf = getacpdisc(connID, targetmac);
-    byte[] buf2 = getacpdisc2(connID, targetmac);
+    byte[] buf = getacpdisc(connid, targetmac);
+    byte[] buf2 = getacpdisc2(connid, targetmac);
     String[] _searchres = new String[1];
     ArrayList<String> _tempres = new ArrayList<>();
     DatagramSocket _socket;
@@ -1019,7 +1019,7 @@ public class ACP {
      */
   private String[] rcvacpDisc(byte[] buf, int _debug) {
     String[] result = new String[9];
-    int _pckttype = 0;
+    int tmppckttype = 0;
     int _out = 1;
     int _hostname = 2;
     int _ip = 3;
@@ -1033,7 +1033,7 @@ public class ACP {
       result[i] = "";
     }
 
-    result[_pckttype] = "ACPdiscovery reply";
+    result[tmppckttype] = "ACPdiscovery reply";
     try {
       // get IP
       byte[] targetip = new byte[4];
@@ -1044,24 +1044,24 @@ public class ACP {
       result[_ip] = targetAddr.toString();
 
       // get host name
-      int i = 48;
-      while ((buf[i] != 0x00) & (i < buf.length)) {
-        result[_hostname] = result[_hostname] + (char) buf[i++];
+      int index = 48;
+      while ((buf[index] != 0x00) & (index < buf.length)) {
+        result[_hostname] = result[_hostname] + (char) buf[index++];
       }
 
       // Product ID string starts at byte 80
-      i = 80;
-      while ((buf[i] != 0x00) & (i < buf.length)) {
-        result[_productstr] = result[_productstr] + (char) buf[i++];
+      index = 80;
+      while ((buf[index] != 0x00) & (index < buf.length)) {
+        result[_productstr] = result[_productstr] + (char) buf[index++];
       }
 
       // Product ID starts at byte 192 low to high
-      for (i = 3; i >= 0; i--) {
+      for (int i = 3; i >= 0; i--) {
         result[_productid] = result[_productid] + buf[192 + i];
       }
 
       // MAC starts at byte 311
-      for (i = 0; i <= 5; i++) {
+      for (int i = 0; i <= 5; i++) {
         result[_mac] = result[_mac] + bufferToHex(buf, i + 311, 1);
         if (i != 5) {
           result[_mac] = result[_mac] + ":";
@@ -1069,7 +1069,7 @@ public class ACP {
       }
 
       // Key - changes with connectionid (everytime) -> key to password encryption?
-      for (i = 0; i <= 3; i++) {
+      for (int i = 0; i <= 3; i++) {
         result[_key] = result[_key] + bufferToHex(buf, 47 - i, 1);
       }
 

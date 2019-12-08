@@ -166,7 +166,7 @@ public class acp_commander {
 
     // variables
     String _mac = String.valueOf("");
-    String _connID = String.valueOf("");
+    String _connid = String.valueOf("");
     String _target = String.valueOf("");
     Integer _port = new Integer(_stdport);
     String _bind = String.valueOf("");
@@ -271,7 +271,7 @@ public class acp_commander {
 
     if (hasParam("-i", args)) {
       outDebug("connectionid parameter -i given", 2);
-      _connID = getParamValue("-i", args, _connID);
+      _connid = getParamValue("-i", args, _connid);
     }
 
     if (hasParam("-s", args)) {
@@ -366,30 +366,30 @@ public class acp_commander {
                     "Command-line argument -c given, but command line is empty!");
     }
 
-    if ((!_authent) && (_connID.equals("") && !_findLS)) {
+    if ((!_authent) && (_connid.equals("") && !_findLS)) {
       outWarning("Using a random connection ID without authentification!");
     }
 
-    if (_connID.equals("")) {
+    if (_connid.equals("")) {
       // TODO
       // generate random connection ID
       Random generator = new Random();
-      byte[] temp_connID = new byte[6];
-      generator.nextBytes(temp_connID);
-      _connID = ACP.bufferToHex(temp_connID, 0, 6);
-      outDebug("Using random connID value = " + _connID,1);
+      byte[] temp_connid = new byte[6];
+      generator.nextBytes(temp_connid);
+      _connid = ACP.bufferToHex(temp_connid, 0, 6);
+      outDebug("Using random connid value = " + _connid,1);
     } else {
-      if (_connID.equalsIgnoreCase("mac")) {
+      if (_connid.equalsIgnoreCase("mac")) {
         // TODO
         // get local MAC and set it as connection ID
-        _connID = "00:50:56:c0:00:08";
+        _connid = "00:50:56:c0:00:08";
         outWarning("Using local MAC not implemented, yet!\n"
-                 + "Using default connID value (" + _connID + ")");
+                 + "Using default connid value (" + _connid + ")");
       } else {
         // TODO
         // check given connection id for length and content
-        _connID = _connID.replaceAll(":", "");
-        if (_connID.length() != 12) {
+        _connid = _connid.replaceAll(":", "");
+        if (_connid.length() != 12) {
           outError("Given connection ID has invalid length (not 6 bytes long)");
         }
       }
@@ -458,8 +458,8 @@ public class acp_commander {
     ACP myACP = new ACP(_target);
     myACP.debuglevel = _debug;
     myACP.port = _port;
-    myACP.setconnid(_connID);
-    myACP.setTargetMAC(_mac);
+    myACP.setconnid(_connid);
+    myACP.settargetmac(_mac);
     myACP.bind(_bind);
 
     //
@@ -475,7 +475,7 @@ public class acp_commander {
       } else {
         outDebug("Using port:\t" + myACP.port.toString(), 1);
       }
-      outDebug("Using MAC-Address:\t" + myACP.getTargetMAC(), 1);
+      outDebug("Using MAC-Address:\t" + myACP.gettargetmac(), 1);
 
     } catch
     (java.lang.NullPointerException NPE) {
