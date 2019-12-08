@@ -621,7 +621,7 @@ public class ACP {
 
   // Translate ErrorCode to meaningful string
   private String getErrorMsg(byte[] buf) {
-    String ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
+    String acpStatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
                + bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
     int ErrorCode = getErrorCode(buf);
 
@@ -693,7 +693,7 @@ public class ACP {
         break;
       // unknown error, better use ErrorCode and format it to hex
       default:
-        ErrorString = "ACP_STATE_UNKNOWN_ERROR (" + ACPstatus + ")";
+        ErrorString = "ACP_STATE_UNKNOWN_ERROR (" + acpStatus + ")";
     }
     return ErrorString;
   }
@@ -1102,33 +1102,33 @@ public class ACP {
      *            1 - formatted output
      *             2..n - possible details (ACPdiscovery)
      */
-  private String[] rcvACP(byte[] buf, int _debug) {
-    if (_debug >= 3) {
+  private String[] rcvACP(byte[] buf, int debug) {
+    if (debug >= 3) {
       rcvACPHexDump(buf);
     }
 
     String[] result;
-    String ACPreply;
+    String acpReply;
     int ACPtype = 0;
-    String ACPstatus;
+    String acpStatus;
 
     // get type of ACP answer both as long and hexstring
     ACPtype = (buf[8] & 0xFF) + (buf[9] & 0xFF) * 256; // &0xFF necessary to avoid neg. values
-    ACPreply = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
+    acpReply = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
 
     //@georg check!
     // value = 0xFFFFFFFF if ERROR occured
-    ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
+    acpStatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
           + bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
-    if (ACPstatus.equalsIgnoreCase("FFFFFFFF")) {
-      outDebug("Received packet (" + ACPreply + ") has the error-flag set!\n"
+    if (acpStatus.equalsIgnoreCase("FFFFFFFF")) {
+      outDebug("Received packet (" + acpReply + ") has the error-flag set!\n"
           + "For 'Authenticate' that is (usually) OK as we do send a buggy packet.", 1);
     }
 
     switch (ACPtype) {
       case 0xc020: // ACP discovery
         outDebug("received ACP Discovery reply", 1);
-        result = rcvACPDisc(buf, _debug);
+        result = rcvACPDisc(buf, debug);
         break;
       case 0xc030: // ACP changeIP
         outDebug("received ACP change IP reply", 1);
@@ -1142,7 +1142,7 @@ public class ACP {
         result[0] = "ACP special command reply";
         result[1] = getErrorMsg(buf);
 
-        //            result[1] = "OK"; // should be set according to ACPstatus!
+        //            result[1] = "OK"; // should be set according to acpStatus!
         break;
       case 0xca10: // ACPcmd
         outDebug("received ACPcmd reply", 1);
@@ -1150,9 +1150,9 @@ public class ACP {
         result = new String[2];
         result[0] = "ACPcmd reply";
         result[1] = "";
-        int i = 40;
-        while ((buf[i] != 0x00) & (i < buf.length)) {
-          result[1] = result[1] + (char) buf[i++];
+        int index = 40;
+        while ((buf[index] != 0x00) & (index < buf.length)) {
+          result[1] = result[1] + (char) buf[index++];
         }
 
         // filter the LSPro default answere "**no message**" as it led to some user queries/worries
@@ -1162,12 +1162,12 @@ public class ACP {
         break;
       case 0xce00: // ACP discovery
         outDebug("received ACP Discovery reply", 1);
-        result = rcvACPDisc(buf, _debug);
+        result = rcvACPDisc(buf, debug);
         break;
       default:
         result = new String[2]; //handling needed ?
-        result[0] = "Unknown ACP-Reply packet: 0x" + ACPreply;
-        result[1] = "Unknown ACP-Reply packet: 0x" + ACPreply; // add correct status!
+        result[0] = "Unknown ACP-Reply packet: 0x" + acpReply;
+        result[1] = "Unknown ACP-Reply packet: 0x" + acpReply; // add correct status!
     }
     outDebug("ACP analysis result: " + result[1], 2);
     return (result);
