@@ -26,7 +26,7 @@ public class ACP {
   private String connid; // connection ID, "unique" identifier for the connection
   private String targetmac; // MAC address of the LS, it reacts only if correct MAC or
   // FF:FF:FF:FF:FF:FF is set in the packet
-  protected byte[] Key = new byte[4]; // Key for password encryption
+  protected byte[] key = new byte[4]; // Key for password encryption
   // sent in reply to ACP discovery packet
   protected String password;
   private String apservd = "ap_servd";
@@ -38,7 +38,7 @@ public class ACP {
   * Especially blinkled, saveconfig, loadconfig have long reply times as reply is
   * sent when the command has been executed. Same has to be considered for other cmds.
   */
-  protected int Timeout = 1000;
+  protected int timeout = 1000;
   protected int resendPackets = 2; // standard value for repeated sending of packets
 
   public int debuglevel = 0; // Debug level
@@ -48,14 +48,14 @@ public class ACP {
   public ACP() {
   }
 
-  public ACP(String Target) {
+  public ACP(String newtarget) {
     this();
-    setTarget(Target);
+    setTarget(newtarget);
   }
 
-  public ACP(byte[] Target) {
+  public ACP(byte[] newtarget) {
     this();
-    setTarget(Target);
+    setTarget(newtarget);
   }
 
 
@@ -86,63 +86,63 @@ public class ACP {
   }
 
   public byte[] getTargetKey() {
-    byte[] result = new byte[Key.length];
-    System.arraycopy(Key,0,result,0,Key.length);
+    byte[] result = new byte[key.length];
+    System.arraycopy(key,0,result,0,key.length);
     return (result);
   }
 
-  public void setTargetKey(byte[] _Key) {
+  public void setTargetKey(byte[] newkey) {
     // TODO: input param checking!
-    if (_Key.length != 4) {
+    if (newkey.length != 4) {
       outError("ACPException: Encryption key must be 4 bytes long!");
       return;
     }
-    System.arraycopy(_Key,0,Key,0,_Key.length);
+    System.arraycopy(newkey,0,key,0,newkey.length);
   }
 
-  public void setTargetKey(String _Key) {
+  public void setTargetKey(String newkey) {
     // TODO: input param checking!
-    setTargetKey(hextobyte(_Key));
+    setTargetKey(hextobyte(newkey));
   }
 
-  public void setPassword(String _password) {
-    password = _password;
+  public void setPassword(String newpassword) {
+    password = newpassword;
   }
 
   public InetAddress getTarget() {
     return target;
   }
 
-  public void setTarget(String Target) {
+  public void setTarget(String newtarget) {
     try {
-      target = InetAddress.getByName(Target);
+      target = InetAddress.getByName(newtarget);
     } catch (UnknownHostException ex) {
       outInfoSetTarget();
       outError(ex.toString() + " [in setTarget]");
     }
   }
 
-  public void setTarget(byte[] Target) {
+  public void setTarget(byte[] newtarget) {
     try {
-      target = InetAddress.getByAddress(Target);
+      target = InetAddress.getByAddress(newtarget);
     } catch (UnknownHostException ex) {
       outInfoSetTarget();
       outError(ex.toString() + " [in setTarget]");
     }
   }
 
-  public void setbroadcastip(String Target) {
+  public void setbroadcastip(String newtarget) {
     try {
-      target = InetAddress.getByName(Target);
+      target = InetAddress.getByName(newtarget);
       settargetmac("FF:FF:FF:FF:FF:FF");
     } catch (UnknownHostException ex) {
       outError(ex.toString() + " [in setbroadcastip]");
     }
   }
 
-  public void setbroadcastip(byte[] Target) {
+  public void setbroadcastip(byte[] newtarget) {
     try {
-      target = InetAddress.getByAddress(Target);
+      target = InetAddress.getByAddress(newtarget);
       settargetmac("FF:FF:FF:FF:FF:FF");
     } catch (UnknownHostException ex) {
       outError(ex.toString() + " [in setbroadcastip]");
@@ -186,7 +186,7 @@ public class ACP {
   }
 
   public String[] command(String cmd, int maxResend) {
-    // send telnet-type command cmd to Linkstation by ACPcmd
+    // send telnet-type command cmd to Linkstation by acpcmd
     enonecmd();
     authent();
     if (maxResend <= 0) {
@@ -196,20 +196,20 @@ public class ACP {
   }
 
   public String[] command(String cmd) {
-    // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
+    // send telnet-type command cmd to Linkstation by acpcmd - only send packet once!
     enonecmd();
     authent();
     return doSendRcv(getacpcmd(connid, targetmac, cmd), 1);
   }
 
   public String[] authent() {
-    byte[] _encrypted = encryptacppassword(password, Key);
-    return authent(_encrypted);
+    byte[] encrypted = encryptacppassword(password, key);
+    return authent(encrypted);
   }
 
-  public String[] authent(byte[] enc_password) {
+  public String[] authent(byte[] encpassword) {
     // authenticate to ACP protokoll
-    return doSendRcv(getacpauth(connid, targetmac, enc_password));
+    return doSendRcv(getacpauth(connid, targetmac, encpassword));
   }
 
   public String[] shutdown() {
@@ -222,9 +222,9 @@ public class ACP {
     return doSendRcv(getacpreboot(connid, targetmac));
   }
 
-  public String[] EMMode() {
+  public String[] emmode() {
     // ENOneCmd protected
-    return doSendRcv(getacpEMMode(connid, targetmac));
+    return doSendRcv(getacpemmode(connid, targetmac));
   }
 
   public String[] normmode() {
@@ -233,15 +233,15 @@ public class ACP {
   }
 
   public String[] blinkled() {
-    int _mytimeout = Timeout;
-    Timeout = 60000;
+    int mytimeout = timeout;
+    timeout = 60000;
     String[] result = doSendRcv(getacpblinkled(connid, targetmac));
-    Timeout = _mytimeout;
+    timeout = mytimeout;
     return result;
   }
 
   public String[] enonecmd() {
-    return enonecmdenc(encryptacppassword(apservd, Key));
+    return enonecmdenc(encryptacppassword(apservd, key));
   }
 
   public String[] enonecmdenc(byte[] encPassword) {
@@ -250,19 +250,19 @@ public class ACP {
 
   public String[] saveconfig() {
     // set timeout to 1 min
-    int _mytimeout = Timeout;
-    Timeout = 60000;
+    int mytimeout = timeout;
+    timeout = 60000;
     String[] result = doSendRcv(getacpsaveconfig(connid, targetmac));
-    Timeout = _mytimeout;
+    timeout = mytimeout;
     return result;
   }
 
   public String[] loadconfig() {
     // set timeout to 1 min
-    int _mytimeout = Timeout;
-    Timeout = 60000;
+    int mytimeout = timeout;
+    timeout = 60000;
     String[] result = doSendRcv(getacploadconfig(connid, targetmac));
-    Timeout = _mytimeout;
+    timeout = mytimeout;
     return result;
   }
 
@@ -270,20 +270,20 @@ public class ACP {
     return doSendRcv(getacpdebugmode(connid, targetmac));
   }
 
-  public String[] multilang(byte Language) {
+  public String[] multilang(byte language) {
     // interface to switch web GUI language
     // ENOneCmd protected
     // 0 .. Japanese
     // 1 .. English
     // 2 .. German
     // default .. English
-    return doSendRcv(getacpmultilang(connid, targetmac, Language));
+    return doSendRcv(getacpmultilang(connid, targetmac, language));
   }
 
   public String[] changeip(byte[] newip, byte[] newMask, boolean usedhcp) {
     // change IP address
-    byte[] _encrypted = encryptacppassword(password, Key);
-    return doSendRcv(getacpchangeip(connid, targetmac, newip, newMask, usedhcp, _encrypted));
+    byte[] encrypted = encryptacppassword(password, key);
+    return doSendRcv(getacpchangeip(connid, targetmac, newip, newMask, usedhcp, encrypted));
   }
 
   //--- End of public routines ---
@@ -293,71 +293,71 @@ public class ACP {
   //
 
   private String[] doDiscover() {
-    String _state = "[Send/Receive ACPDiscover]";
+    String state = "[Send/Receive ACPDiscover]";
     byte[] buf = getacpdisc(connid, targetmac);
     byte[] buf2 = getacpdisc2(connid, targetmac);
-    String[] _searchres = new String[1];
-    ArrayList<String> _tempres = new ArrayList<>();
-    DatagramSocket _socket;
+    String[] searchres = new String[1];
+    ArrayList<String> tempres = new ArrayList<>();
+    DatagramSocket socket;
 
-    DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, port.intValue());
-    DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
+    DatagramPacket packet = new DatagramPacket(buf, buf.length, target, port.intValue());
+    DatagramPacket receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
 
-    DatagramPacket _packet2 = new DatagramPacket(buf2, buf2.length, target, port.intValue());
+    DatagramPacket packet2 = new DatagramPacket(buf2, buf2.length, target, port.intValue());
 
     try {
-      _socket = getSocket(); // TODO bind functionality is missing here
+      socket = getSocket(); // TODO bind functionality is missing here
 
-      _socket.send(_packet);
-      _socket.send(_packet2);
+      socket.send(packet);
+      socket.send(packet2);
 
-      long _LastSendTime = System.currentTimeMillis();
-      while (System.currentTimeMillis() - _LastSendTime < Timeout) {
-        _socket.receive(_receive);
-        _searchres = rcvacp(_receive.getData(), debuglevel); // get search results
+      long lastsendtime = System.currentTimeMillis();
+      while (System.currentTimeMillis() - lastsendtime < timeout) {
+        socket.receive(receive);
+        searchres = rcvacp(receive.getData(), debuglevel); // get search results
 
         // TODO: do optional Discover event with _searchres
-        _tempres.add(_searchres[1]); // add formatted string to result list
+        tempres.add(searchres[1]); // add formatted string to result list
       }
-    } catch (java.net.SocketTimeoutException SToE) {
+    } catch (java.net.SocketTimeoutException stoe) {
       // TimeOut should be OK as we wait until Timeout if we get packets
       outDebug(
           "Timeout reached, stop listening to further Discovery replies",
                 2);
-    } catch (java.net.SocketException SE) {
+    } catch (java.net.SocketException se) {
       // TODO: better error handling
       outInfoSocket();
-      outError("Exception: SocketException (" + SE.getMessage() + ") "
-                + _state);
-    } catch (java.io.IOException IOE) {
+      outError("Exception: SocketException (" + se.getMessage() + ") "
+                + state);
+    } catch (java.io.IOException ioe) {
       // TODO: better error handling
-      outError("Exception: IOException (" + IOE.getMessage() + ") "
-                + _state);
+      outError("Exception: IOException (" + ioe.getMessage() + ") "
+                + state);
     }
 
     // first check for repeated entries and delete them.
-    for (int i = 0; i < _tempres.size() - 1; i++) {
-      for (int j = i + 1; j < _tempres.size(); j++) {
+    for (int i = 0; i < tempres.size() - 1; i++) {
+      for (int j = i + 1; j < tempres.size(); j++) {
         // if entry i is equal to entry j
-        if (((String) _tempres.get(i)).equals((String) _tempres.get(j))) {
+        if (((String) tempres.get(i)).equals((String) tempres.get(j))) {
           // remove j, alternatively clear string and delete in second loop
-          _tempres.remove(j);
+          tempres.remove(j);
           j--;
         }
       }
     }
 
     // move results into string array
-    String[] result = new String[_tempres.size()];
-    for (int i = 0; i < _tempres.size(); i++) {
-      result[i] = (String) _tempres.get(i);
+    String[] result = new String[tempres.size()];
+    for (int i = 0; i < tempres.size(); i++) {
+      result[i] = (String) tempres.get(i);
     }
 
     //probably not good practice and should be refactored
     if (target.toString().split("/",2)[1].equals("255.255.255.255")) {
       return result;
     }
-    return _searchres;
+    return searchres;
   }
 
   // send ACP packet and handle answer
@@ -367,79 +367,79 @@ public class ACP {
 
 
   private String[] doSendRcv(byte[] buf, int repeatSend) {
-    String _ACPcmd = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
-    String _state = "[ACP Send/Receive (Packet:" + _ACPcmd + " = "
+    String acpcmd = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
+    String state = "[ACP Send/Receive (Packet:" + acpcmd + " = "
             + getcmdstring(buf) + ")]";
     String[] result;
     int sendcount = 0;
-    boolean SendAgain = true;
-    DatagramSocket _socket;
-    DatagramPacket _packet = new DatagramPacket(buf, buf.length, target, port.intValue());
-    // TODO: danger - possible buffer overflow/data loss with fixed packet length
-    DatagramPacket _receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
+    boolean sendagain = true;
+    DatagramSocket socket;
+    DatagramPacket packet = new DatagramPacket(buf, buf.length, target, port.intValue());
+
+    DatagramPacket receive = new DatagramPacket(new byte[rcvBufLen], rcvBufLen);
 
     do {
       sendcount++;
       try {
         outDebug("Sending " + sendcount + "/" + repeatSend, 2);
 
-        _socket = getSocket();
+        socket = getSocket();
 
-        _socket.send(_packet);
-        _socket.receive(_receive);
+        socket.send(packet);
+        socket.receive(receive);
 
-        SendAgain = false; // we received an answer
+        sendagain = false; // we received an answer
 
             // TODO: do optional Receive-event with result
-      } catch (java.net.SocketTimeoutException SToE) {
+      } catch (java.net.SocketTimeoutException stoe) {
         // TODO: better error handling
         result = new String[2];
         if (sendcount >= repeatSend) {
-          result[1] = "Exception: SocketTimeoutException (" + SToE.getMessage() + ") " + _state;
+          result[1] = "Exception: SocketTimeoutException (" + stoe.getMessage() + ") " + state;
 
           outInfoTimeout();
           outError(result[1]);
         } else {
-          result[1] = "Timeout (" + _state + " retry sending ("
+          result[1] = "Timeout (" + state + " retry sending ("
                 + sendcount + "/" + repeatSend + ")";
           outDebug(result[1], 1);
         }
-      } catch (java.net.SocketException SE) {
+      } catch (java.net.SocketException se) {
         // TODO: better error handling
         result = new String[2];
-        result[1] = "Exception: SocketException (" + SE.getMessage() + ") " + _state;
+        result[1] = "Exception: SocketException (" + se.getMessage() + ") " + state;
 
         outInfoSocket();
         outError(result[1]);
-      } catch (java.io.IOException IOE) {
+      } catch (java.io.IOException ioe) {
         // TODO: better error handling
         result = new String[2];
-        result[1] = "Exception: IOException (" + IOE.getMessage() + ") " + _state;
+        result[1] = "Exception: IOException (" + ioe.getMessage() + ") " + state;
         outError(result[1]);
       }
 
-    } while ((sendcount < repeatSend) && SendAgain); // repeat until max retries reached
+    } while ((sendcount < repeatSend) && sendagain); // repeat until max retries reached
 
-    result = rcvacp(_receive.getData(), debuglevel); // get search results
+    result = rcvacp(receive.getData(), debuglevel); // get search results
 
     return result;
   }
 
   private DatagramSocket getSocket() throws java.net.SocketException {
-    DatagramSocket _socket;
+    DatagramSocket socket;
     if (bind != null) {
       // bind socket to a local address (-b)
       // Create a socket address from a hostname (_bind) and a port number. A port number
       // of zero will let the system pick up an ephemeral port in a bind operation.
       outDebug("Binding socket to: " + bind.toString() + "\n", 1);
 
-      _socket = new DatagramSocket(bind);
+      socket = new DatagramSocket(bind);
     } else {
-      _socket = new DatagramSocket();
+      socket = new DatagramSocket();
     }
 
-    _socket.setSoTimeout(Timeout);
-    return _socket;
+    socket.setSoTimeout(timeout);
+    return socket;
   }
 
   //
@@ -612,90 +612,90 @@ public class ACP {
     return cmdstring;
   }
 
-  // retreive ErrorCode out of receive buffer
-  private int getErrorCode(byte[] buf) {
+  // retreive errorcode out of receive buffer
+  private int geterrorcode(byte[] buf) {
     return (int) (buf[28] & 0xFF) + (int) ((buf[29] & 0xFF) << 8)
           +  (int) ((buf[30] & 0xFF) << 16) + (int) ((buf[31] & 0xFF) << 24);
   }
 
 
-  // Translate ErrorCode to meaningful string
+  // Translate errorcode to meaningful string
   private String getErrorMsg(byte[] buf) {
     String acpStatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
                + bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
-    int ErrorCode = getErrorCode(buf);
+    int errorcode = geterrorcode(buf);
 
-    String ErrorString;
-    switch (ErrorCode) {
+    String errorstring;
+    switch (errorcode) {
       // There should be an error state ACP_OK, TODO: Test
       case 0x00000000:
-        ErrorString = "ACP_STATE_OK";
+        errorstring = "ACP_STATE_OK";
         break;
       case 0x80000000:
-        ErrorString = "ACP_STATE_MALLOC_ERROR";
+        errorstring = "ACP_STATE_MALLOC_ERROR";
         break;
       case 0x80000001:
-        ErrorString = "ACP_STATE_PASSWORD_ERROR";
+        errorstring = "ACP_STATE_PASSWORD_ERROR";
         break;
       case 0x80000002:
-        ErrorString = "ACP_STATE_NO_CHANGE";
+        errorstring = "ACP_STATE_NO_CHANGE";
         break;
       case 0x80000003:
-        ErrorString = "ACP_STATE_MODE_ERROR";
+        errorstring = "ACP_STATE_MODE_ERROR";
         break;
       case 0x80000004:
-        ErrorString = "ACP_STATE_CRC_ERROR";
+        errorstring = "ACP_STATE_CRC_ERROR";
         break;
       case 0x80000005:
-        ErrorString = "ACP_STATE_NOKEY";
+        errorstring = "ACP_STATE_NOKEY";
         break;
       case 0x80000006:
-        ErrorString = "ACP_STATE_DIFFMODEL";
+        errorstring = "ACP_STATE_DIFFMODEL";
         break;
       case 0x80000007:
-        ErrorString = "ACP_STATE_NOMODEM";
+        errorstring = "ACP_STATE_NOMODEM";
         break;
       case 0x80000008:
-        ErrorString = "ACP_STATE_COMMAND_ERROR";
+        errorstring = "ACP_STATE_COMMAND_ERROR";
         break;
       case 0x80000009:
-        ErrorString = "ACP_STATE_NOT_UPDATE";
+        errorstring = "ACP_STATE_NOT_UPDATE";
         break;
       case 0x8000000A:
-        ErrorString = "ACP_STATE_PERMIT_ERROR";
+        errorstring = "ACP_STATE_PERMIT_ERROR";
         break;
       case 0x8000000B:
-        ErrorString = "ACP_STATE_OPEN_ERROR";
+        errorstring = "ACP_STATE_OPEN_ERROR";
         break;
       case 0x8000000C:
-        ErrorString = "ACP_STATE_READ_ERROR";
+        errorstring = "ACP_STATE_READ_ERROR";
         break;
       case 0x8000000D:
-        ErrorString = "ACP_STATE_WRITE_ERROR";
+        errorstring = "ACP_STATE_WRITE_ERROR";
         break;
       case 0x8000000E:
-        ErrorString = "ACP_STATE_COMPARE_ERROR";
+        errorstring = "ACP_STATE_COMPARE_ERROR";
         break;
       case 0x8000000F:
-        ErrorString = "ACP_STATE_MOUNT_ERROR";
+        errorstring = "ACP_STATE_MOUNT_ERROR";
         break;
       case 0x80000010:
-        ErrorString = "ACP_STATE_PID_ERROR";
+        errorstring = "ACP_STATE_PID_ERROR";
         break;
       case 0x80000011:
-        ErrorString = "ACP_STATE_FIRM_TYPE_ERROR";
+        errorstring = "ACP_STATE_FIRM_TYPE_ERROR";
         break;
       case 0x80000012:
-        ErrorString = "ACP_STATE_FORK_ERROR";
+        errorstring = "ACP_STATE_FORK_ERROR";
         break;
       case 0xFFFFFFFF:
-        ErrorString = "ACP_STATE_FAILURE";
+        errorstring = "ACP_STATE_FAILURE";
         break;
-      // unknown error, better use ErrorCode and format it to hex
+      // unknown error, better use errorcode and format it to hex
       default:
-        ErrorString = "ACP_STATE_UNKNOWN_ERROR (" + acpStatus + ")";
+        errorstring = "ACP_STATE_UNKNOWN_ERROR (" + acpStatus + ")";
     }
-    return ErrorString;
+    return errorstring;
   }
 
   /**
@@ -741,11 +741,11 @@ public class ACP {
     return (buf);
   }
 
-  // creates an ACPEMMode packet, ACP_EN_ONECMD protected
-  private byte[] getacpEMMode(String connid, String targetmac) {
+  // creates an ACPemmode packet, ACP_EN_ONECMD protected
+  private byte[] getacpemmode(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
-    buf[32] = 0x03; // type ACPEMMode
+    buf[32] = 0x03; // type ACPemmode
 
     return (buf);
   }
@@ -810,12 +810,12 @@ public class ACP {
   // creates an ACPMultilang packet, ACP_EN_ONECMD protected
   // Used for setting GUI language, then additional parameter for language is needed
   private byte[] getacpmultilang(String connid, String targetmac,
-                   byte Language) {
+                   byte language) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x12; // type ACPMultilang
 
-    buf[0x24] = Language; // seems to be a 4 byte value, starting at 0x24
+    buf[0x24] = language; // seems to be a 4 byte value, starting at 0x24
 
     return (buf);
   }
@@ -888,77 +888,70 @@ public class ACP {
     return (buf);
   }
 
-  public byte[] encryptacppassword(String _password, byte[] _key) {
-    if (_password.length() > 24) {
+  public byte[] encryptacppassword(String password, byte[] newkey) {
+    if (password.length() > 24) {
       outError("The acp_commander only allows password lengths up to 24 chars");
     }
-    if (_password.length() == 0) {
+    if (password.length() == 0) {
       return new byte[8];
     }
 
-    byte[] sub_passwd = new byte[8];
-    int sub_length = 0;
-    byte[] result = new byte[(_password.length() + 7 >> 3) * 8];
+    byte[] subpasswd = new byte[8];
+    int sublength = 0;
+    byte[] result = new byte[(password.length() + 7 >> 3) * 8];
 
-    for (int i = 0; i < (_password.length() + 7) >> 3; i++) {
-      sub_length = _password.length() - i * 8;
-      if (sub_length > 8) {
-        sub_length = 8;
+    for (int i = 0; i < (password.length() + 7) >> 3; i++) {
+      sublength = password.length() - i * 8;
+      if (sublength > 8) {
+        sublength = 8;
       }
 
-      System.arraycopy(_password.substring(i * 8).getBytes(defaultCharset), 0,
-                 sub_passwd, 0, sub_length);
-      if (sub_length < 8) {
-        sub_passwd[sub_length] = (byte) 0x00; // end of string must be 0x00
+      System.arraycopy(password.substring(i * 8).getBytes(defaultCharset), 0,
+                 subpasswd, 0, sublength);
+      if (sublength < 8) {
+        subpasswd[sublength] = (byte) 0x00; // end of string must be 0x00
       }
 
-      System.arraycopy(encacppassword(sub_passwd, _key), 0, result, i * 8,
-                 8);
+      System.arraycopy(encacppassword(subpasswd, newkey), 0, result, i * 8, 8);
     }
 
     return result;
   }
 
-  private byte[] encacppassword(byte[] _password, byte[] _key) {
+  private byte[] encacppassword(byte[] password, byte[] outkey) {
     //
     // mimmicks route from LSUpdater.exe, starting at 0x00401700
     // key is a 4 byte array (changed order, key 6ae2ad78 => (0x6a, 0xe2, 0xad, 0x78)
     // password = ap_servd, key= 6ae2ad78 gives encrypted 19:A4:F7:9B:AF:7B:C4:DD
     //
-    byte[] new_key = new byte[8];
+    byte[] newkey = new byte[8];
     byte[] result = new byte[8];
 
-    // first generate initial encryption key (new_key) from key
+    // first generate initial encryption key (newkey) from key
     for (int i = 0; i < 4; i++) {
-      new_key[3 - i] = (byte) (_key[i]); // lower 4 bytes
-      new_key[4 + i] = (byte) ((_key[i] ^ _key[3 - i]) * _key[3 - i]); // higher 4 bytes
+      newkey[3 - i] = (byte) (outkey[i]); // lower 4 bytes
+      newkey[4 + i] = (byte) ((outkey[i] ^ outkey[3 - i]) * outkey[3 - i]); // higher 4 bytes
     }
-    // use new_key to generate scrambled (xor) password, new_key is regularly altered
-    int j = 0;
-    int n;
+    // use newkey to generate scrambled (xor) password, newkey is regularly altered
+    //int j = 0;
     for (int i = 0; i < 4; i++) {
-      // encryption of first char, first alter new_key
-      new_key[0] = (byte) (_password[j] ^ new_key[0]);
+      // encryption of first char, first alter newkey
+      newkey[0] = (byte) (password[(i * 2)] ^ newkey[0]);
 
-      n = 2;
-      for (int k = 0; k < i; k++) { // only executed if i > 1
-        new_key[n] = (byte) (new_key[n] ^ new_key[n - 2]);
-        n = n + 2;
+      for (int k = 1; k < (i + 1); k++) { // only executed if i > 1
+        newkey[k * 2] = (byte) (newkey[k * 2] ^ newkey[(k * 2) - 2]);
       }
 
-      result[i] = new_key[j];
+      result[i] = newkey[(i * 2)];
 
-      // above is repeated (more or less) for 2nd char, first alter new_key
-      new_key[1] = (byte) (_password[j + 1] ^ new_key[1]);
+      // above is repeated (more or less) for 2nd char, first alter newkey
+      newkey[1] = (byte) (password[(i * 2) + 1] ^ newkey[1]);
 
-      n = 3;
-      for (int k = 0; k < i; k++) { // only executed if i > 1
-        new_key[n] = (byte) (new_key[n] ^ new_key[n - 2]);
-        n = n + 2;
+      for (int k = 1; k < (i + 1); k++) { // only executed if i > 1
+        newkey[(k * 2) + 1] = (byte) (newkey[(k * 2) + 1] ^ newkey[(k * 2) - 1]);
       }
 
-      result[7 - i] = new_key[j + 1];
-      j = j + 2;
+      result[7 - i] = newkey[(i * 2) + 1];
     }
 
     return (result);
@@ -995,16 +988,16 @@ public class ACP {
         }
         System.out.println("");
       }
-    } catch (java.lang.ArrayIndexOutOfBoundsException ArrayE) {
-      outError(ArrayE.toString());
+    } catch (java.lang.ArrayIndexOutOfBoundsException arrayE) {
+      outError(arrayE.toString());
     }
   }
 
   /* Analyse ACPDisc answer packet, get hostname, hostIP, DHCP-state, FW-version
-     * outACPrcvDisc(byte[] buf, int _debug)
+     * outACPrcvDisc(byte[] buf, int debug)
      *  INPUT
      *    buf      ... byte [], buffer with received data
-     *    _debug   ... int, debug state
+     *    debug   ... int, debug state
      *  OUTPUT
      *    result   ... String [] string array with results of packet analysis
      *            0 - "ACPdiscovery reply" = packet type
@@ -1017,17 +1010,17 @@ public class ACP {
      *            7 - FW version
      *            8 - key (used for pwd encryption in regular authentication process)
      */
-  private String[] rcvacpDisc(byte[] buf, int _debug) {
+  private String[] rcvacpDisc(byte[] buf, int debug) {
     String[] result = new String[9];
     int tmppckttype = 0;
-    int _out = 1;
-    int _hostname = 2;
-    int _ip = 3;
-    int _mac = 4;
-    int _productstr = 5;
-    int _productid = 6;
-    int _FWversion = 7;
-    int _key = 8;
+    int out = 1;
+    int hostname = 2;
+    int ip = 3;
+    int mac = 4;
+    int productstr = 5;
+    int productid = 6;
+    int fwversion = 7;
+    int key = 8;
 
     for (int i = 0; i < result.length; i++) {
       result[i] = "";
@@ -1041,48 +1034,48 @@ public class ACP {
         targetip[i] = buf[35 - i];
       }
       InetAddress targetAddr = InetAddress.getByAddress(targetip);
-      result[_ip] = targetAddr.toString();
+      result[ip] = targetAddr.toString();
 
       // get host name
       int index = 48;
       while ((buf[index] != 0x00) & (index < buf.length)) {
-        result[_hostname] = result[_hostname] + (char) buf[index++];
+        result[hostname] = result[hostname] + (char) buf[index++];
       }
 
       // Product ID string starts at byte 80
       index = 80;
       while ((buf[index] != 0x00) & (index < buf.length)) {
-        result[_productstr] = result[_productstr] + (char) buf[index++];
+        result[productstr] = result[productstr] + (char) buf[index++];
       }
 
       // Product ID starts at byte 192 low to high
       for (int i = 3; i >= 0; i--) {
-        result[_productid] = result[_productid] + buf[192 + i];
+        result[productid] = result[productid] + buf[192 + i];
       }
 
       // MAC starts at byte 311
       for (int i = 0; i <= 5; i++) {
-        result[_mac] = result[_mac] + bufferToHex(buf, i + 311, 1);
+        result[mac] = result[mac] + bufferToHex(buf, i + 311, 1);
         if (i != 5) {
-          result[_mac] = result[_mac] + ":";
+          result[mac] = result[mac] + ":";
         }
       }
 
       // Key - changes with connectionid (everytime) -> key to password encryption?
       for (int i = 0; i <= 3; i++) {
-        result[_key] = result[_key] + bufferToHex(buf, 47 - i, 1);
+        result[key] = result[key] + bufferToHex(buf, 47 - i, 1);
       }
 
       // Firmware version starts at 187
-      result[_FWversion] = buf[187] + buf[188] + "." + buf[189] + buf[190];
+      result[fwversion] = buf[187] + buf[188] + "." + buf[189] + buf[190];
 
-      result[_out] = (result[_hostname] + "\t"
-                + result[_ip].replace("/","") + "\t"
-                + String.format("%-" + 20 + "s", result[_productstr]) + "\t"
-                + "ID=" + result[_productid] + "\t"
-                + "mac: " + result[_mac] + "\t"
-                + "FW=  " + result[_FWversion] + "\t"
-               //+ "Key=" + result[_key] + "\t"
+      result[out] = (result[hostname] + "\t"
+                + result[ip].replace("/","") + "\t"
+                + String.format("%-" + 20 + "s", result[productstr]) + "\t"
+                + "ID=" + result[productid] + "\t"
+                + "mac: " + result[mac] + "\t"
+                + "FW=  " + result[fwversion] + "\t"
+               //+ "Key=" + result[newkey] + "\t"
                );
     } catch (java.net.UnknownHostException unkhoste) {
       outError(unkhoste.getMessage());
@@ -1091,10 +1084,10 @@ public class ACP {
   }
 
   /* Analyses incoming ACP Replys - TODO progress, still needs better handling
-     *  rcvacp(byte[] buf, int _debug)
+     *  rcvacp(byte[] buf, int debug)
      *  INPUT
      *    buf      ... byte [], buffer with received data
-     *    _debug   ... int, debug state
+     *    debug   ... int, debug state
      *  OUTPUT
      *    result   ... String [] string array with results of packet analysis
      *            0 - "ACP... reply" = packet type
@@ -1143,11 +1136,11 @@ public class ACP {
 
         //            result[1] = "OK"; // should be set according to acpStatus!
         break;
-      case 0xca10: // ACPcmd
-        outDebug("received ACPcmd reply", 1);
+      case 0xca10: // acpcmd
+        outDebug("received acpcmd reply", 1);
 
         result = new String[2];
-        result[0] = "ACPcmd reply";
+        result[0] = "acpcmd reply";
         result[1] = "";
         int index = 40;
         while ((buf[index] != 0x00) & (index < buf.length)) {

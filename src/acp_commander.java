@@ -617,7 +617,7 @@ public class acp_commander {
       _state = "Set EM-Mode";
       // send EM-Mode command
       System.out.println("Sending EM-Mode command...\t");
-      String _result = myACP.EMMode()[1];
+      String _result = myACP.emmode()[1];
       System.out.println(_result);
       if (_result.equals("ACP_STATE_OK")) {
         System.out.println("At your next reboot your LS will boot into EM mode.");
@@ -682,14 +682,14 @@ public class acp_commander {
       _state = "changeip";
 
       try {
-        int _mytimeout = myACP.Timeout;
-        myACP.Timeout = 10000;
+        int _mytimeout = myACP.timeout;
+        myACP.timeout = 10000;
 
         System.out.println("Changeing IP:\t"
                    + myACP.changeip(InetAddress.getByName(_newip).getAddress(),
                      new byte[] {(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true)[1]);
 
-        myACP.Timeout = _mytimeout;
+        myACP.timeout = _mytimeout;
         System.out.println(
                          "\nPlease note, that the current support for the change of the IP "
                       +  "is currently very rudimentary.\nThe IP has been set to the given, "
