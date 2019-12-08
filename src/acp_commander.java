@@ -48,7 +48,7 @@ public class acp_commander {
             + "                Using a lot of different id's in a chain of commands might\n"
             + "                cause a lot of overhead at the device.\n"
             + "   -p port  ... define alternative target port, default = " + _stdport + "\n"
-            + "   -b localIP.. bind socket to local address. Use if acp_commander\n"
+            + "   -b localip.. bind socket to local address. Use if acp_commander\n"
             + "                can not find your device (might use wrong adapter).\n"
             + "\n"
             + "   -f       ... find device(s) by sending an ACP_DISCOVER package\n"
@@ -270,7 +270,7 @@ public class acp_commander {
     }
 
     if (hasParam("-i", args)) {
-      outDebug("ConnectionID parameter -i given", 2);
+      outDebug("connectionid parameter -i given", 2);
       _connID = getParamValue("-i", args, _connID);
     }
 
@@ -458,7 +458,7 @@ public class acp_commander {
     ACP myACP = new ACP(_target);
     myACP.DebugLevel = _debug;
     myACP.Port = _port;
-    myACP.setConnID(_connID);
+    myACP.setconnid(_connID);
     myACP.setTargetMAC(_mac);
     myACP.bind(_bind);
 
@@ -511,7 +511,7 @@ public class acp_commander {
                  * Buffalos standard authentication procedure:
                  * 1 - send ACPDiscover to get key for password encryption
                  * 2 - send ACPSpecial-EnOneCmd with encrypted password "ap_servd"
-                 * 3 - send ACPSpecial-Authent with encrypted admin password
+                 * 3 - send ACPSpecial-authent with encrypted admin password
                  */
 
       outDebug("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1],1);
@@ -524,14 +524,14 @@ public class acp_commander {
 
       myACP.setPassword(_password);
 
-      if (!myACP.Authent()[1].equals("ACP_STATE_OK")) {
+      if (!myACP.authent()[1].equals("ACP_STATE_OK")) {
 
         java.io.Console console = System.console();
 
         try {
           _password = new String(console.readPassword("admin password: "));
           myACP.setPassword(_password);
-          myACP.Authent();
+          myACP.authent();
         } catch (Exception E) { }
       }
     }

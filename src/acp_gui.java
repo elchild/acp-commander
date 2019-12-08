@@ -38,7 +38,7 @@ public class acp_gui extends Frame implements WindowListener, ActionListener, It
 
   Checkbox quietModeCheckbox;
   Checkbox idCheckbox;
-  Checkbox noAuthenticationCheckbox;
+  Checkbox noauthenticationCheckbox;
   Checkbox noDebug_Checkbox;
   Checkbox debug1_Checkbox;
   Checkbox debug2_Checkbox;
@@ -59,7 +59,7 @@ public class acp_gui extends Frame implements WindowListener, ActionListener, It
   Label targetHostLabel;
   Label targetPortLabel;
   Label localMacLabel;
-  Label noAuthenticationLabel;
+  Label noauthenticationLabel;
   Label openBoxTitle;
   Label openBoxDescription;
   Label optionsTitle;

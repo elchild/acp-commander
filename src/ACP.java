@@ -62,18 +62,18 @@ public class ACP {
   //
   //  set/get for private variables
   //
-  public String getConnID() {
+  public String getconnid() {
     return connID.toString();
   }
 
-  public void setConnID(String ConnectionID) {
+  public void setconnid(String connectionid) {
     // TODO: input param checking!
-    connID = ConnectionID;
+    connID = connectionid;
   }
 
-  public void setConnID(byte[] ConnectionID) {
+  public void setconnid(byte[] connectionid) {
     // TODO: input param checking!
-    connID = bufferToHex(ConnectionID, 0, 6);
+    connID = bufferToHex(connectionid, 0, 6);
   }
 
   public String getTargetMAC() {
@@ -131,28 +131,28 @@ public class ACP {
     }
   }
 
-  public void setBroadcastIP(String Target) {
+  public void setbroadcastip(String Target) {
     try {
       target = InetAddress.getByName(Target);
       setTargetMAC("FF:FF:FF:FF:FF:FF");
     } catch (UnknownHostException ex) {
-      outError(ex.toString() + " [in setBroadcastIP]");
+      outError(ex.toString() + " [in setbroadcastip]");
     }
   }
 
-  public void setBroadcastIP(byte[] Target) {
+  public void setbroadcastip(byte[] Target) {
     try {
       target = InetAddress.getByAddress(Target);
       setTargetMAC("FF:FF:FF:FF:FF:FF");
     } catch (UnknownHostException ex) {
-      outError(ex.toString() + " [in setBroadcastIP]");
+      outError(ex.toString() + " [in setbroadcastip]");
     }
   }
 
-  public void bind(InetSocketAddress localIP) {
-    bind = localIP;
-    if (localIP.isUnresolved()) {
-      outWarning("The bind address " + localIP
+  public void bind(InetSocketAddress localip) {
+    bind = localip;
+    if (localip.isUnresolved()) {
+      outWarning("The bind address " + localip
           + " given with parameter -b could not be resolved to a local IP-Address.\n"
           + "You must use this parameter with a valid IP-Address that belongs to "
           + "the PC you run acp_commander on.\n");
@@ -160,12 +160,12 @@ public class ACP {
     }
   }
 
-  public void bind(String localIP) {
+  public void bind(String localip) {
     // bind socket to a local address (-b)
     // Create a socket address from a hostname (_bind) and a port number. A port number
     // of zero will let the system pick up an ephemeral port in a bind operation.
-    if (!localIP.equalsIgnoreCase("")) {
-      bind(new InetSocketAddress(localIP, 0));
+    if (!localip.equalsIgnoreCase("")) {
+      bind(new InetSocketAddress(localip, 0));
     } else {
       bind = null;
     }
@@ -188,26 +188,26 @@ public class ACP {
   public String[] Command(String cmd, int maxResend) {
     // send telnet-type command cmd to Linkstation by ACPcmd
     EnOneCmd();
-    Authent();
+    authent();
     if (maxResend <= 0) {
       maxResend = resendPackets;
     }
-    return doSendRcv(getACPCmd(connID, targetmac, cmd), maxResend);
+    return doSendRcv(getacpcmd(connID, targetmac, cmd), maxResend);
   }
 
   public String[] Command(String cmd) {
     // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
     EnOneCmd();
-    Authent();
-    return doSendRcv(getACPCmd(connID, targetmac, cmd), 1);
+    authent();
+    return doSendRcv(getacpcmd(connID, targetmac, cmd), 1);
   }
 
-  public String[] Authent() {
+  public String[] authent() {
     byte[] _encrypted = encryptACPpassword(password, Key);
-    return Authent(_encrypted);
+    return authent(_encrypted);
   }
 
-  public String[] Authent(byte[] enc_password) {
+  public String[] authent(byte[] enc_password) {
     // authenticate to ACP protokoll
     return doSendRcv(getACPAuth(connID, targetmac, enc_password));
   }
@@ -241,10 +241,10 @@ public class ACP {
   }
 
   public String[] EnOneCmd() {
-    return EnOneCmdENC(encryptACPpassword(ap_servd, Key));
+    return enonecmdenc(encryptACPpassword(ap_servd, Key));
   }
 
-  public String[] EnOneCmdENC(byte[] encPassword) {
+  public String[] enonecmdenc(byte[] encPassword) {
     return doSendRcv(getACPEnOneCmd(connID, targetmac, encPassword));
   }
 
@@ -455,10 +455,10 @@ public class ACP {
   }
 
   private String getCmdString(byte[] buf) {
-    int ACPCmd = getCommand(buf);
+    int acpcmd = getCommand(buf);
     String CmdString = String.valueOf("");
 
-    switch (ACPCmd) {
+    switch (acpcmd) {
         // ACP_Commands
         // Currently missing, but defined in clientUtil_server:
         //     ACP_FORMAT
@@ -699,98 +699,98 @@ public class ACP {
   }
 
   /**
-     * setACPHeader
+     * setacpheader
      * Helper function. Creates an ACP header in the given buf.
      *
      * @param buf byte[]        buffer for packet data
-     * @param ACPCmd String     HexString (2 byte) with ACPCommand
-     * @param ConnID String     HexString (6 byte) with Connection ID
+     * @param acpcmd String     HexString (2 byte) with ACPCommand
+     * @param connid String     HexString (6 byte) with Connection ID
      * @param targetmac String  HexString (6 byte) with targets MAC
      * @param payloadsize byte  Length of payload following header
      *              (for ACPSpecial command this is fixed to 0x28 byte!)
      */
-  private void setACPHeader(byte[] buf, String ACPCmd, String ConnID,
+  private void setacpheader(byte[] buf, String acpcmd, String connid,
                   String targetmac, byte payloadsize) {
     buf[0] = 0x20; // length of header, 32 bytes
     buf[4] = 0x08; // minor packet version
     buf[6] = 0x01; // major packet version
-    buf[8] = hextobyte(ACPCmd.substring(2, 4))[0]; // lowbyte of ACP command
-    buf[9] = hextobyte(ACPCmd.substring(0, 2))[0]; // highbyte of ACP command
+    buf[8] = hextobyte(acpcmd.substring(2, 4))[0]; // lowbyte of ACP command
+    buf[9] = hextobyte(acpcmd.substring(0, 2))[0]; // highbyte of ACP command
     buf[10] = payloadsize;
 
-    byte[] test = hextobyte(ConnID);
+    byte[] test = hextobyte(connid);
     System.arraycopy(test, 0, buf, 16, 6);
     System.arraycopy(hextobyte(targetmac), 0, buf, 22, 6);
   }
 
   // creates an ACPReboot packet, ACP_EN_ONECMD protected
-  private byte[] getACPReboot(String ConnID, String targetmac) {
+  private byte[] getACPReboot(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x01; // type ACPReboot
 
     return (buf);
   }
 
   // creates an ACPShutdown packet, ACP_EN_ONECMD protected
-  private byte[] getACPShutdown(String ConnID, String targetmac) {
+  private byte[] getACPShutdown(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x02; // type ACPShutdown
 
     return (buf);
   }
 
   // creates an ACPEMMode packet, ACP_EN_ONECMD protected
-  private byte[] getACPEMMode(String ConnID, String targetmac) {
+  private byte[] getACPEMMode(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x03; // type ACPEMMode
 
     return (buf);
   }
 
   // creates an ACPNormMode packet, ACP_EN_ONECMD protected
-  private byte[] getACPNormMode(String ConnID, String targetmac) {
+  private byte[] getACPNormMode(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x04; // type ACPNormmode
 
     return (buf);
   }
 
   // creates an ACPBlinkLED packet, also plays a series of tones
-  private byte[] getACPBlinkLED(String ConnID, String targetmac) {
+  private byte[] getACPBlinkLED(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x05; // type ACPBlinkled
 
     return (buf);
   }
 
   // creates an ACPSaveConfig packet
-  private byte[] getACPSaveConfig(String ConnID, String targetmac) {
+  private byte[] getACPSaveConfig(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x06; // type ACPSaveConfig
 
     return (buf);
   }
 
   // creates an ACPLoadConfig packet
-  private byte[] getACPLoadConfig(String ConnID, String targetmac) {
+  private byte[] getACPLoadConfig(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x07; // type ACPLoadConfig
 
     return (buf);
   }
 
   // creates an ACPEnOneCmd packet with the encrypted password (HexString 8 byte)
-  private byte[] getACPEnOneCmd(String ConnID, String targetmac,
+  private byte[] getACPEnOneCmd(String connid, String targetmac,
                   byte[] password) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) 0x28);
+    setacpheader(buf, "80a0", connid, targetmac, (byte) 0x28);
     buf[32] = 0x0d;
 
     System.arraycopy(password, 0, buf, 40, 8);
@@ -799,9 +799,9 @@ public class ACP {
 
   // creates an ACPDebugmode packet
   // unclear what this causes on the LS
-  private byte[] getACPDebugMode(String ConnID, String targetmac) {
+  private byte[] getACPDebugMode(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x0e; // type ACPDebugmode
 
     return (buf);
@@ -809,10 +809,10 @@ public class ACP {
 
   // creates an ACPMultilang packet, ACP_EN_ONECMD protected
   // Used for setting GUI language, then additional parameter for language is needed
-  private byte[] getACPMultiLang(String ConnID, String targetmac,
+  private byte[] getACPMultiLang(String connid, String targetmac,
                    byte Language) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) (0x28));
+    setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x12; // type ACPMultilang
 
     buf[0x24] = Language; // seems to be a 4 byte value, starting at 0x24
@@ -822,27 +822,27 @@ public class ACP {
 
   // creates an ACPDiscover packet
   // LS answers with a packet giving firmware details and a key used for pw encryption
-  private byte[] getACPDisc(String ConnID, String targetmac) {
+  private byte[] getACPDisc(String connid, String targetmac) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "8020", ConnID, targetmac, (byte) 0x28);
+    setacpheader(buf, "8020", connid, targetmac, (byte) 0x28);
 
     return (buf);
   }
 
   //newer version of discovery packet required by some devs
-  private byte[] getACPDisc2(String ConnID, String targetmac) {
+  private byte[] getACPDisc2(String connid, String targetmac) {
     byte[] buf = new byte[32];
-    setACPHeader(buf, "8E00", ConnID, targetmac, (byte) 0x00);
+    setacpheader(buf, "8E00", connid, targetmac, (byte) 0x00);
 
     return (buf);
   }
 
   // creates an ACPChangeIP packet
-  private byte[] getACPChangeIP(String ConnID, String targetmac, byte[] newIP,
+  private byte[] getACPChangeIP(String connid, String targetmac, byte[] newIP,
                   byte[] newMask, boolean useDHCP,
                   byte[] encPassword) {
     byte[] buf = new byte[144];
-    setACPHeader(buf, "8030", ConnID, targetmac, (byte) 112);
+    setacpheader(buf, "8030", connid, targetmac, (byte) 112);
 
     System.arraycopy(encPassword, 0, buf, 0x40, encPassword.length);
     // actually 144 byte long, contains password
@@ -861,10 +861,10 @@ public class ACP {
   }
 
   // create a correct ACPAuth packet
-  private byte[] getACPAuth(String ConnID, String targetmac,
+  private byte[] getACPAuth(String connid, String targetmac,
                   byte[] password) {
     byte[] buf = new byte[72];
-    setACPHeader(buf, "80a0", ConnID, targetmac, (byte) 0x28);
+    setacpheader(buf, "80a0", connid, targetmac, (byte) 0x28);
     buf[32] = 0x0c;
 
     System.arraycopy(password, 0, buf, 40, password.length);
@@ -873,13 +873,13 @@ public class ACP {
 
 
   // creates an ACPCMD packet, used to send telnet-style commands to the LS
-  private byte[] getACPCmd(String ConnID, String targetmac, String cmd) {
+  private byte[] getacpcmd(String connid, String targetmac, String cmd) {
     if (cmd.length() > 210) {
       outError("Command line too long (>210 chars).");
     }
 
     byte[] buf = new byte[cmd.length() + 44];
-    setACPHeader(buf, "8a10", ConnID, targetmac, (byte) (cmd.length() + 12));
+    setacpheader(buf, "8a10", connid, targetmac, (byte) (cmd.length() + 12));
     buf[32] = (byte) (cmd.length());
     buf[36] = 0x03; // type
 
@@ -1036,11 +1036,11 @@ public class ACP {
     result[_pckttype] = "ACPdiscovery reply";
     try {
       // get IP
-      byte[] targetIP = new byte[4];
+      byte[] targetip = new byte[4];
       for (int i = 0; i <= 3; i++) {
-        targetIP[i] = buf[35 - i];
+        targetip[i] = buf[35 - i];
       }
-      InetAddress targetAddr = InetAddress.getByAddress(targetIP);
+      InetAddress targetAddr = InetAddress.getByAddress(targetip);
       result[_ip] = targetAddr.toString();
 
       // get host name
@@ -1121,7 +1121,7 @@ public class ACP {
           + bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
     if (acpStatus.equalsIgnoreCase("FFFFFFFF")) {
       outDebug("Received packet (" + acpReply + ") has the error-flag set!\n"
-          + "For 'Authenticate' that is (usually) OK as we do send a buggy packet.", 1);
+          + "For 'authenticate' that is (usually) OK as we do send a buggy packet.", 1);
     }
 
     switch (acptype) {
