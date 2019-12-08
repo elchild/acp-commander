@@ -35,13 +35,13 @@ public class ACP {
 
   /** set socket timeout to 1000 ms, rather high, but some users report timeout
   * problems. Could also be UDP-related - try resending packets
-  * Especially BlinkLED, SaveConfig, LoadConfig have long reply times as reply is
+  * Especially blinkled, saveconfig, loadconfig have long reply times as reply is
   * sent when the command has been executed. Same has to be considered for other cmds.
   */
   protected int Timeout = 1000;
   protected int resendPackets = 2; // standard value for repeated sending of packets
 
-  public int DebugLevel = 0; // Debug level
+  public int debuglevel = 0; // Debug level
 
   protected int rcvBufLen = 4096; // standard length of receive buffer
 
@@ -171,23 +171,23 @@ public class ACP {
     }
   }
 
-  int getDebugLevel() {
-    return DebugLevel;
+  int getdebuglevel() {
+    return debuglevel;
   }
 
   //
   // ACP functionallity
   //
 
-  public String[] Find() {
+  public String[] find() {
     // discover linkstations by sending an ACP-Discover package
     // return on line of formatted string per found LS
     return doDiscover();
   }
 
-  public String[] Command(String cmd, int maxResend) {
+  public String[] command(String cmd, int maxResend) {
     // send telnet-type command cmd to Linkstation by ACPcmd
-    EnOneCmd();
+    enonecmd();
     authent();
     if (maxResend <= 0) {
       maxResend = resendPackets;
@@ -195,95 +195,95 @@ public class ACP {
     return doSendRcv(getacpcmd(connID, targetmac, cmd), maxResend);
   }
 
-  public String[] Command(String cmd) {
+  public String[] command(String cmd) {
     // send telnet-type command cmd to Linkstation by ACPcmd - only send packet once!
-    EnOneCmd();
+    enonecmd();
     authent();
     return doSendRcv(getacpcmd(connID, targetmac, cmd), 1);
   }
 
   public String[] authent() {
-    byte[] _encrypted = encryptACPpassword(password, Key);
+    byte[] _encrypted = encryptacppassword(password, Key);
     return authent(_encrypted);
   }
 
   public String[] authent(byte[] enc_password) {
     // authenticate to ACP protokoll
-    return doSendRcv(getACPAuth(connID, targetmac, enc_password));
+    return doSendRcv(getacpauth(connID, targetmac, enc_password));
   }
 
-  public String[] Shutdown() {
+  public String[] shutdown() {
     // ENOneCmd protected
-    return doSendRcv(getACPShutdown(connID, targetmac));
+    return doSendRcv(getacpshutdown(connID, targetmac));
   }
 
-  public String[] Reboot() {
+  public String[] reboot() {
     // ENOneCmd protected
-    return doSendRcv(getACPReboot(connID, targetmac));
+    return doSendRcv(getacpreboot(connID, targetmac));
   }
 
   public String[] EMMode() {
     // ENOneCmd protected
-    return doSendRcv(getACPEMMode(connID, targetmac));
+    return doSendRcv(getacpEMMode(connID, targetmac));
   }
 
-  public String[] NormMode() {
+  public String[] normmode() {
     // ENOneCmd protected
-    return doSendRcv(getACPNormMode(connID, targetmac));
+    return doSendRcv(getacpnormmode(connID, targetmac));
   }
 
-  public String[] BlinkLED() {
+  public String[] blinkled() {
     int _mytimeout = Timeout;
     Timeout = 60000;
-    String[] result = doSendRcv(getACPBlinkLED(connID, targetmac));
+    String[] result = doSendRcv(getacpblinkled(connID, targetmac));
     Timeout = _mytimeout;
     return result;
   }
 
-  public String[] EnOneCmd() {
-    return enonecmdenc(encryptACPpassword(ap_servd, Key));
+  public String[] enonecmd() {
+    return enonecmdenc(encryptacppassword(ap_servd, Key));
   }
 
   public String[] enonecmdenc(byte[] encPassword) {
-    return doSendRcv(getACPEnOneCmd(connID, targetmac, encPassword));
+    return doSendRcv(getacpenonecmd(connID, targetmac, encPassword));
   }
 
-  public String[] SaveConfig() {
+  public String[] saveconfig() {
     // set timeout to 1 min
     int _mytimeout = Timeout;
     Timeout = 60000;
-    String[] result = doSendRcv(getACPSaveConfig(connID, targetmac));
+    String[] result = doSendRcv(getacpsaveconfig(connID, targetmac));
     Timeout = _mytimeout;
     return result;
   }
 
-  public String[] LoadConfig() {
+  public String[] loadconfig() {
     // set timeout to 1 min
     int _mytimeout = Timeout;
     Timeout = 60000;
-    String[] result = doSendRcv(getACPLoadConfig(connID, targetmac));
+    String[] result = doSendRcv(getacploadconfig(connID, targetmac));
     Timeout = _mytimeout;
     return result;
   }
 
-  public String[] DebugMode() {
-    return doSendRcv(getACPDebugMode(connID, targetmac));
+  public String[] debugmode() {
+    return doSendRcv(getacpdebugmode(connID, targetmac));
   }
 
-  public String[] MultiLang(byte Language) {
+  public String[] multilang(byte Language) {
     // interface to switch web GUI language
     // ENOneCmd protected
     // 0 .. Japanese
     // 1 .. English
     // 2 .. German
     // default .. English
-    return doSendRcv(getACPMultiLang(connID, targetmac, Language));
+    return doSendRcv(getacpmultilang(connID, targetmac, Language));
   }
 
-  public String[] ChangeIP(byte[] newIP, byte[] newMask, boolean useDHCP) {
+  public String[] changeip(byte[] newip, byte[] newMask, boolean usedhcp) {
     // change IP address
-    byte[] _encrypted = encryptACPpassword(password, Key);
-    return doSendRcv(getACPChangeIP(connID, targetmac, newIP, newMask, useDHCP, _encrypted));
+    byte[] _encrypted = encryptacppassword(password, Key);
+    return doSendRcv(getacpchangeip(connID, targetmac, newip, newMask, usedhcp, _encrypted));
   }
 
   //--- End of public routines ---
@@ -294,8 +294,8 @@ public class ACP {
 
   private String[] doDiscover() {
     String _state = "[Send/Receive ACPDiscover]";
-    byte[] buf = getACPDisc(connID, targetmac);
-    byte[] buf2 = getACPDisc2(connID, targetmac);
+    byte[] buf = getacpdisc(connID, targetmac);
+    byte[] buf2 = getacpdisc2(connID, targetmac);
     String[] _searchres = new String[1];
     ArrayList<String> _tempres = new ArrayList<>();
     DatagramSocket _socket;
@@ -314,7 +314,7 @@ public class ACP {
       long _LastSendTime = System.currentTimeMillis();
       while (System.currentTimeMillis() - _LastSendTime < Timeout) {
         _socket.receive(_receive);
-        _searchres = rcvacp(_receive.getData(), DebugLevel); // get search results
+        _searchres = rcvacp(_receive.getData(), debuglevel); // get search results
 
         // TODO: do optional Discover event with _searchres
         _tempres.add(_searchres[1]); // add formatted string to result list
@@ -369,7 +369,7 @@ public class ACP {
   private String[] doSendRcv(byte[] buf, int repeatSend) {
     String _ACPcmd = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
     String _state = "[ACP Send/Receive (Packet:" + _ACPcmd + " = "
-            + getCmdString(buf) + ")]";
+            + getcmdstring(buf) + ")]";
     String[] result;
     int sendcount = 0;
     boolean SendAgain = true;
@@ -420,7 +420,7 @@ public class ACP {
 
     } while ((sendcount < repeatSend) && SendAgain); // repeat until max retries reached
 
-    result = rcvacp(_receive.getData(), DebugLevel); // get search results
+    result = rcvacp(_receive.getData(), debuglevel); // get search results
 
     return result;
   }
@@ -446,7 +446,7 @@ public class ACP {
   // ACP packet creation functionality
   //
 
-  private int getCommand(byte[] buf) {
+  private int getcommand(byte[] buf) {
     return (int) ((buf[9] & 0xFF) << 8) + (int) (buf[8] & 0xFF);
   }
 
@@ -454,9 +454,9 @@ public class ACP {
     return buf[32];
   }
 
-  private String getCmdString(byte[] buf) {
-    int acpcmd = getCommand(buf);
-    String CmdString = String.valueOf("");
+  private String getcmdstring(byte[] buf) {
+    int acpcmd = getcommand(buf);
+    String cmdstring = String.valueOf("");
 
     switch (acpcmd) {
         // ACP_Commands
@@ -466,99 +466,99 @@ public class ACP {
         // missing candidates are 0x80C0 and 0x80D0 or 0x8C00 and 0x8D00
 
       case 0x8020:
-        CmdString = "ACP_Discover";
+        cmdstring = "ACP_Discover";
         break;
       case 0x8030:
-        CmdString = "ACP_Change_IP";
+        cmdstring = "ACP_Change_IP";
         break;
       case 0x8040:
-        CmdString = "ACP_Ping";
+        cmdstring = "ACP_Ping";
         break;
       case 0x8050:
-        CmdString = "ACP_Info";
+        cmdstring = "ACP_Info";
         break;
       case 0x8070:
-        CmdString = "ACP_FIRMUP_End";
+        cmdstring = "ACP_FIRMUP_End";
         break;
       case 0x8080:
-        CmdString = "ACP_FIRMUP2";
+        cmdstring = "ACP_FIRMUP2";
         break;
       case 0x8090:
-        CmdString = "ACP_INFO_HDD";
+        cmdstring = "ACP_INFO_HDD";
         break;
       case 0x80A0:
         switch (getSpecialCmd(buf)) {
           // ACP_Special - details in packetbuf [32]
           case 0x01:
-            CmdString = "SPECIAL_CMD_REBOOT";
+            cmdstring = "SPECIAL_CMD_REBOOT";
             break;
           case 0x02:
-            CmdString = "SPECIAL_CMD_SHUTDOWN";
+            cmdstring = "SPECIAL_CMD_SHUTDOWN";
             break;
           case 0x03:
-            CmdString = "SPECIAL_CMD_EMMODE";
+            cmdstring = "SPECIAL_CMD_EMMODE";
             break;
           case 0x04:
-            CmdString = "SPECIAL_CMD_NORMMODE";
+            cmdstring = "SPECIAL_CMD_NORMMODE";
             break;
           case 0x05:
-            CmdString = "SPECIAL_CMD_BLINKLED";
+            cmdstring = "SPECIAL_CMD_BLINKLED";
             break;
           case 0x06:
-            CmdString = "SPECIAL_CMD_SAVECONFIG";
+            cmdstring = "SPECIAL_CMD_SAVECONFIG";
             break;
           case 0x07:
-            CmdString = "SPECIAL_CMD_LOADCONFIG";
+            cmdstring = "SPECIAL_CMD_LOADCONFIG";
             break;
           case 0x08:
-            CmdString = "SPECIAL_CMD_FACTORYSETUP";
+            cmdstring = "SPECIAL_CMD_FACTORYSETUP";
             break;
           case 0x09:
-            CmdString = "SPECIAL_CMD_LIBLOCKSTATE";
+            cmdstring = "SPECIAL_CMD_LIBLOCKSTATE";
             break;
           case 0x0a:
-            CmdString = "SPECIAL_CMD_LIBLOCK";
+            cmdstring = "SPECIAL_CMD_LIBLOCK";
             break;
           case 0x0b:
-            CmdString = "SPECIAL_CMD_LIBUNLOCK";
+            cmdstring = "SPECIAL_CMD_LIBUNLOCK";
             break;
           case 0x0c:
-            CmdString = "SPECIAL_CMD_AUTHENICATE";
+            cmdstring = "SPECIAL_CMD_AUTHENICATE";
             break;
           case 0x0d:
-            CmdString = "SPECIAL_CMD_EN_ONECMD";
+            cmdstring = "SPECIAL_CMD_EN_ONECMD";
             break;
           case 0x0e:
-            CmdString = "SPECIAL_CMD_DEBUGMODE";
+            cmdstring = "SPECIAL_CMD_DEBUGMODE";
             break;
           case 0x0f:
-            CmdString = "SPECIAL_CMD_MAC_EEPROM";
+            cmdstring = "SPECIAL_CMD_MAC_EEPROM";
             break;
           case 0x12:
-            CmdString = "SPECIAL_CMD_MUULTILANG";
+            cmdstring = "SPECIAL_CMD_MUULTILANG";
             break;
           default:
-            CmdString = "Unknown SPECIAL_CMD";
+            cmdstring = "Unknown SPECIAL_CMD";
             break;
         }
         break;
       case 0x80D0:
-        CmdString = "ACP_PART";
+        cmdstring = "ACP_PART";
         break;
       case 0x80E0:
-        CmdString = "ACP_INFO_RAID";
+        cmdstring = "ACP_INFO_RAID";
         break;
       case 0x8A10:
-        CmdString = "ACP_CMD";
+        cmdstring = "ACP_CMD";
         break;
       case 0x8B10:
-        CmdString = "ACP_FILE_SEND";
+        cmdstring = "ACP_FILE_SEND";
         break;
       case 0x8B20:
-        CmdString = "ACP_FILESEND_END";
+        cmdstring = "ACP_FILESEND_END";
         break;
       case 0x8E00:
-        CmdString = "ACP_Discover";
+        cmdstring = "ACP_Discover";
         break;
 
                                   // Answers to ACP-Commands
@@ -566,50 +566,50 @@ public class ACP {
                                   //     ACP_FORMAT_Reply
                                   //     ACP_ERASE_USER_Reply
       case 0xC020:
-        CmdString = "ACP_Discover_Reply";
+        cmdstring = "ACP_Discover_Reply";
         break;
       case 0xC030:
-        CmdString = "ACP_Change_IP_Reply";
+        cmdstring = "ACP_Change_IP_Reply";
         break;
       case 0xC040:
-        CmdString = "ACP_Ping_Reply";
+        cmdstring = "ACP_Ping_Reply";
         break;
       case 0xC050:
-        CmdString = "ACP_Info_Reply";
+        cmdstring = "ACP_Info_Reply";
         break;
       case 0xC070:
-        CmdString = "ACP_FIRMUP_End_Reply";
+        cmdstring = "ACP_FIRMUP_End_Reply";
         break;
       case 0xC080:
-        CmdString = "ACP_FIRMUP2_Reply";
+        cmdstring = "ACP_FIRMUP2_Reply";
         break;
       case 0xC090:
-        CmdString = "ACP_INFO_HDD_Reply";
+        cmdstring = "ACP_INFO_HDD_Reply";
         break;
       case 0xC0A0:
-        CmdString = "ACP_Special_Reply";
+        cmdstring = "ACP_Special_Reply";
         break;
                                        // further handling possible. - necessary?
       case 0xC0D0:
-        CmdString = "ACP_PART_Reply";
+        cmdstring = "ACP_PART_Reply";
         break;
       case 0xC0E0:
-        CmdString = "ACP_INFO_RAID_Reply";
+        cmdstring = "ACP_INFO_RAID_Reply";
         break;
       case 0xCA10:
-        CmdString = "ACP_CMD_Reply";
+        cmdstring = "ACP_CMD_Reply";
         break;
       case 0xCB10:
-        CmdString = "ACP_FILE_SEND_Reply";
+        cmdstring = "ACP_FILE_SEND_Reply";
         break;
       case 0xCB20:
-        CmdString = "ACP_FILESEND_END_Reply";
+        cmdstring = "ACP_FILESEND_END_Reply";
         break;
                                             // Unknown! - Error?
       default:
-        CmdString = "Unknown ACP command - possible error!";
+        cmdstring = "Unknown ACP command - possible error!";
     }
-    return CmdString;
+    return cmdstring;
   }
 
   // retreive ErrorCode out of receive buffer
@@ -724,7 +724,7 @@ public class ACP {
   }
 
   // creates an ACPReboot packet, ACP_EN_ONECMD protected
-  private byte[] getACPReboot(String connid, String targetmac) {
+  private byte[] getacpreboot(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x01; // type ACPReboot
@@ -733,7 +733,7 @@ public class ACP {
   }
 
   // creates an ACPShutdown packet, ACP_EN_ONECMD protected
-  private byte[] getACPShutdown(String connid, String targetmac) {
+  private byte[] getacpshutdown(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x02; // type ACPShutdown
@@ -742,7 +742,7 @@ public class ACP {
   }
 
   // creates an ACPEMMode packet, ACP_EN_ONECMD protected
-  private byte[] getACPEMMode(String connid, String targetmac) {
+  private byte[] getacpEMMode(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x03; // type ACPEMMode
@@ -750,8 +750,8 @@ public class ACP {
     return (buf);
   }
 
-  // creates an ACPNormMode packet, ACP_EN_ONECMD protected
-  private byte[] getACPNormMode(String connid, String targetmac) {
+  // creates an ACPnormmode packet, ACP_EN_ONECMD protected
+  private byte[] getacpnormmode(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x04; // type ACPNormmode
@@ -759,8 +759,8 @@ public class ACP {
     return (buf);
   }
 
-  // creates an ACPBlinkLED packet, also plays a series of tones
-  private byte[] getACPBlinkLED(String connid, String targetmac) {
+  // creates an ACPblinkled packet, also plays a series of tones
+  private byte[] getacpblinkled(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x05; // type ACPBlinkled
@@ -768,26 +768,26 @@ public class ACP {
     return (buf);
   }
 
-  // creates an ACPSaveConfig packet
-  private byte[] getACPSaveConfig(String connid, String targetmac) {
+  // creates an ACPsaveconfig packet
+  private byte[] getacpsaveconfig(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
-    buf[32] = 0x06; // type ACPSaveConfig
+    buf[32] = 0x06; // type ACPsaveconfig
 
     return (buf);
   }
 
-  // creates an ACPLoadConfig packet
-  private byte[] getACPLoadConfig(String connid, String targetmac) {
+  // creates an ACPloadconfig packet
+  private byte[] getacploadconfig(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
-    buf[32] = 0x07; // type ACPLoadConfig
+    buf[32] = 0x07; // type ACPloadconfig
 
     return (buf);
   }
 
-  // creates an ACPEnOneCmd packet with the encrypted password (HexString 8 byte)
-  private byte[] getACPEnOneCmd(String connid, String targetmac,
+  // creates an ACPenonecmd packet with the encrypted password (HexString 8 byte)
+  private byte[] getacpenonecmd(String connid, String targetmac,
                   byte[] password) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) 0x28);
@@ -799,7 +799,7 @@ public class ACP {
 
   // creates an ACPDebugmode packet
   // unclear what this causes on the LS
-  private byte[] getACPDebugMode(String connid, String targetmac) {
+  private byte[] getacpdebugmode(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
     buf[32] = 0x0e; // type ACPDebugmode
@@ -809,7 +809,7 @@ public class ACP {
 
   // creates an ACPMultilang packet, ACP_EN_ONECMD protected
   // Used for setting GUI language, then additional parameter for language is needed
-  private byte[] getACPMultiLang(String connid, String targetmac,
+  private byte[] getacpmultilang(String connid, String targetmac,
                    byte Language) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) (0x28));
@@ -822,7 +822,7 @@ public class ACP {
 
   // creates an ACPDiscover packet
   // LS answers with a packet giving firmware details and a key used for pw encryption
-  private byte[] getACPDisc(String connid, String targetmac) {
+  private byte[] getacpdisc(String connid, String targetmac) {
     byte[] buf = new byte[72];
     setacpheader(buf, "8020", connid, targetmac, (byte) 0x28);
 
@@ -830,16 +830,16 @@ public class ACP {
   }
 
   //newer version of discovery packet required by some devs
-  private byte[] getACPDisc2(String connid, String targetmac) {
+  private byte[] getacpdisc2(String connid, String targetmac) {
     byte[] buf = new byte[32];
     setacpheader(buf, "8E00", connid, targetmac, (byte) 0x00);
 
     return (buf);
   }
 
-  // creates an ACPChangeIP packet
-  private byte[] getACPChangeIP(String connid, String targetmac, byte[] newIP,
-                  byte[] newMask, boolean useDHCP,
+  // creates an ACPchangeip packet
+  private byte[] getacpchangeip(String connid, String targetmac, byte[] newip,
+                  byte[] newMask, boolean usedhcp,
                   byte[] encPassword) {
     byte[] buf = new byte[144];
     setacpheader(buf, "8030", connid, targetmac, (byte) 112);
@@ -848,12 +848,12 @@ public class ACP {
     // actually 144 byte long, contains password
 
 
-    if (useDHCP) {
+    if (usedhcp) {
       buf[0x2C] = (byte) 1; // could be: DHCP=true - seems always to be true,
       // expect DHCP and password beyond 0x38
     }
     for (int i = 0; i <= 3; i++) {
-      buf[0x33 - i] = newIP[i]; // ip starts at 0x30, low byte first
+      buf[0x33 - i] = newip[i]; // ip starts at 0x30, low byte first
       buf[0x37 - i] = newMask[i]; // mask starts at 0x34, low byte first
     }
 
@@ -861,7 +861,7 @@ public class ACP {
   }
 
   // create a correct ACPAuth packet
-  private byte[] getACPAuth(String connid, String targetmac,
+  private byte[] getacpauth(String connid, String targetmac,
                   byte[] password) {
     byte[] buf = new byte[72];
     setacpheader(buf, "80a0", connid, targetmac, (byte) 0x28);
@@ -888,7 +888,7 @@ public class ACP {
     return (buf);
   }
 
-  public byte[] encryptACPpassword(String _password, byte[] _key) {
+  public byte[] encryptacppassword(String _password, byte[] _key) {
     if (_password.length() > 24) {
       outError("The acp_commander only allows password lengths up to 24 chars");
     }
@@ -912,14 +912,14 @@ public class ACP {
         sub_passwd[sub_length] = (byte) 0x00; // end of string must be 0x00
       }
 
-      System.arraycopy(encACPpassword(sub_passwd, _key), 0, result, i * 8,
+      System.arraycopy(encacppassword(sub_passwd, _key), 0, result, i * 8,
                  8);
     }
 
     return result;
   }
 
-  private byte[] encACPpassword(byte[] _password, byte[] _key) {
+  private byte[] encacppassword(byte[] _password, byte[] _key) {
     //
     // mimmicks route from LSUpdater.exe, starting at 0x00401700
     // key is a 4 byte array (changed order, key 6ae2ad78 => (0x6a, 0xe2, 0xad, 0x78)
@@ -1215,7 +1215,7 @@ public class ACP {
       return;
     }
 
-    if (debuglevel <= getDebugLevel()) {
+    if (debuglevel <= getdebuglevel()) {
       System.out.println(message);
     }
   }

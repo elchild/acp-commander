@@ -58,7 +58,7 @@ public class acp_commander {
             + "   -s       ... rudimentry interactive shell\n"
             + "   -cb      ... clear \\boot, get rid of ACP_STATE_ERROR after firmware update\n"
             + "                output of df follows for control\n"
-            + "   -ip newIP... change IP to newIP (basic support).\n"
+            + "   -ip newip... change IP to newip (basic support).\n"
             + "   -blink   ... blink LED's and play some tones\n"
             + "\n"
             + "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n"
@@ -456,7 +456,7 @@ public class acp_commander {
     _state = "VarPrep - NewLib";
 
     ACP myACP = new ACP(_target);
-    myACP.DebugLevel = _debug;
+    myACP.debuglevel = _debug;
     myACP.Port = _port;
     myACP.setconnid(_connID);
     myACP.setTargetMAC(_mac);
@@ -494,7 +494,7 @@ public class acp_commander {
       int _foundLS = 0;
 
       outDebug("Sending ACP-Disover packet...",1);
-      String[] foundLS = myACP.Find();
+      String[] foundLS = myACP.find();
       for (int i = 0; i < foundLS.length; i++) {
         System.out.println(foundLS[i]);
       }
@@ -510,11 +510,11 @@ public class acp_commander {
       /**
                  * Buffalos standard authentication procedure:
                  * 1 - send ACPDiscover to get key for password encryption
-                 * 2 - send ACPSpecial-EnOneCmd with encrypted password "ap_servd"
+                 * 2 - send ACPSpecial-enonecmd with encrypted password "ap_servd"
                  * 3 - send ACPSpecial-authent with encrypted admin password
                  */
 
-      outDebug("Trying to authenticate EnOneCmd...\t" + myACP.EnOneCmd()[1],1);
+      outDebug("Trying to authenticate enonecmd...\t" + myACP.enonecmd()[1],1);
 
       if (_password.equals("")) {
         //if password blank, try "password" otherwise prompt
@@ -543,13 +543,13 @@ public class acp_commander {
 
       // display status of backup jobs /etc/melco/backup*:status=
       System.out.print("status of backup jobs:\n");
-      String[] BackupState = myACP.Command(
+      String[] BackupState = myACP.command(
                     "grep status= /etc/melco/backup*", 3);
       System.out.println(BackupState[1]);
 
       // display language for WebGUI /etc/melco/info:lang=
       System.out.print("language setting of WebGUI:\t"
-                        + myACP.Command("grep lang= /etc/melco/info", 3)[1]);
+                        + myACP.command("grep lang= /etc/melco/info", 3)[1]);
 
     }
 
@@ -571,15 +571,15 @@ public class acp_commander {
       //System.out.println("ACPTest 8F00:\t" + myACP.ACPTest("8F00")[1]);  //no
       } catch (Exception ex) {
       }
-    //System.out.println("DebugMode:\t"+myACP.DebugMode()[1]);
-    //System.out.println("Shutdown:\t"+myACP.Shutdown()[1]);
+    //System.out.println("debugmode:\t"+myACP.debugmode()[1]);
+    //System.out.println("Shutdown:\t"+myACP.shutdown()[1]);
     }
 
     if (_openbox) {
       _state = "ACP_OPENBOX";
-      System.out.println("Reset root pwd...\t" + myACP.Command("passwd -d root", 3)[1]);
-      myACP.Command("rm /etc/securetty", 3);
-      System.out.println("start telnetd...\t" + myACP.Command("/bin/busybox telnetd&", 3)[1]);
+      System.out.println("Reset root pwd...\t" + myACP.command("passwd -d root", 3)[1]);
+      myACP.command("rm /etc/securetty", 3);
+      System.out.println("start telnetd...\t" + myACP.command("/bin/busybox telnetd&", 3)[1]);
 
       // Due to many questions in the forum...
       System.out.println(
@@ -593,24 +593,24 @@ public class acp_commander {
       // clear /boot; full /boot is the reason for most ACP_STATE_FAILURE messages
       // send packet up to 3 times
       System.out.println("Sending clear /boot command sequence...\t"
-                        +  myACP.Command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img"
+                        +  myACP.command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img"
                         +  " hddrootfs.buffalo.org hddrootfs.buffalo.updated.done",3)[1]);
       // show result of df to verify success, send packet up to 3 times
       System.out.println("Output of df for verification...\t"
-                         + myACP.Command("df", 3)[1]);
+                         + myACP.command("df", 3)[1]);
     }
 
     if (_blink) {
       _state = "blink";
       // blink LED's and play tones via ACP-command
-      System.out.println("BlinkLED...\t" + myACP.BlinkLED()[1]);
+      System.out.println("blinkled...\t" + myACP.blinkled()[1]);
     }
 
     if (_gui) {
       _state = "set webgui language";
       // set WebGUI language
       System.out.println("Setting WebGUI language...\t"
-                         + myACP.MultiLang(_setgui.byteValue())[1]);
+                         + myACP.multilang(_setgui.byteValue())[1]);
     }
 
     if (_emmode) {
@@ -628,7 +628,7 @@ public class acp_commander {
       _state = "Set Norm-Mode";
       // send Norm-Mode command
       System.out.print("Sending Norm-Mode command...\t");
-      String _result = myACP.NormMode()[1];
+      String _result = myACP.normmode()[1];
       System.out.println(_result);
       if (_result.equals("ACP_STATE_OK")) {
         System.out.println("At your next reboot your LS will boot into normal mode.");
@@ -638,7 +638,7 @@ public class acp_commander {
     if (!_cmd.equals("")) {
       _state = "ACP_CMD";
       // send custom command via ACP
-      String _cmdresult = myACP.Command(_cmd)[1];
+      String _cmdresult = myACP.command(_cmd)[1];
       outDebug(">" + _cmd + "\n",1);
       System.out.print(_cmdresult);
     }
@@ -660,12 +660,12 @@ public class acp_commander {
         while ((cmdln != null) && (!cmdln.equals("exit"))) {
           // send command and display answer
           //only first cmd working for some reason.
-          output = myACP.Command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd")[1];
+          output = myACP.command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd")[1];
           if (output.equals("OK (ACP_STATE_OK)")) {
             output = "";
           }
           System.out.print(output);
-          pwd = myACP.Command("cat /tmp/.pwd")[1].split("\n",2)[0];
+          pwd = myACP.command("cat /tmp/.pwd")[1].split("\n",2)[0];
           // get next commandline
           System.out.print(pwd + ">");
           cmdln = keyboard.readLine();
@@ -686,7 +686,7 @@ public class acp_commander {
         myACP.Timeout = 10000;
 
         System.out.println("Changeing IP:\t"
-                   + myACP.ChangeIP(InetAddress.getByName(_newip).getAddress(),
+                   + myACP.changeip(InetAddress.getByName(_newip).getAddress(),
                      new byte[] {(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true)[1]);
 
         myACP.Timeout = _mytimeout;
@@ -705,14 +705,14 @@ public class acp_commander {
     if (_reboot) {
       _state = "reboot";
 
-      System.out.println("Rebooting...:\t" + myACP.Reboot()[1]);
+      System.out.println("Rebooting...:\t" + myACP.reboot()[1]);
     }
 
     // shutdown
     if (_shutdown) {
       _state = "shutdown";
 
-      System.out.println("Sending SHUTDOWN command...:\t" + myACP.Shutdown()[1]);
+      System.out.println("Sending SHUTDOWN command...:\t" + myACP.shutdown()[1]);
     }
   }
 }
