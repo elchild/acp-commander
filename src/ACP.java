@@ -154,7 +154,8 @@ public class ACP {
     if (localIP.isUnresolved()) {
       outWarning("The bind address " + localIP
           + " given with parameter -b could not be resolved to a local IP-Address.\n"
-          + "You must use this parameter with a valid IP-Address that belongs to the PC you run acp_commander on.\n");
+          + "You must use this parameter with a valid IP-Address that belongs to "
+          + "the PC you run acp_commander on.\n");
       bind = null;
     }
   }
@@ -326,12 +327,12 @@ public class ACP {
     } catch (java.net.SocketException SE) {
       // TODO: better error handling
       outInfoSocket();
-      outError("Exception: SocketException (" + SE.getMessage() + ") " +
-                _state);
+      outError("Exception: SocketException (" + SE.getMessage() + ") "
+                + _state);
     } catch (java.io.IOException IOE) {
       // TODO: better error handling
-      outError("Exception: IOException (" + IOE.getMessage() + ") " +
-                _state);
+      outError("Exception: IOException (" + IOE.getMessage() + ") "
+                + _state);
     }
 
     // first check for repeated entries and delete them.
@@ -353,8 +354,7 @@ public class ACP {
     }
 
     //probably not good practice and should be refactored
-    if (target.toString().split("/",2)[1].equals("255.255.255.255"))
-    {
+    if (target.toString().split("/",2)[1].equals("255.255.255.255")) {
       return result;
     }
     return _searchres;
@@ -368,8 +368,8 @@ public class ACP {
 
   private String[] doSendRcv(byte[] buf, int repeatSend) {
     String _ACPcmd = bufferToHex(buf, 9, 1) + bufferToHex(buf, 8, 1);
-    String _state = "[ACP Send/Receive (Packet:" + _ACPcmd + " = " +
-            getCmdString(buf) + ")]";
+    String _state = "[ACP Send/Receive (Packet:" + _ACPcmd + " = "
+            + getCmdString(buf) + ")]";
     String[] result;
     int sendcount = 0;
     boolean SendAgain = true;
@@ -400,8 +400,8 @@ public class ACP {
           outInfoTimeout();
           outError(result[1]);
         } else {
-          result[1] = "Timeout (" + _state + " retry sending (" +
-                sendcount + "/" + repeatSend + ")";
+          result[1] = "Timeout (" + _state + " retry sending ("
+                + sendcount + "/" + repeatSend + ")";
           outDebug(result[1], 1);
         }
       } catch (java.net.SocketException SE) {
@@ -414,8 +414,7 @@ public class ACP {
       } catch (java.io.IOException IOE) {
         // TODO: better error handling
         result = new String[2];
-        result[1] = "Exception: IOException (" + IOE.getMessage() +
-                ") " + _state;
+        result[1] = "Exception: IOException (" + IOE.getMessage() + ") " + _state;
         outError(result[1]);
       }
 
@@ -615,16 +614,15 @@ public class ACP {
 
   // retreive ErrorCode out of receive buffer
   private int getErrorCode(byte[] buf) {
-    return (int) (buf[28] & 0xFF) + (int) ((buf[29] & 0xFF) << 8) +
-            (int) ((buf[30] & 0xFF) << 16) + (int) ((buf[31] & 0xFF) << 24);
+    return (int) (buf[28] & 0xFF) + (int) ((buf[29] & 0xFF) << 8)
+          +  (int) ((buf[30] & 0xFF) << 16) + (int) ((buf[31] & 0xFF) << 24);
   }
 
 
   // Translate ErrorCode to meaningful string
   private String getErrorMsg(byte[] buf) {
-    String ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1) +
-               bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
-    //        String ACPstatus = bufferToHex(buf, 28, 4);
+    String ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
+               + bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
     int ErrorCode = getErrorCode(buf);
 
     String ErrorString;
@@ -693,7 +691,7 @@ public class ACP {
       case 0xFFFFFFFF:
         ErrorString = "ACP_STATE_FAILURE";
         break;
-                                         // unknown error, better use ErrorCode and format it to hex
+      // unknown error, better use ErrorCode and format it to hex
       default:
         ErrorString = "ACP_STATE_UNKNOWN_ERROR (" + ACPstatus + ")";
     }
@@ -796,7 +794,6 @@ public class ACP {
     buf[32] = 0x0d;
 
     System.arraycopy(password, 0, buf, 40, 8);
-    //        System.arraycopy(HexToByte("14:bd:36:a7:a7:81:86:f1"), 0, buf, 40, 8); // the encrypted password as hexstring
     return (buf);
   }
 
@@ -893,8 +890,7 @@ public class ACP {
 
   public byte[] encryptACPpassword(String _password, byte[] _key) {
     if (_password.length() > 24) {
-      outError(
-                "The acp_commander only allows password lengths up to 24 chars");
+      outError("The acp_commander only allows password lengths up to 24 chars");
     }
     if (_password.length() == 0) {
       return new byte[8];
@@ -1079,8 +1075,7 @@ public class ACP {
       }
 
       // Firmware version starts at 187
-      result[_FWversion] = buf[187] + buf[188] + "." +
-                 buf[189] + buf[190];
+      result[_FWversion] = buf[187] + buf[188] + "." + buf[189] + buf[190];
 
       result[_out] = (result[_hostname] + "\t"
                 + result[_ip].replace("/","") + "\t"
@@ -1123,13 +1118,11 @@ public class ACP {
 
     //@georg check!
     // value = 0xFFFFFFFF if ERROR occured
-    ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1) +
-          bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
+    ACPstatus = bufferToHex(buf, 31, 1) + bufferToHex(buf, 30, 1)
+          + bufferToHex(buf, 29, 1) + bufferToHex(buf, 28, 1);
     if (ACPstatus.equalsIgnoreCase("FFFFFFFF")) {
-      outDebug("Received packet (" + ACPreply +
-                ") has the error-flag set!\n" +
-                "For 'Authenticate' that is (usually) OK as we do send a buggy packet.",
-                1);
+      outDebug("Received packet (" + ACPreply + ") has the error-flag set!\n"
+          + "For 'Authenticate' that is (usually) OK as we do send a buggy packet.", 1);
     }
 
     switch (ACPtype) {
@@ -1186,30 +1179,30 @@ public class ACP {
 
   private void outInfoTimeout() {
     System.out.println(
-            "A SocketTimeoutException usually indicates bad firewall settings.\n" +
-            "Check especially for *UDP* port " + Port.toString() +
-            " and make sure that the connection to your LS is working.");
+            "A SocketTimeoutException usually indicates bad firewall settings.\n"
+            + "Check especially for *UDP* port " + Port.toString()
+            + " and make sure that the connection to your LS is working.");
     if (Port.intValue() != 22936) {
-      outWarning("The Timeout could also be caused as you specified " +
-                "(parameter -p) to use port " + Port.toString() +
-                " which differs from standard port 22936.");
+      outWarning("The Timeout could also be caused as you specified "
+                + "(parameter -p) to use port " + Port.toString()
+                + " which differs from standard port 22936.");
     }
   }
 
   private void outInfoSocket() {
     System.out.println(
-            "A SocketException often indicates bad firewall settings.\n" +
-            "The acp_commander / your java enviroment needs to send/recevie on UDP port " +
-            Port.toString() + ".");
+            "A SocketException often indicates bad firewall settings.\n"
+            + "The acp_commander / your java enviroment needs to send/recevie on UDP port "
+            + Port.toString() + ".");
   }
 
   private void outInfoSetTarget() {
     System.out.println(
-            "A UnknownHostException usually indicates that the specified target is not known " +
-            "to your PC (can not be resolved).\n" +
-            "Possible reasons are typos in the target parameter \"-t\", connection or " +
-            "name resolution problems.\n" +
-            "Also make sure that the target - here your Linkstation / Terastation - is powered on.");
+        "A UnknownHostException usually indicates that the specified target is not known "
+        + "to your PC (can not be resolved).\n"
+        + "Possible reasons are typos in the target parameter \"-t\", connection or "
+        + "name resolution problems.\n"
+        + "Also make sure that the target - here your Linkstation / Terastation - is powered on.");
   }
 
   //
@@ -1246,7 +1239,7 @@ public class ACP {
     return (bts);
   }
 
-  public static String bufferToHex(byte buffer[], int startOffset, int length) {
+  public static String bufferToHex(byte[] buffer, int startOffset, int length) {
     StringBuilder sb = new StringBuilder(length * 2);
 
     for (int i = startOffset; i < (startOffset + length); i++) {
