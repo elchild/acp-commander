@@ -26,62 +26,61 @@ import java.util.Random;
 public class acp_commander {
   private static String _version = "0.5";
   private static int _stdport = 22936;
-  private static int _timeout = 5000; // set socket timeout to 5000 ms, some user report timeout problems
+  private static int _timeout = 5000;
 
-  private static int _debug = 0; // determins degree of additional output, increasing with value
-  private static String _state; // where are we in the code, mostly for exceptions output :-(
+  private static int _debug = 0; // determins degree of additional output.
+  private static String _state; // where are we in the code.
 
   private static void outUsage() {
-    System.out.println("Usage:  acp_commander [options] -t target\n\n" +
-                           "options are:\n" +
-                           "   -t target .. IP or network name of the Device\n" +
-                           "   -m MAC   ... define targets mac address set in the ACP package *),\n" +
-                           "                default = FF:FF:FF:FF:FF:FF.\n" +
-                           "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n" +
-                           "                only use this option together with -i.\n" +
-                           "   -pw passwd . your admin password. A default password will be tried if ommited.\n" +
-                           "                if authentication fails you will be prompted for your password\n" +
-                           "   -i ID    ... define a connection identifier, if not given, a random one will\n" +
-                           "                be used. (With param MAC the senders MAC address will be used.)\n" +
-                           "                Successfull authenitfications are stored in conjunction with a \n" +
-                           "                given connection ID. So you may reuse a previously used one.\n" +
-                           "                Using a lot of different id's in a chain of commands might\n" +
-                           "                cause a lot of overhead at the device.\n" +
-                           "   -p port  ... define alternative target port, default = " +
-                           _stdport + "\n" +
-                           "   -b localIP.. bind socket to local address. Use if acp_commander\n" +
-                           "                can not find your device (might use wrong adapter).\n" +
-                           "\n" +
-                           "   -f       ... find device(s) by sending an ACP_DISCOVER package\n" +
-                           "   -o       ... open the device by sending 'telnetd' and 'passwd -d root',\n" +
-                           "                thus enabling telnet and clearing the root password\n" +
-                           "   -c cmd   ... sends the given shell command cmd to the device.\n" +
-                           "   -s       ... rudimentry interactive shell\n" +
-                           "   -cb      ... clear \\boot, get rid of ACP_STATE_ERROR after firmware update\n" +
-                           "                output of df follows for control\n" +
-                           "   -ip newIP... change IP to newIP (basic support).\n" +
-                           "   -blink   ... blink LED's and play some tones\n" +
-                           "\n" +
-                           "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n" +
-                           "   -diag    ... run some diagnostics on device settings (lang, backup).\n" +
-                           "   -emmode  ... Device reboots next into EM-mode.\n" +
-                           "   -normmode .. Device reboots next into normal mode.\n" +
-                           "   -reboot  ... reboot device.\n" +
-                           "   -shutdown .. shutdown device.\n" +
-                           "\n" +
-                           "   -d1...-d3 .. set debug level, generate additional output\n" +
-                           "                debug level >= 3: HEX/ASCII dump of incoming packets\n" +
-                           "   -q       ... quiet, surpress header, does not work with -h or -v\n" +
-                           "   -h | -v  ... extended help (this output)\n" +
-                           "   -u       ... (shorter) usage \n" +
-                           "\n" +
-                           "*)  this is not the MAC address the packet is sent to, but the address within\n" +
-                           "    the ACP packet. The device will only react to ACP packets if they\n" +
-                           "    carry the correct (its) MAC-address or FF:FF:FF:FF:FF:FF\n" +
-                           "\n" +
-                           "This program is based on the work done at nas-central.org (linkstationwiki.net),\n" +
-                           "which is not related with Buffalo(R) in any way.\n"
-                            + "report issues/enhancement requests at https://github.com/1000001101000/acp-commander");
+    System.out.println("Usage:  acp_commander [options] -t target\n\n"
+            + "options are:\n"
+            + "   -t target .. IP or network name of the Device\n"
+            + "   -m MAC   ... define targets mac address set in the ACP package *),\n"
+            + "                default = FF:FF:FF:FF:FF:FF.\n"
+            + "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n"
+            + "                only use this option together with -i.\n"
+            + "   -pw passwd . your admin password. A default password will be tried if ommited.\n"
+            + "                if authentication fails you will be prompted for your password\n"
+            + "   -i ID    ... define a connection identifier, if not given, a random one will\n"
+            + "                be used. (With param MAC the senders MAC address will be used.)\n"
+            + "                Successfull authenitfications are stored in conjunction with a \n"
+            + "                given connection ID. So you may reuse a previously used one.\n"
+            + "                Using a lot of different id's in a chain of commands might\n"
+            + "                cause a lot of overhead at the device.\n"
+            + "   -p port  ... define alternative target port, default = " + _stdport + "\n"
+            + "   -b localIP.. bind socket to local address. Use if acp_commander\n"
+            + "                can not find your device (might use wrong adapter).\n"
+            + "\n"
+            + "   -f       ... find device(s) by sending an ACP_DISCOVER package\n"
+            + "   -o       ... open the device by sending 'telnetd' and 'passwd -d root',\n"
+            + "                thus enabling telnet and clearing the root password\n"
+            + "   -c cmd   ... sends the given shell command cmd to the device.\n"
+            + "   -s       ... rudimentry interactive shell\n"
+            + "   -cb      ... clear \\boot, get rid of ACP_STATE_ERROR after firmware update\n"
+            + "                output of df follows for control\n"
+            + "   -ip newIP... change IP to newIP (basic support).\n"
+            + "   -blink   ... blink LED's and play some tones\n"
+            + "\n"
+            + "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n"
+            + "   -diag    ... run some diagnostics on device settings (lang, backup).\n"
+            + "   -emmode  ... Device reboots next into EM-mode.\n"
+            + "   -normmode .. Device reboots next into normal mode.\n"
+            + "   -reboot  ... reboot device.\n"
+            + "   -shutdown .. shutdown device.\n"
+            + "\n"
+            + "   -d1...-d3 .. set debug level, generate additional output\n"
+            + "                debug level >= 3: HEX/ASCII dump of incoming packets\n"
+            + "   -q       ... quiet, surpress header, does not work with -h or -v\n"
+            + "   -h | -v  ... extended help (this output)\n"
+            + "   -u       ... (shorter) usage \n"
+            + "\n"
+            + "*)  this is not the MAC address the packet is sent to, but the address within\n"
+            + "    the ACP packet. The device will only react to ACP packets if they\n"
+            + "    carry the correct (its) MAC-address or FF:FF:FF:FF:FF:FF\n"
+            + "\n"
+            + "This program is based on the work done at nas-central.org (linkstationwiki.net),\n"
+            + "which is not related with Buffalo(R) in any way.\n"
+            + "report issues/enhancement requests at https://github.com/1000001101000/acp-commander");
   }
 
 
@@ -199,21 +198,12 @@ public class acp_commander {
     _state = "CmdLnParse";
 
     // catch various standard options for help. Only -h and -v are official, though
-    if ((args.length == 0) |
-            (hasParam(new String[] {"-u", "-usage", "--usage", "/u",
-              "-h", "--h", "-v", "--v", "-?", "--?", "/h", "/?",
-              "-help", "--help",
-              "-version", "--version"}, args))) {
-      // if none or usage parameter is given only output of shorter usage
-      // otherwise longer help with explanations is presented
-      if ((args.length == 0) |
-                (hasParam(new String[] {"-u", "-usage", "--usage", "/u"}, args))) {
-        usage();
-        return;
-      } else {
-        help();
-        return;
-      } // if usage | help
+    if ((args.length == 0)
+        || (hasParam(new String[] {"-u", "-usage", "--usage", "/u",
+            "-h", "--h", "-v", "--v", "-?", "--?", "/h", "/?",
+            "-help", "--help", "-version", "--version"}, args))) {
+      help();
+      return;
     }
 
     if (hasParam(new String[] {"-d1", "-d2", "-d3"}, args)) {
@@ -314,10 +304,8 @@ public class acp_commander {
       _authent = true;
       _emmode = true;
       if (_normmode) {
-        outWarning(
-                        "You specified both '-emmode' and '-normmode' " +
-                        "for normal reboot\n" +
-                        "--> '-rebootem' will be ignored");
+        outWarning("You specified both '-emmode' and '-normmode' "
+                 + "for normal reboot\n" + "--> '-rebootem' will be ignored");
         _emmode = false;
       }
     }
@@ -395,15 +383,14 @@ public class acp_commander {
         // TODO
         // get local MAC and set it as connection ID
         _connID = "00:50:56:c0:00:08";
-        outWarning("Using local MAC not implemented, yet!\n" +
-                           "Using default connID value (" + _connID + ")");
+        outWarning("Using local MAC not implemented, yet!\n"
+                 + "Using default connID value (" + _connID + ")");
       } else {
         // TODO
         // check given connection id for length and content
         _connID = _connID.replaceAll(":", "");
         if (_connID.length() != 12) {
-          outError(
-                            "Given connection ID has invalid length (not 6 bytes long)");
+          outError("Given connection ID has invalid length (not 6 bytes long)");
         }
       }
     }
@@ -416,8 +403,8 @@ public class acp_commander {
         // TODO
         // get targets MAC and set it
         _mac = "FF:FF:FF:FF:FF:FF";
-        outWarning("Using targets MAC is not implemented, yet!\n" +
-                           "Using default value (" + _mac + ")");
+        outWarning("Using targets MAC is not implemented, yet!\n"
+                 + "Using default value (" + _mac + ")");
       } else {
         // TODO
         // check given MAC for length and content
@@ -452,13 +439,13 @@ public class acp_commander {
         InetAddress _testip;
         _testip = InetAddress.getByName(_newip);
         if (_testip.isAnyLocalAddress()) {
-          outError("'" + _newip +
-                             "' is recognized as local IP. You must specify an untaken IP");
+          outError("'" + _newip
+                       + "' is recognized as local IP. You must specify an untaken IP");
         }
 
       } catch (java.net.UnknownHostException Ex) {
-        outError("'" + _newip +
-                         "' is not recognized as a valid IP for the use as new IP to be set.");
+        outError("'" + _newip
+                     + "' is not recognized as a valid IP for the use as new IP to be set.");
       }
             ;
     }
@@ -480,11 +467,11 @@ public class acp_commander {
     //
     try {
       _state = "initial status output";
-      outDebug("Using target:\t" + myACP.getTarget().getHostName() +
-                               "/" + myACP.getTarget().getHostAddress(),1);
+      outDebug("Using target:\t" + myACP.getTarget().getHostName()
+                 + "/" + myACP.getTarget().getHostAddress(),1);
       if (myACP.Port.intValue() != _stdport) {
-        System.out.println("Using port:\t" + myACP.Port.toString() +
-                                   "\t (this is NOT the standard port)");
+        System.out.println("Using port:\t" + myACP.Port.toString()
+                         + "\t (this is NOT the standard port)");
       } else {
         outDebug("Using port:\t" + myACP.Port.toString(), 1);
       }
@@ -492,10 +479,9 @@ public class acp_commander {
 
     } catch
     (java.lang.NullPointerException NPE) {
-      outError("NullPointerException in " + _state + ".\n" +
-                     "Usually this is thrown when the target can not be resolved. " +
-                     "Check, if the specified target \"" + _target +
-                     "\" is correct!");
+      outError("NullPointerException in " + _state + ".\n"
+             + "Usually this is thrown when the target can not be resolved. "
+             +  "Check, if the specified target \"" + _target + "\" is correct!");
     }
 
     //
@@ -546,7 +532,7 @@ public class acp_commander {
           _password = new String(console.readPassword("admin password: "));
           myACP.setPassword(_password);
           myACP.Authent();
-        } catch (Exception E) {}
+        } catch (Exception E) { }
       }
     }
 
@@ -563,7 +549,7 @@ public class acp_commander {
 
       // display language for WebGUI /etc/melco/info:lang=
       System.out.print("language setting of WebGUI:\t"
-                             + myACP.Command("grep lang= /etc/melco/info", 3)[1]);
+                        + myACP.Command("grep lang= /etc/melco/info", 3)[1]);
 
     }
 
@@ -572,21 +558,21 @@ public class acp_commander {
       System.out.println("Performing test sequence...");
 
       try {
-      //                System.out.println("ACPTest 8000:\t" + myACP.ACPTest("8000")[1]);  //no
-      //                System.out.println("ACPTest 8010:\t" + myACP.ACPTest("8010")[1]);  //no
-      //                System.out.println("ACPTest 8040:\t" + myACP.ACPTest("8040")[1]);  //ACP_PING
-      //                System.out.println("ACPTest 80B0:\t" + myACP.ACPTest("80B0")[1]);  //no
-      //                System.out.println("ACPTest 80E0:\t" + myACP.ACPTest("80E0")[1]);  //ACP_RAID_INFO
-      //                System.out.println("ACPTest 80F0:\t" + myACP.ACPTest("80F0")[1]);  //no
-      //                System.out.println("ACPTest 80C0:\t" + myACP.ACPTest("80C0")[1]);  //no
-      //                System.out.println("ACPTest 8C00:\t" + myACP.ACPTest("8C00")[1]);  //ACP_Format
-      //                System.out.println("ACPTest 8D00:\t" + myACP.ACPTest("8D00")[1]);  //ACP_EREASE_USER
-      //                System.out.println("ACPTest 8E00:\t" + myACP.ACPTest("8E00")[1]);  //no
-      //                System.out.println("ACPTest 8F00:\t" + myACP.ACPTest("8F00")[1]);  //no
+      //System.out.println("ACPTest 8000:\t" + myACP.ACPTest("8000")[1]);  //no
+      //System.out.println("ACPTest 8010:\t" + myACP.ACPTest("8010")[1]);  //no
+      //System.out.println("ACPTest 8040:\t" + myACP.ACPTest("8040")[1]);  //ACP_PING
+      //System.out.println("ACPTest 80B0:\t" + myACP.ACPTest("80B0")[1]);  //no
+      //System.out.println("ACPTest 80E0:\t" + myACP.ACPTest("80E0")[1]);  //ACP_RAID_INFO
+      //System.out.println("ACPTest 80F0:\t" + myACP.ACPTest("80F0")[1]);  //no
+      //System.out.println("ACPTest 80C0:\t" + myACP.ACPTest("80C0")[1]);  //no
+      //System.out.println("ACPTest 8C00:\t" + myACP.ACPTest("8C00")[1]);  //ACP_Format
+      //System.out.println("ACPTest 8D00:\t" + myACP.ACPTest("8D00")[1]);  //ACP_EREASE_USER
+      //System.out.println("ACPTest 8E00:\t" + myACP.ACPTest("8E00")[1]);  //no
+      //System.out.println("ACPTest 8F00:\t" + myACP.ACPTest("8F00")[1]);  //no
       } catch (Exception ex) {
       }
-    //                 System.out.println("DebugMode:\t"+myACP.DebugMode()[1]);
-    //                 System.out.println("Shutdown:\t"+myACP.Shutdown()[1]);
+    //System.out.println("DebugMode:\t"+myACP.DebugMode()[1]);
+    //System.out.println("Shutdown:\t"+myACP.Shutdown()[1]);
     }
 
     if (_openbox) {
@@ -597,24 +583,21 @@ public class acp_commander {
 
       // Due to many questions in the forum...
       System.out.println(
-                    "\nYou can now telnet to your box as user 'root' providing " +
-                    "no / an empty password. Please change your root password to" +
-                    " something secure.");
+                    "\nYou can now telnet to your box as user 'root' providing "
+                 +  "no / an empty password. Please change your root password to"
+                 +  " something secure.");
     }
 
     if (_clearboot) {
       _state = "clearboot";
       // clear /boot; full /boot is the reason for most ACP_STATE_FAILURE messages
       // send packet up to 3 times
-      System.out.println("Sending clear /boot command sequence...\t" +
-                               myACP.Command(
-                                       "cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img" +
-                                       " hddrootfs.buffalo.org hddrootfs.buffalo.updated.done",
-                                       3)[
-                               1]);
+      System.out.println("Sending clear /boot command sequence...\t"
+                        +  myACP.Command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img"
+                        +  " hddrootfs.buffalo.org hddrootfs.buffalo.updated.done",3)[1]);
       // show result of df to verify success, send packet up to 3 times
-      System.out.println("Output of df for verification...\t" +
-                               myACP.Command("df", 3)[1]);
+      System.out.println("Output of df for verification...\t"
+                         + myACP.Command("df", 3)[1]);
     }
 
     if (_blink) {
@@ -626,8 +609,8 @@ public class acp_commander {
     if (_gui) {
       _state = "set webgui language";
       // set WebGUI language
-      System.out.println("Setting WebGUI language...\t" +
-                               myACP.MultiLang(_setgui.byteValue())[1]);
+      System.out.println("Setting WebGUI language...\t"
+                         + myACP.MultiLang(_setgui.byteValue())[1]);
     }
 
     if (_emmode) {
@@ -687,7 +670,7 @@ public class acp_commander {
           System.out.print(pwd + ">");
           cmdln = keyboard.readLine();
         }
-      } catch (java.io.IOException IOE) {}
+      } catch (java.io.IOException IOE) { }
     }
 
     /**
@@ -702,16 +685,16 @@ public class acp_commander {
         int _mytimeout = myACP.Timeout;
         myACP.Timeout = 10000;
 
-        System.out.println("Changeing IP:\t" +
-              myACP.ChangeIP(InetAddress.getByName(_newip).getAddress(),
-              new byte[] {(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true)[1]);
+        System.out.println("Changeing IP:\t"
+                   + myACP.ChangeIP(InetAddress.getByName(_newip).getAddress(),
+                     new byte[] {(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true)[1]);
 
         myACP.Timeout = _mytimeout;
         System.out.println(
-                        "\nPlease note, that the current support for the change of the IP "+
-                        "is currently very rudimentary.\nThe IP has been set to the given, "+
-                        "fixed IP. However DNS and gateway have not been set. Use the "+
-                        "WebGUI to make appropriate settings.");
+                         "\nPlease note, that the current support for the change of the IP "
+                      +  "is currently very rudimentary.\nThe IP has been set to the given, "
+                      +  "fixed IP. However DNS and gateway have not been set. Use the "
+                      +  "WebGUI to make appropriate settings.");
       } catch (java.net.UnknownHostException NetE) {
         outError(NetE.toString() + "[in changeIP]");
       }
