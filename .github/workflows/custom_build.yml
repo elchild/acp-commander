@@ -5,6 +5,7 @@ on:
     paths: 
       - 'src/*.java'
       - 'src/build/*.sh'
+      - '.github/workflows/*.yml'
  
 jobs:
   build:
