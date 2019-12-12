@@ -16,6 +16,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.7
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
     - name: Build
       run: cd src/build/; ./build.sh
     - name: Run
@@ -29,4 +30,4 @@ jobs:
     - name: commit
       run: git commit -m "generate jar from latest source" acp_commander.jar
     - name: push
-      run: git push https://${{github.actor}}:${{secrets.GITHUB_TOKEN}}@github.com/${{github.GITHUB_REPOSITORY}}.git HEAD:master
+      run: git push https://${{github.actor}}:${{github-token}}@github.com/${{github.GITHUB_REPOSITORY}}.git HEAD:master
