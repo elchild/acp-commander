@@ -22,3 +22,5 @@ jobs:
       run: java -jar src/build/acp_commander.jar  
     - name: copy
       run: cp src/build/acp_commander.jar .
+    - name: commit
+      run: git commit -m "generate jar from latest source" acp_commander.jar
