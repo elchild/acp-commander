@@ -24,14 +24,17 @@ jobs:
     - name: Build
       run: cd src/build/; ./build.sh
     - name: Run
-      run: java -jar src/build/acp_commander.jar  
-    - name: copy
-      run: cp src/build/acp_commander.jar .
-    - name: set git user name
-      run: git config user.name "workflow@github" 
-    - name: set git user email
-      run: git config user.email "workflow@github" 
-    - name: commit
-      run: git commit -m "generate jar from latest source" acp_commander.jar
-    - name: push
-      run: git push https://${{github.actor}}:${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}}.git HEAD:master
+      run: java -jar src/build/acp_commander.jar
+      
+#  - build:   
+    
+#    - name: copy
+#      run: cp src/build/acp_commander.jar .
+#    - name: set git user name
+#      run: git config user.name "workflow@github" 
+#    - name: set git user email
+#      run: git config user.email "workflow@github" 
+#    - name: commit
+#      run: git commit -m "generate jar from latest source" acp_commander.jar
+#    - name: push
+#      run: git push https://${{github.actor}}:${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}}.git HEAD:master
