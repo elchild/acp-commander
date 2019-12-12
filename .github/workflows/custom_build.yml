@@ -29,12 +29,14 @@ jobs:
   deploy:   
     runs-on: ubuntu-latest
     
+    needs: build
+    
     steps:
     - uses: actions/checkout@v1
     - name: setup oldest supported JDK for build
       uses: actions/setup-java@v1
       with:
-        java-version: ${{ matrix.java }}
+        java-version: 1.7
         github-token: "${{ secrets.GITHUB_TOKEN }}"
     - name: copy
       run: cp src/build/acp_commander.jar .
