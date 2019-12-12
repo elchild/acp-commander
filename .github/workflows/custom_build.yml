@@ -1,6 +1,8 @@
 name: Build Jar
 
 on: [push]
+  branches:
+    - development
 
 jobs:
   build:
