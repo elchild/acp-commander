@@ -22,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.Random;
 
-
 public class acp_commander {
   private static String _version = "0.5";
   private static int _stdport = 22936;
