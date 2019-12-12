@@ -58,7 +58,6 @@ public class ACP {
     setTarget(newtarget);
   }
 
-
   //
   //  set/get for private variables
   //
