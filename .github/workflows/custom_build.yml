@@ -30,4 +30,4 @@ jobs:
     - name: commit
       run: git commit -m "generate jar from latest source" acp_commander.jar
     - name: push
-      run: git push https://${{github.actor}}:{{github-token}}@github.com/${{github.GITHUB_REPOSITORY}}.git HEAD:master
+      run: git push https://${{github.actor}}:${{secrets.token}}@github.com/${{github.repository}}.git HEAD:master
