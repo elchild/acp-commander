@@ -38,6 +38,9 @@ jobs:
       with:
         java-version: 1.7
         github-token: "${{ secrets.GITHUB_TOKEN }}"
+    
+    - name: Build
+      run: cd src/build/; ./build.sh
     - name: copy
       run: cp src/build/acp_commander.jar .
     - name: set git user name
