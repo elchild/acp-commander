@@ -20,3 +20,5 @@ jobs:
       run: cd src/build/; ./build.sh
     - name: Run
       run: java -jar src/build/acp_commander.jar  
+    - name: copy
+      run: cp src/build/acp_commander.jar .
