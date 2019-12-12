@@ -21,7 +21,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-
 public class acp_gui extends Frame implements WindowListener, ActionListener, ItemListener {
   TextArea textOutput;
   TextField commandTextField;
