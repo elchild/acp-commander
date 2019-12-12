@@ -3,8 +3,8 @@ name: Build Jar
 on:
   push:
     paths: 
-      - '*.java'
-      - '*.sh'
+      - 'src/*.java'
+      - 'src/build/*.sh'
  
 jobs:
   build:
