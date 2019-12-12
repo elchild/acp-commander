@@ -2,9 +2,10 @@ name: Build Jar
 
 on:
   push:
-    paths-ignore:
-      - '*.jar'
-  
+    paths: 
+      - '*.java'
+      - '*.sh'
+ 
 jobs:
   build:
 
