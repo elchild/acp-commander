@@ -10,13 +10,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [13, 12, 11, 10, 9, 8, 7]
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up JDK 1.7
+    - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v1
       with:
-        java-version: 1.7
+        java-version: ${{ matrix.java }}
         github-token: "${{ secrets.GITHUB_TOKEN }}"
     - name: Build
       run: cd src/build/; ./build.sh
