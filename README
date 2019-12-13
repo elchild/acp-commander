@@ -13,6 +13,8 @@ So far I have:
 
 A few of the changes have resulted in the minimum java version now being 1.7 which is what the provided jar is built with.
 
+Let me know if you run into any issues.
+
 Full usage details can be seen by running:
 java -jar acp_commander.jar
 
