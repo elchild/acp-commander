@@ -8,6 +8,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: look at adapters
-      run: ip addr
+     - uses: 'docker'
       
