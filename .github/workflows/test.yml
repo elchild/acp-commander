@@ -7,4 +7,4 @@ jobs:
     steps:
     - name: test
       id: hello
-      uses: acp-commander/acptest@v1
+      uses: 1000001101000/acp-commander/acptest@v1
