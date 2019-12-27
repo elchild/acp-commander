@@ -1,0 +1,10 @@
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: launch test target
+    steps:
+    - name: test
+      id: hello
+      uses: acp-commander/acptest@v1
