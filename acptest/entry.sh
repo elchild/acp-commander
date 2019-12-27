@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd /
-ccrypt -d -K $KEY1 server.tar.gz
+ccrypt -d -K ${key1} server.tar.gz
 mkdir /usr/local/acptarget
 cd /usr/local/acptarget
 tar xf /server.tar.gz
