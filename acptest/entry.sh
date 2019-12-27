@@ -9,4 +9,4 @@ tar xf /server.tar.gz
 cp /etc/resolv.conf /usr/local/acptarget/etc/
 chroot /usr/local/acptarget/ /usr/local/sbin/clientUtil_server -i eth0
 echo $?
-sleep 60
+sleep 240
