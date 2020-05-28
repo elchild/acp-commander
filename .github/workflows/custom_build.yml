@@ -8,16 +8,6 @@ on: [push]
      # - '.github/workflows/*.yml'
  
 jobs:
-  testerstart:
-    runs-on: ubuntu-latest
-    name: launch test target
-    steps:
-    - name: test
-      id: hello
-      uses: 1000001101000/acp-commander/acptest@master
-      env:
-        key1: ${{secrets.KEY1}} 
-     
   build:
 
     runs-on: ubuntu-latest
