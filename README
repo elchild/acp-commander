@@ -3,7 +3,7 @@ If this project helps you click the Star at the top of the page to let me know!
 I've created a fork of the original ACP commander project with the goal of making it work more reliably with newer devices.
 
 So far I have:
-*corrected some issues preventing the project from building from the provided source.
+*corrected some issues preventing the project from building from the original source.
 *created a build script to simplify building from source.
 *fixed an authentication bug which prevented most commands from working without also send the "-pw" command, this prevented many built in functions such as "-o" from working on many devices as well.
 *added logic to "-o" to allow root access via telnet to work on virtually every device model (all but the LS500 out of those so far tested).
