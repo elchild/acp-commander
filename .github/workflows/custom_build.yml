@@ -1,10 +1,10 @@
 name: Build Jar
 
-on: [push]
- # push:
- #   paths: 
- #     - 'src/*.java'
- #     - 'src/build/*.sh'
+on: #[push]
+  push:
+    paths: 
+      - 'src/*.java'
+      - 'src/build/*.sh'
      # - '.github/workflows/*.yml'
  
 jobs:
