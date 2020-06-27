@@ -33,11 +33,7 @@ public class ACP {
   private InetSocketAddress bind;
   private Charset defaultCharset = Charset.forName("UTF-8");
 
-  /** set socket timeout to 1000 ms, rather high, but some users report timeout
-  * problems. Could also be UDP-related - try resending packets
-  * Especially blinkled, saveconfig, loadconfig have long reply times as reply is
-  * sent when the command has been executed. Same has to be considered for other cmds.
-  */
+  //default packet timout, overriden by most operations
   protected int timeout = 1000;
   protected int resendPackets = 2; // standard value for repeated sending of packets
 
@@ -196,6 +192,7 @@ public class ACP {
 
   public String[] command(String cmd) {
     // send telnet-type command cmd to Linkstation by acpcmd - only send packet once!
+    timeout = 60000;
     enonecmd();
     authent();
     return doSendRcv(getacpcmd(connid, targetmac, cmd), 1);
@@ -292,6 +289,7 @@ public class ACP {
   //
 
   private String[] doDiscover() {
+    timeout = 3000;
     String state = "[Send/Receive ACPDiscover]";
     byte[] buf = getacpdisc(connid, targetmac);
     byte[] buf2 = getacpdisc2(connid, targetmac);

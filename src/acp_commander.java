@@ -13,14 +13,20 @@ package acpcommander;
  */
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 
 import java.nio.charset.StandardCharsets;
 
 import java.util.Random;
+
+import com.sun.net.httpserver.HttpServer;
 
 public class acp_commander {
   private static String _version = "0.5";
@@ -66,6 +72,10 @@ public class acp_commander {
             + "   -normmode .. Device reboots next into normal mode.\n"
             + "   -reboot  ... reboot device.\n"
             + "   -shutdown .. shutdown device.\n"
+            + "   -xfer     .. Transfer file from current directory to device via HTTP.\n"
+            + "             .. creates backup with .bak extension if file already exists.\n"
+            + "   -xferto   .. Optional target directory for -xfer command.\n"
+            + "             .. creates directory if it doesn't exist.\n"
             + "\n"
             + "   -d1...-d3 .. set debug level, generate additional output\n"
             + "                debug level >= 3: HEX/ASCII dump of incoming packets\n"
@@ -276,6 +286,10 @@ public class acp_commander {
     if (hasParam("-s", args)) {
       _authent = true;
       _shell = true;
+    }
+
+    if (hasParam("-xfer", args)) {
+      _authent = true;
     }
 
     if (hasParam("-gui", args)) {
@@ -670,6 +684,63 @@ public class acp_commander {
           cmdln = keyboard.readLine();
         }
       } catch (java.io.IOException IOE) { }
+    }
+
+    if (hasParam("-xfer", args)) {
+      outDebug("Using parameter -xfer (file transfer)", 1);
+      String output = String.valueOf("");
+      String localip = String.valueOf("");
+      String filename = getParamValue("-xfer", args, "");
+      String targetdir = String.valueOf("/root");
+      int localport = 0;
+
+      //check for optional destination directory
+      if (hasParam("-xferto", args))
+      {
+        //validate somehow?
+	targetdir = getParamValue("-xferto", args, "");
+      }
+
+      //check if local file exists?
+      File checkfile = new File("./" + filename);
+      if (! checkfile.exists() )
+      {
+        System.out.println("local file does not exist!");
+        System.exit( -1);
+      }
+
+      //open a socket to target and record the local ip address the OS used
+      try(final DatagramSocket socket = new DatagramSocket()){
+      socket.connect(InetAddress.getByName(_target), 10002);
+      localip = socket.getLocalAddress().getHostAddress();
+      socket.close();
+      } catch (java.io.IOException IOE) {System.out.println(IOE); System.exit( -1); }
+
+      //have socket find and test a port, then free it to attach the server to
+      try {
+      ServerSocket s = new ServerSocket(0);
+      localport = s.getLocalPort();
+      s.close();
+      } catch (java.io.IOException IOE) {System.out.println(IOE); System.exit( -1);}
+
+      //build the url for the device to download from
+      String localurl = "http://" + localip + ":" + String.valueOf(localport) + "/" + filename;
+
+      //start an HTTP server in the current directoy
+      try {
+      HttpServer server = HttpServer.create(new InetSocketAddress(localip, localport), 0);
+      server.createContext("/", new StaticFileHandler("./"));
+      server.start();
+      //create the target directory if absent
+      output = myACP.command("mkdir -p " + targetdir)[1];
+      //backup file if it already exists
+      output = myACP.command("cd " + targetdir + ";" + "mv " + filename + " " + filename + ".bak")[1];
+      //download the file to the target directory
+      output = myACP.command("cd " + targetdir + ";" + "wget " + localurl)[1];
+      server.stop(0);
+      } catch (java.io.IOException IOE) {System.out.println(IOE); System.exit( -1);}
+
+      //somehow judge success/fail
     }
 
     /**
