@@ -12,6 +12,7 @@ So far I have:
 *reworked the authentication logic to attempt the default password if none is provided, also prompt for password whenever initial authentication fails. 
 *replaced jittery password prompt with standard version included with java 1.6+ 
 *removed a bunch of "dead" code that is not actually referenced in the project.
+*added a simple file transfer function to push files to the device.
 
 A few of the changes have resulted in the minimum java version now being 1.7 which is what the provided jar is built with.
 
