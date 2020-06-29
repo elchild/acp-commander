@@ -1116,17 +1116,17 @@ public class ACP {
 
     switch (acptype) {
       case 0xc020: // ACP discovery
-        outDebug("received ACP Discovery reply", 1);
+        outDebug("received ACP Discovery reply", 2);
         result = rcvacpDisc(buf, debug);
         break;
       case 0xc030: // ACP changeIP
-        outDebug("received ACP change IP reply", 1);
+        outDebug("received ACP change IP reply", 2);
         result = new String[2]; //handling needed ?
         result[0] = "ACP change IP reply";
         result[1] = getErrorMsg(buf);
         break;
       case 0xc0a0: // ACP special command
-        outDebug("received ACP special command reply", 1);
+        outDebug("received ACP special command reply", 2);
         result = new String[2]; //handling needed ?
         result[0] = "ACP special command reply";
         result[1] = getErrorMsg(buf);
@@ -1134,7 +1134,7 @@ public class ACP {
         //            result[1] = "OK"; // should be set according to acpStatus!
         break;
       case 0xca10: // acpcmd
-        outDebug("received acpcmd reply", 1);
+        outDebug("received acpcmd reply", 2);
 
         result = new String[2];
         result[0] = "acpcmd reply";

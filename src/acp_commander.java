@@ -687,21 +687,27 @@ public class acp_commander {
     }
 
     if (hasParam("-xfer", args)) {
-      outDebug("Using parameter -xfer (file transfer)", 1);
+      outDebug("\n\nUsing parameter -xfer (file transfer)", 1);
       String output = String.valueOf("");
       String localip = String.valueOf("");
       String filename = getParamValue("-xfer", args, "");
       String targetdir = String.valueOf("/root");
+      String tmpcmd = String.valueOf("");
       int localport = 0;
+
+      outDebug("Filename: " + filename, 1);
 
       //check for optional destination directory
       if (hasParam("-xferto", args))
       {
         //validate somehow?
+        outDebug("Using parameter -xferto (target directory)", 1);
 	targetdir = getParamValue("-xferto", args, "");
       }
 
-      //check if local file exists?
+      outDebug("Target Directory: " + targetdir, 1);
+
+      //check if local file exists
       File checkfile = new File("./" + filename);
       if (! checkfile.exists() )
       {
@@ -726,18 +732,47 @@ public class acp_commander {
       //build the url for the device to download from
       String localurl = "http://" + localip + ":" + String.valueOf(localport) + "/" + filename;
 
+      outDebug("File URL: " + localurl, 1);
+
       //start an HTTP server in the current directoy
       try {
       HttpServer server = HttpServer.create(new InetSocketAddress(localip, localport), 0);
       server.createContext("/", new StaticFileHandler("./"));
       server.start();
+      outDebug("Starting HTTP...", 1);
+
+      //output the contents of the directory
+      tmpcmd = "ls -l " + targetdir;
+      outDebug("starting contents... " + tmpcmd, 1);
+      output = myACP.command(tmpcmd)[1];
+      outDebug(output, 1);
+
       //create the target directory if absent
-      output = myACP.command("mkdir -p " + targetdir)[1];
+      tmpcmd = "mkdir -p " + targetdir;
+      outDebug("creating target directory... " + tmpcmd, 1);
+      output = myACP.command(tmpcmd + "; echo $?")[1];
+      outDebug("return code: " + output, 1);
+
       //backup file if it already exists
-      output = myACP.command("cd " + targetdir + ";" + "mv " + filename + " " + filename + ".bak")[1];
+      tmpcmd = "cd " + targetdir + ";" + "mv " + filename + " " + filename + ".bak";
+      outDebug("backup file if present... " + tmpcmd, 1);
+      output = myACP.command(tmpcmd + "; echo $?")[1];
+      outDebug("return code: " + output, 1);
+
       //download the file to the target directory
-      output = myACP.command("cd " + targetdir + ";" + "wget " + localurl)[1];
+      tmpcmd = "cd " + targetdir + ";" + "wget " + localurl;
+      outDebug("attempting transfer using wget... " + tmpcmd, 1);
+      output = myACP.command(tmpcmd + "; echo $?")[1];
+      outDebug("return code: " + output, 1);
+
+      //output the contents of the directory
+      tmpcmd = "ls -l " + targetdir;
+      outDebug("ending contents... " + tmpcmd, 1);
+      output = myACP.command(tmpcmd)[1];
+      outDebug(output, 1);
+
       server.stop(0);
+      outDebug("Stopping HTTP...", 1);
       } catch (java.io.IOException IOE) {System.out.println(IOE); System.exit( -1);}
 
       //somehow judge success/fail
