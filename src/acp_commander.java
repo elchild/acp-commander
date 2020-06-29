@@ -691,6 +691,7 @@ public class acp_commander {
       String output = String.valueOf("");
       String localip = String.valueOf("");
       String filename = getParamValue("-xfer", args, "");
+      String localdir = System.getProperty("user.dir");
       String targetdir = String.valueOf("/root");
       String tmpcmd = String.valueOf("");
       int localport = 0;
@@ -737,7 +738,7 @@ public class acp_commander {
       //start an HTTP server in the current directoy
       try {
       HttpServer server = HttpServer.create(new InetSocketAddress(localip, localport), 0);
-      server.createContext("/", new StaticFileHandler("./"));
+      server.createContext("/", new StaticFileHandler(localdir));
       server.start();
       outDebug("Starting HTTP...", 1);
 
