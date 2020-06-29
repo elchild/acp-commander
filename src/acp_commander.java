@@ -709,7 +709,7 @@ public class acp_commander {
       outDebug("Target Directory: " + targetdir, 1);
 
       //check if local file exists
-      File checkfile = new File(localdir + File.separator + filename);
+      File checkfile = new File(localdir,filename);
       if (! checkfile.exists() )
       {
         System.out.println("local file does not exist!");
