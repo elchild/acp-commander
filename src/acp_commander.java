@@ -21,6 +21,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 import java.nio.charset.StandardCharsets;
 
@@ -167,6 +168,30 @@ public class acp_commander {
   // writes the warning to System.out
   private static void outWarning(String message) {
     System.out.println("WARNING: " + message);
+  }
+
+  private static boolean tcpTest(String host, int port) {
+    Socket s = null;
+    try
+    {
+      s = new Socket(host, port);
+      return true;
+    }
+    catch (Exception e)
+    {
+      return false;
+    }
+    finally
+    {
+      if(s != null)
+      {
+        try
+        {
+          s.close();
+        }
+        catch(Exception e){}
+      }
+    }
   }
 
   public static void main(String[] args) {
@@ -592,13 +617,21 @@ public class acp_commander {
       _state = "ACP_OPENBOX";
       System.out.println("Reset root pwd...\t" + myACP.command("passwd -d root", 3)[1]);
       myACP.command("rm /etc/securetty", 3);
-      System.out.println("start telnetd...\t" + myACP.command("/bin/busybox telnetd&", 3)[1]);
+      System.out.print("Startng Telnet ..");
+      myACP.command("/bin/busybox telnetd&", 3);
 
-      // Due to many questions in the forum...
-      System.out.println(
+      if (!tcpTest(_target,23))
+      {
+        System.out.print("Failed!\n");
+      }
+      else
+      {
+        System.out.print("Success!\n");
+        System.out.println(
                     "\nYou can now telnet to your box as user 'root' providing "
                  +  "no / an empty password. Please change your root password to"
                  +  " something secure.");
+      }
     }
 
     if (_clearboot) {
