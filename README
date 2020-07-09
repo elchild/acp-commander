@@ -6,7 +6,7 @@ So far I have:
 *corrected some issues preventing the project from building from the original source.
 *created a build script to simplify building from source.
 *fixed an authentication bug which prevented most commands from working without also send the "-pw" command, this prevented many built in functions such as "-o" from working on many devices as well.
-*added logic to "-o" to allow root access via telnet to work on virtually every device model (all but the LS500 out of those so far tested).
+*added logic to "-o" to allow root access via telnet to work on virtually every device model (try "-s" if your device does not have telnet).
 *improved the shell option "-s" to work more robustly allowing limited shell-like access on devices without telnet (such as the LS500).
 *added support for the newer discovery protocol allowing more of the newer devices to be supported.
 *reworked the authentication logic to attempt the default password if none is provided, also prompt for password whenever initial authentication fails. 
