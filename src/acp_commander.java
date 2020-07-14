@@ -25,6 +25,7 @@ import java.net.Socket;
 
 import java.nio.charset.StandardCharsets;
 
+import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
 import com.sun.net.httpserver.HttpServer;
@@ -617,20 +618,35 @@ public class acp_commander {
       _state = "ACP_OPENBOX";
       System.out.println("Reset root pwd...\t" + myACP.command("passwd -d root", 3)[1]);
       myACP.command("rm /etc/securetty", 3);
-      System.out.print("Startng Telnet ..");
+      System.out.print("Starting Telnet .");
       myACP.command("/bin/busybox telnetd&", 3);
 
-      if (!tcpTest(_target,23))
+
+      boolean telnetup = false;
+      for (int i=0; i < 8; i++)
       {
-        System.out.print("Failed!\n");
-      }
-      else
-      {
-        System.out.print("Success!\n");
-        System.out.println(
+        System.out.print(".");
+        try {
+          TimeUnit.SECONDS.sleep(1);
+        }
+        catch (java.lang.InterruptedException JLIE) { }
+
+        if (tcpTest(_target,23))
+        {
+          System.out.print(" Success!\n");
+          System.out.println(
                     "\nYou can now telnet to your box as user 'root' providing "
                  +  "no / an empty password. Please change your root password to"
                  +  " something secure.");
+          telnetup = true;
+          break;
+        }
+      }
+
+      if (!telnetup)
+      {
+        System.out.print("Failed!\n");
+        System.out.println("\nUnable to detect telnet server. \nThis could be a firewall issue but more likely this model does not have a telnetd binary installed.\nConsider using \"-s\" as an alternative.");
       }
     }
 
