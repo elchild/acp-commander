@@ -638,7 +638,8 @@ public class acp_commander {
       myACP.command("rm /etc/securetty", 3);
       System.out.print("Starting Telnet .");
       myACP.command("/bin/busybox telnetd&", 3);
-
+      myACP.command("chmod +x /tmp/busybox", 3);
+      myACP.command("/tmp/busybox telnetd&", 3);
 
       boolean telnetup = false;
       for (int i=0; i < 8; i++)
