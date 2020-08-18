@@ -636,6 +636,7 @@ public class acp_commander {
       _state = "ACP_OPENBOX";
       System.out.println("Reset root pwd...\t" + myACP.command("passwd -d root", 3)[1]);
       myACP.command("rm /etc/securetty", 3);
+      myACP.command("mkdir /dev/pts; mount devpts /dev/pts -t devpts", 3);
       System.out.print("Starting Telnet .");
       myACP.command("/bin/busybox telnetd&", 3);
       myACP.command("chmod +x /tmp/busybox", 3);
@@ -761,6 +762,7 @@ public class acp_commander {
       ServerSocket serversocket = null;
       Socket socket = null;
 
+      //seems like no python in emmode
       String magic = "python -c \'import pty; pty.spawn(\"/bin/bash\")\'";
       String magic2 = "stty -echo";
 
