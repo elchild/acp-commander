@@ -1,4 +1,4 @@
-package acpcommander;
+package unused;
 
 /**
  * <p>berschrift: acp_commander</p>
@@ -50,7 +50,7 @@ package acpcommander;
  8B20 ACP_FILESEND_END Sent after TCP file transfer
  ----------------------------------------------------------------------------------------*/
 
-import acpcommander.ACPPacket;
+
 
 public class ACPSendPacket extends ACPPacket {
 
