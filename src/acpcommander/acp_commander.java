@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
+import acpcommander.util.AcpParser;
 import com.sun.net.httpserver.HttpServer;
 
 public class acp_commander {
@@ -70,8 +71,8 @@ public class acp_commander {
                 + "\n"
                 + "   -gui nr  ... set Web GUI language 0=Jap, 1=Eng, 2=Ger.\n"
                 + "   -diag    ... run some diagnostics on device settings (lang, backup).\n"
-                + "   -emmode  ... Device reboots next into EM-mode.\n"
-                + "   -normmode .. Device reboots next into normal mode.\n"
+                + "   -emMode  ... Device reboots next into EM-mode.\n"
+                + "   -normMode .. Device reboots next into normal mode.\n"
                 + "   -reboot  ... reboot device.\n"
                 + "   -shutdown .. shutdown device.\n"
                 + "   -xfer     .. Transfer file from current directory to device via HTTP.\n"
@@ -143,8 +144,8 @@ public class acp_commander {
         return false;
     }
 
-    // private static void outDebug(String message, int debuglevel)
-    // if parameter "debuglevel" <= _debug the debug message is written to System.out
+    // private static void outDebug(String message, int debugLevel)
+    // if parameter "debugLevel" <= _debug the debug message is written to System.out
     private static void outDebug(String message, int debuglevel) {
         // negative debuglevels are considered as errors!
         if (debuglevel < 0) {
@@ -204,16 +205,16 @@ public class acp_commander {
 
     public static void main(String[] args) {
         // variables
-        String _mac = String.valueOf("");
-        String _connid = String.valueOf("");
-        String _target = String.valueOf("");
+        String _mac = "";
+        String _connid = "";
+        String _target = "";
         //Integer _port = new Integer(_stdport);
         int _port = _stdport;
-        String _bind = String.valueOf("");
+        String _bind = "";
 
-        String _cmd = String.valueOf("");
-        String _newip = String.valueOf("");
-        String _password = String.valueOf("");
+        String _cmd = "";
+        String _newip = "";
+        String _password = "";
         int _setgui = Integer.valueOf(1); // set gui to language 0=jap, 1=eng, 2=ger
 
         // flags what to do, set during parsing the command line arguments
@@ -284,7 +285,7 @@ public class acp_commander {
 
         if (hasParam("-p", args)) {
             outDebug("Port parameter -p given", 2);
-            _port = Integer.valueOf(getParamValue("-p", args, Integer.toString(_port)));
+            _port = Integer.parseInt(getParamValue("-p", args, Integer.toString(_port)));
         }
 
         if (hasParam("-m", args)) {
@@ -347,16 +348,16 @@ public class acp_commander {
             _reboot = true;
         }
 
-        if (hasParam("-normmode", args)) {
+        if (hasParam("-normMode", args)) {
             _authent = true;
             _normmode = true;
         }
 
-        if (hasParam("-emmode", args)) {
+        if (hasParam("-emMode", args)) {
             _authent = true;
             _emmode = true;
             if (_normmode) {
-                outWarning("You specified both '-emmode' and '-normmode' "
+                outWarning("You specified both '-emMode' and '-normMode' "
                         + "for normal reboot\n" + "--> '-rebootem' will be ignored");
                 _emmode = false;
             }
@@ -389,7 +390,7 @@ public class acp_commander {
             outDebug("Command-line parameter -ip given", 2);
             _newip = getParamValue("-ip", args, "");
             _changeip = true;
-            _authent = true; // changeip requires autenticate
+            _authent = true; // changeIp requires autenticate
         }
 
         if (hasParam("-pw", args)) {
@@ -428,7 +429,7 @@ public class acp_commander {
             Random generator = new Random();
             byte[] temp_connid = new byte[6];
             generator.nextBytes(temp_connid);
-            _connid = ACP.bufferToHex(temp_connid, 0, 6);
+            _connid = AcpParser.bufferToHex(temp_connid, 0, 6);
             outDebug("Using random connid value = " + _connid, 1);
         } else {
             if (_connid.equalsIgnoreCase("mac")) {
@@ -508,10 +509,10 @@ public class acp_commander {
         _state = "VarPrep - NewLib";
 
         ACP myACP = new ACP(_target);
-        myACP.debuglevel = _debug;
+        myACP.log.debugLevel = _debug;
         myACP.port = _port;
-        myACP.setconnid(_connid);
-        myACP.settargetmac(_mac);
+        myACP.setConnectionId(_connid);
+        myACP.setTargetMac(_mac);
         myACP.bind(_bind);
 
         //
@@ -522,12 +523,12 @@ public class acp_commander {
             outDebug("Using target:\t" + myACP.getTarget().getHostName()
                     + "/" + myACP.getTarget().getHostAddress(), 1);
             if (myACP.port.intValue() != _stdport) {
-                System.out.println("Using port:\t" + myACP.port.toString()
+                System.out.println("Using port:\t" + myACP.port
                         + "\t (this is NOT the standard port)");
             } else {
-                outDebug("Using port:\t" + myACP.port.toString(), 1);
+                outDebug("Using port:\t" + myACP.port, 1);
             }
-            outDebug("Using MAC-Address:\t" + myACP.gettargetmac(), 1);
+            outDebug("Using MAC-Address:\t" + myACP.getTargetMac(), 1);
 
         } catch
         (java.lang.NullPointerException NPE) {
@@ -546,11 +547,15 @@ public class acp_commander {
             int _foundLS = 0;
 
             outDebug("Sending ACP-Disover packet...", 1);
-            String[] foundLS = myACP.find();
+
+            /*String[] foundLS = myACP.find();
             for (int i = 0; i < foundLS.length; i++) {
                 System.out.println(foundLS[i]);
             }
-            System.out.println("Found " + foundLS.length + " device(s).");
+
+            System.out.println("Found " + foundLS.length + " device(s).");*/
+
+            System.out.println("[FIX PLS] " + myACP.find().concatenatedOutput); //AH Todo: This DEFINITELY isn't right
         }
 
         if (_authent) {
@@ -562,11 +567,12 @@ public class acp_commander {
             /**
              * Buffalos standard authentication procedure:
              * 1 - send ACPDiscover to get key for password encryption
-             * 2 - send ACPSpecial-enonecmd with encrypted password "ap_servd"
-             * 3 - send ACPSpecial-authent with encrypted admin password
+             * 2 - send ACPSpecial-enOneCmd with encrypted password "ap_servd"
+             * 3 - send ACPSpecial-authenticate with encrypted admin password
              */
 
-            outDebug("Trying to authenticate enonecmd...\t" + myACP.enonecmd()[1], 1);
+            //outDebug("Trying to authenticate enOneCmd...\t" + myACP.enOneCmd()[1], 1);
+            outDebug("Trying to authenticate enOneCmd...\t" + myACP.enOneCmd().concatenatedOutput, 1); //AH Todo: I think this isn't quite right
 
             if (_password.equals("")) {
                 //if password blank, try "password" otherwise prompt
@@ -576,14 +582,14 @@ public class acp_commander {
 
             myACP.setPassword(_password);
 
-            if (!myACP.authent()[1].equals("ACP_STATE_OK")) {
-
+            //if (!myACP.authenticate()[1].equals("ACP_STATE_OK")) {
+            if (!myACP.authenticate().concatenatedOutput.equals("ACP_STATE_OK")) { //AH Todo: I think this isn't quite right
                 java.io.Console console = System.console();
 
                 try {
                     _password = new String(console.readPassword("admin password: "));
                     myACP.setPassword(_password);
-                    myACP.authent();
+                    myACP.authenticate();
                 } catch (Exception E) {
                 }
             }
@@ -596,13 +602,15 @@ public class acp_commander {
 
             // display status of backup jobs /etc/melco/backup*:status=
             System.out.print("status of backup jobs:\n");
-            String[] BackupState = myACP.command(
-                    "grep status= /etc/melco/backup*", 3);
-            System.out.println(BackupState[1]);
+
+            /*String[] BackupState = myACP.command("grep status= /etc/melco/backup*", 3);
+            System.out.println(BackupState[1]);*/
+
+            AcpReply BackupState = myACP.command("grep status= /etc/melco/backup*", 3);
+            System.out.println(BackupState.concatenatedOutput);
 
             // display language for WebGUI /etc/melco/info:lang=
-            System.out.print("language setting of WebGUI:\t"
-                    + myACP.command("grep lang= /etc/melco/info", 3)[1]);
+            System.out.print("language setting of WebGUI:\t" + myACP.command("grep lang= /etc/melco/info", 3).concatenatedOutput);
 
         }
 
@@ -630,7 +638,7 @@ public class acp_commander {
 
         if (_openbox) {
             _state = "ACP_OPENBOX";
-            System.out.println("Reset root pwd...\t" + myACP.command("passwd -d root", 3)[1]);
+            System.out.println("Reset root pwd...\t" + myACP.command("passwd -d root", 3).concatenatedOutput);
             myACP.command("rm /etc/securetty", 3);
             myACP.command("mkdir /dev/pts; mount devpts /dev/pts -t devpts", 3);
             System.out.print("Starting Telnet .");
@@ -669,30 +677,29 @@ public class acp_commander {
             // send packet up to 3 times
             System.out.println("Sending clear /boot command sequence...\t"
                     + myACP.command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img"
-                    + " hddrootfs.buffalo.org hddrootfs.buffalo.updated.done", 3)[1]);
+                    + " hddrootfs.buffalo.org hddrootfs.buffalo.updated.done", 3).concatenatedOutput);
+
             // show result of df to verify success, send packet up to 3 times
-            System.out.println("Output of df for verification...\t"
-                    + myACP.command("df", 3)[1]);
+            System.out.println("Output of df for verification...\t" + myACP.command("df", 3).concatenatedOutput);
         }
 
         if (_blink) {
             _state = "blink";
             // blink LED's and play tones via ACP-command
-            System.out.println("blinkled...\t" + myACP.blinkled()[1]);
+            System.out.println("blinkLed...\t" + myACP.blinkLed().concatenatedOutput);
         }
 
         if (_gui) {
             _state = "set webgui language";
             // set WebGUI language
-            System.out.println("Setting WebGUI language...\t"
-                    + myACP.multilang((byte) _setgui)[1]);
+            System.out.println("Setting WebGUI language...\t" + myACP.setWebUiLanguage((byte) _setgui).concatenatedOutput);
         }
 
         if (_emmode) {
             _state = "Set EM-Mode";
             // send EM-Mode command
             System.out.println("Sending EM-Mode command...\t");
-            String _result = myACP.emmode()[1];
+            String _result = myACP.emMode().concatenatedOutput;
             System.out.println(_result);
             if (_result.equals("ACP_STATE_OK")) {
                 System.out.println("At your next reboot your LS will boot into EM mode.");
@@ -703,7 +710,7 @@ public class acp_commander {
             _state = "Set Norm-Mode";
             // send Norm-Mode command
             System.out.print("Sending Norm-Mode command...\t");
-            String _result = myACP.normmode()[1];
+            String _result = myACP.normMode().concatenatedOutput;
             System.out.println(_result);
             if (_result.equals("ACP_STATE_OK")) {
                 System.out.println("At your next reboot your LS will boot into normal mode.");
@@ -713,7 +720,7 @@ public class acp_commander {
         if (!_cmd.equals("")) {
             _state = "ACP_CMD";
             // send custom command via ACP
-            String _cmdresult = myACP.command(_cmd)[1];
+            String _cmdresult = myACP.command(_cmd).concatenatedOutput;
             outDebug(">" + _cmd + "\n", 1);
             System.out.print(_cmdresult);
         }
@@ -721,9 +728,9 @@ public class acp_commander {
         // create a telnet style shell, leave with "exit"
         if (_shell) {
             _state = "shell";
-            String cmdln = String.valueOf("");
-            String pwd = String.valueOf("/");
-            String output = String.valueOf("");
+            String cmdln;
+            String pwd = "/";
+            String output;
             BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
             System.out.print("Enter commands to device, enter 'exit' to leave\n");
 
@@ -735,12 +742,12 @@ public class acp_commander {
                 while ((cmdln != null) && (!cmdln.equals("exit"))) {
                     // send command and display answer
                     //only first cmd working for some reason.
-                    output = myACP.command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd")[1];
+                    output = myACP.command("cd " + pwd + ";" + cmdln + ";pwd > /tmp/.pwd").concatenatedOutput;
                     if (output.equals("OK (ACP_STATE_OK)")) {
                         output = "";
                     }
                     System.out.print(output);
-                    pwd = myACP.command("cat /tmp/.pwd")[1].split("\n", 2)[0];
+                    pwd = myACP.command("cat /tmp/.pwd").concatenatedOutput.split("\n", 2)[0];
                     // get next commandline
                     System.out.print(pwd + ">");
                     cmdln = keyboard.readLine();
@@ -756,7 +763,7 @@ public class acp_commander {
             ServerSocket serversocket = null;
             Socket socket = null;
 
-            //seems like no python in emmode
+            //seems like no python in emMode
             String magic = "python -c \'import pty; pty.spawn(\"/bin/bash\")\'";
             String magic2 = "stty -echo";
 
@@ -810,12 +817,12 @@ public class acp_commander {
 
         if (hasParam("-xfer", args)) {
             outDebug("\n\nUsing parameter -xfer (file transfer)", 1);
-            String output = String.valueOf("");
-            String localip = String.valueOf("");
+            String output;
+            String localip;
             String filename = getParamValue("-xfer", args, "");
             String localdir = System.getProperty("user.dir");
-            String targetdir = String.valueOf("/root");
-            String tmpcmd = String.valueOf("");
+            String targetdir = "/root";
+            String tmpcmd;
             int localport = 0;
 
             outDebug("Filename: " + filename, 1);
@@ -864,31 +871,31 @@ public class acp_commander {
                 //output the contents of the directory
                 tmpcmd = "ls -l " + targetdir;
                 outDebug("starting contents... " + tmpcmd, 1);
-                output = myACP.command(tmpcmd)[1];
+                output = myACP.command(tmpcmd).concatenatedOutput;
                 outDebug(output, 1);
 
                 //create the target directory if absent
                 tmpcmd = "mkdir -p " + targetdir;
                 outDebug("creating target directory... " + tmpcmd, 1);
-                output = myACP.command(tmpcmd + "; echo $?")[1];
+                output = myACP.command(tmpcmd + "; echo $?").concatenatedOutput;
                 outDebug("return code: " + output, 1);
 
                 //backup file if it already exists
                 tmpcmd = "cd " + targetdir + ";" + "mv " + filename + " " + filename + ".bak";
                 outDebug("backup file if present... " + tmpcmd, 1);
-                output = myACP.command(tmpcmd + "; echo $?")[1];
+                output = myACP.command(tmpcmd + "; echo $?").concatenatedOutput;
                 outDebug("return code: " + output, 1);
 
                 //download the file to the target directory
                 tmpcmd = "cd " + targetdir + ";" + "wget " + localurl;
                 outDebug("attempting transfer using wget... " + tmpcmd, 1);
-                output = myACP.command(tmpcmd + "; echo $?")[1];
+                output = myACP.command(tmpcmd + "; echo $?").concatenatedOutput;
                 outDebug("return code: " + output, 1);
 
                 //output the contents of the directory
                 tmpcmd = "ls -l " + targetdir;
                 outDebug("ending contents... " + tmpcmd, 1);
-                output = myACP.command(tmpcmd)[1];
+                output = myACP.command(tmpcmd).concatenatedOutput;
                 outDebug(output, 1);
 
                 server.stop(0);
@@ -902,20 +909,20 @@ public class acp_commander {
         }
 
         /**
-         * changeip should be one of the last things we do as it will be the last we can do
+         * changeIp should be one of the last things we do as it will be the last we can do
          * for this sequence.
          */
 
         if (_changeip) {
-            _state = "changeip";
+            _state = "changeIp";
 
             try {
                 int _mytimeout = myACP.timeout;
                 myACP.timeout = 10000;
 
                 System.out.println("Changeing IP:\t"
-                        + myACP.changeip(InetAddress.getByName(_newip).getAddress(),
-                        new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true)[1]);
+                        + myACP.changeIp(InetAddress.getByName(_newip).getAddress(),
+                        new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true).concatenatedOutput);
 
                 myACP.timeout = _mytimeout;
                 System.out.println(
@@ -924,7 +931,7 @@ public class acp_commander {
                                 + "fixed IP. However DNS and gateway have not been set. Use the "
                                 + "WebGUI to make appropriate settings.");
             } catch (java.net.UnknownHostException NetE) {
-                outError(NetE.toString() + "[in changeIP]");
+                outError(NetE + "[in changeIP]");
             }
 
         }
@@ -933,14 +940,14 @@ public class acp_commander {
         if (_reboot) {
             _state = "reboot";
 
-            System.out.println("Rebooting...:\t" + myACP.reboot()[1]);
+            System.out.println("Rebooting...:\t" + myACP.reboot().concatenatedOutput);
         }
 
         // shutdown
         if (_shutdown) {
             _state = "shutdown";
 
-            System.out.println("Sending SHUTDOWN command...:\t" + myACP.shutdown()[1]);
+            System.out.println("Sending SHUTDOWN command...:\t" + myACP.shutdown().concatenatedOutput);
         }
     }
 }
