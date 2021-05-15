@@ -8,7 +8,7 @@ public class AcpEncryption {
     private Charset charset;
     private ScopedLogger log;
 
-    public AcpEncryption(Charset charset, ScopedLogger log){
+    public AcpEncryption(ScopedLogger log, Charset charset){
         this.charset = charset;
         this.log = log;
     }

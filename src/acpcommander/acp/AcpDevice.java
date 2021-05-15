@@ -30,25 +30,36 @@ public class AcpDevice {
     public Integer port = 22936;
     private String connectionId; // connection ID, "unique" identifier for the connection
     private String targetMacAddress; // MAC address of the LS, it reacts only if correct MAC or FF:FF:FF:FF:FF:FF is set in the packet
+
     protected byte[] key = new byte[4]; // Key for password encryption sent in reply to ACP discovery packet
     protected String password;
-    private final String apservd = "ap_servd"; //AH: This seems to be some kind of static password
-    protected int maxPacketResendAttempts = 2; // standard value for repeated sending of packets
-    protected int defaultReceiveBufferSize = 4096; // standard length of receive buffer
+    private final String staticPassword = "ap_servd"; //AH: This seems to be some kind of static password
 
-    private final CannedMessages cannedMessages = new CannedMessages(log);
-    private final AcpEncryption encryption = new AcpEncryption(StandardCharsets.UTF_8, log);
-    private final AcpPacketCreator packetCreator = new AcpPacketCreator(log, StandardCharsets.UTF_8);
-    private AcpCommunication communication = new AcpCommunication(log, null); //AH Todo: Should not need to default bind here. Should be an unassigned var
+    protected final int maxPacketResendAttempts = 2; // standard value for repeated sending of packets
+    protected final int defaultReceiveBufferSize = 4096; // standard length of receive buffer
+
+    private CannedMessages cannedMessages;
+    private AcpEncryption encryption;
+    private AcpPacketCreator packetCreator;
+    private AcpCommunication communication;
 
     public AcpDevice(ScopedLogger log, String newTarget) {
         this.log = log;
+        configureLogDependencies();
         setTarget(newTarget);
     }
 
     public AcpDevice(ScopedLogger log, byte[] newTarget) {
         this.log = log;
+        configureLogDependencies();
         setTarget(newTarget);
+    }
+
+    private void configureLogDependencies(){
+        cannedMessages = new CannedMessages(log);
+        encryption = new AcpEncryption(log, StandardCharsets.UTF_8);
+        packetCreator = new AcpPacketCreator(log, StandardCharsets.UTF_8);
+        communication = new AcpCommunication(log, null); //AH Todo: Should not need to default bind here. Should be an unassigned var
     }
 
     //
@@ -241,7 +252,7 @@ public class AcpDevice {
     }
 
     public AcpReply enOneCmd() {
-        return enOneCmd(encryption.encryptAcpPassword(apservd, key));
+        return enOneCmd(encryption.encryptAcpPassword(staticPassword, key));
     }
 
     public AcpReply setWebUiLanguage(byte language) {
