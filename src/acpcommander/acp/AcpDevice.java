@@ -61,7 +61,6 @@ public class AcpDevice {
         cannedMessages = new CannedMessages(log);
         encryption = new AcpEncryption(log, StandardCharsets.UTF_8);
         packetCreator = new AcpPacketCreator(log, StandardCharsets.UTF_8);
-        communication = new AcpCommunication(log, null); //AH Todo: Should not need to default bind here. Should be an unassigned var
     }
 
     //
@@ -120,6 +119,11 @@ public class AcpDevice {
     }
 
     public void bind(String localip) {
+        if(localip == "" || localip == null){
+            communication = new AcpCommunication(log, null);
+            return;
+        }
+
         // bind socket to a local address (-b)
         // Create a socket address from a hostname (_bind) and a port number. A port number
         // of zero will let the system pick up an ephemeral port in a bind operation.

@@ -130,7 +130,7 @@ public class AcpCommander {
         String _connid = "";
         String _target = "";
         int _port = standardAcpPort;
-        String _bind = "";
+        String _bind = null;
 
         String _cmd = "";
         String _newip = "";
