@@ -34,7 +34,7 @@ public class AcpCommander {
     private static final String acpCommanderVersion = "0.6";
     private static final int standardAcpPort = 22936;
 
-    private static int _debug = 0; // determins degree of additional output.
+    private static int _debug = 0; // determines degree of additional output.
     private static String _state; // where are we in the code.
 
     private static ParameterReader params;
@@ -49,11 +49,11 @@ public class AcpCommander {
             + "                default = FF:FF:FF:FF:FF:FF.\n"
             + "   -na      ... no authorisation, skip the ACP_AUTH packet. You should\n"
             + "                only use this option together with -i.\n"
-            + "   -pw passwd . your admin password. A default password will be tried if ommited.\n"
+            + "   -pw passwd . your admin password. A default password will be tried if omitted.\n"
             + "                if authentication fails you will be prompted for your password\n"
             + "   -i ID    ... define a connection identifier, if not given, a random one will\n"
             + "                be used. (With param MAC the senders MAC address will be used.)\n"
-            + "                Successfull authenitfications are stored in conjunction with a \n"
+            + "                Successful authentications are stored in conjunction with a \n"
             + "                given connection ID. So you may reuse a previously used one.\n"
             + "                Using a lot of different id's in a chain of commands might\n"
             + "                cause a lot of overhead at the device.\n"
@@ -65,7 +65,7 @@ public class AcpCommander {
             + "   -o       ... open the device by sending 'telnetd' and 'passwd -d root',\n"
             + "                thus enabling telnet and clearing the root password\n"
             + "   -c cmd   ... sends the given shell command cmd to the device.\n"
-            + "   -s       ... rudimentry interactive shell\n"
+            + "   -s       ... rudimentary interactive shell\n"
             + "   -cb      ... clear \\boot, get rid of ACP_STATE_ERROR after firmware update\n"
             + "                output of df follows for control\n"
             + "   -ip newip... change IP to newip (basic support).\n"
@@ -84,7 +84,7 @@ public class AcpCommander {
             + "\n"
             + "   -d1...-d3 .. set debug level, generate additional output\n"
             + "                debug level >= 3: HEX/ASCII dump of incoming packets\n"
-            + "   -q       ... quiet, surpress header, does not work with -h or -v\n"
+            + "   -q       ... quiet, surppress header, does not work with -h or -v\n"
             + "   -h | -v  ... extended help (this output)\n"
             + "   -u       ... (shorter) usage \n"
             + "\n"
@@ -247,7 +247,7 @@ public class AcpCommander {
         }
 
         if (params.hasParam("-cb")) {
-            // clear boot, removes unneccessary files from /boot to free space
+            // clear boot, removes unnecessary files from /boot to free space
             log.outDebug("Command-line parameter -cb given", 2);
 
             _authent = true;
@@ -325,7 +325,7 @@ public class AcpCommander {
         if (params.hasParam("-blink")) {
             log.outDebug("Command-line parameter -blink given", 2);
 
-            _authent = true; // blink needs autenticate
+            _authent = true; // blink needs authenticate
             _blink = true;
         }
 
@@ -334,7 +334,7 @@ public class AcpCommander {
 
             _newip = params.getParamValue("-ip", "");
             _changeip = true;
-            _authent = true; // changeIp requires autenticate
+            _authent = true; // changeIp requires authenticate
         }
 
         if (params.hasParam("-pw")) {
@@ -365,7 +365,7 @@ public class AcpCommander {
         }
 
         if ((!_authent) && (_connid.equals("") && !_findLS)) {
-            log.outWarning("Using a random connection ID without authentification!");
+            log.outWarning("Using a random connection ID without authentication!");
         }
 
         if (_connid.equals("")) {
@@ -433,7 +433,7 @@ public class AcpCommander {
                 InetAddress _testip = InetAddress.getByName(_newip);
 
                 if (_testip.isAnyLocalAddress()) {
-                    log.outError("'" + _newip + "' is recognized as local IP. You must specify an untaken IP");
+                    log.outError("'" + _newip + "' is recognized as local IP. You must specify an IP which has not been taken on your local network");
                 }
             } catch (UnknownHostException e) {
                 log.outError("'" + _newip + "' is not recognized as a valid IP for the use as new IP to be set.");
@@ -483,9 +483,7 @@ public class AcpCommander {
         if (_findLS) {
             _state = "ACP_DISCOVER";
             // discover devices by sending both types of ACP-Discover packet
-            int _foundLS = 0;
-
-            log.outDebug("Sending ACP-Disover packet...", 1);
+            log.outDebug("Sending discovery packet...", 1);
 
             /*String[] foundLS = device.find();
             for (int i = 0; i < foundLS.length; i++) {
@@ -494,7 +492,10 @@ public class AcpCommander {
 
             System.out.println("Found " + foundLS.length + " device(s).");*/
 
-            System.out.println("[FIX PLS] " + device.find().concatenatedOutput); //AH Todo: This DEFINITELY isn't right
+            AcpReply reply = device.find();
+
+            System.out.println(reply.extraInformation + "\n");
+            System.out.println("Found " + reply.extraInformationMetadata != "" ? reply.extraInformationMetadata : "1" + " device" + reply.extraInformationMetadata != "1" ? "s" : "" + ".");
         }
 
         if (_authent) {
@@ -505,14 +506,14 @@ public class AcpCommander {
              * other commands can be sent to the device.
              */
             /**
-             * Buffalos standard authentication procedure:
+             * Buffalo's standard authentication procedure:
              * 1 - send ACPDiscover to get key for password encryption
              * 2 - send ACPSpecial-enOneCmd with encrypted password "ap_servd"
              * 3 - send ACPSpecial-authenticate with encrypted admin password
              */
 
             //log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd()[1], 1);
-            log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd().concatenatedOutput, 1); //AH Todo: I think this isn't quite right
+            log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd().extraInformation, 1); //AH Todo: I think this isn't quite right
 
             if (_password.equals("")) {
                 //if password blank, try "password" otherwise prompt
@@ -523,7 +524,7 @@ public class AcpCommander {
             device.setPassword(_password);
 
             //if (!device.authenticate()[1].equals("ACP_STATE_OK")) {
-            if (!device.authenticate().concatenatedOutput.equals("ACP_STATE_OK")) { //AH Todo: I think this isn't quite right
+            if (!device.authenticate().extraInformation.equals("ACP_STATE_OK")) { //AH Todo: I think this isn't quite right
                 Console console = System.console();
 
                 try {
@@ -549,10 +550,10 @@ public class AcpCommander {
             System.out.println(BackupState[1]);*/
 
             AcpReply BackupState = device.command("grep status= /etc/melco/backup*", 3);
-            System.out.println(BackupState.concatenatedOutput);
+            System.out.println(BackupState.extraInformation);
 
             // display language for WebGUI /etc/melco/info:lang=
-            System.out.print("language setting of WebGUI:\t" + device.command("grep lang= /etc/melco/info", 3).concatenatedOutput);
+            System.out.print("language setting of WebGUI:\t" + device.command("grep lang= /etc/melco/info", 3).extraInformation);
         }
 
         if (_test) {
@@ -569,7 +570,7 @@ public class AcpCommander {
                 //System.out.println("ACPTest 80F0:\t" + device.ACPTest("80F0")[1]);  //no
                 //System.out.println("ACPTest 80C0:\t" + device.ACPTest("80C0")[1]);  //no
                 //System.out.println("ACPTest 8C00:\t" + device.ACPTest("8C00")[1]);  //ACP_Format
-                //System.out.println("ACPTest 8D00:\t" + device.ACPTest("8D00")[1]);  //ACP_EREASE_USER
+                //System.out.println("ACPTest 8D00:\t" + device.ACPTest("8D00")[1]);  //ACP_ERASE_USER
                 //System.out.println("ACPTest 8E00:\t" + device.ACPTest("8E00")[1]);  //no
                 //System.out.println("ACPTest 8F00:\t" + device.ACPTest("8F00")[1]);  //no
             } catch (Exception e) {
@@ -583,7 +584,7 @@ public class AcpCommander {
         if (_openbox) {
             _state = "ACP_OPENBOX";
 
-            System.out.println("Reset root pwd...\t" + device.command("passwd -d root", 3).concatenatedOutput);
+            System.out.println("Reset root pwd...\t" + device.command("passwd -d root", 3).extraInformation);
 
             device.command("rm /etc/securetty", 3);
             device.command("mkdir /dev/pts; mount devpts /dev/pts -t devpts", 3);
@@ -626,24 +627,24 @@ public class AcpCommander {
 
             // clear /boot; full /boot is the reason for most ACP_STATE_FAILURE messages
             // send packet up to 3 times
-            System.out.println("Sending clear /boot command sequence...\t"  + device.command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img hddrootfs.buffalo.org hddrootfs.buffalo.updated.done", 3).concatenatedOutput);
+            System.out.println("Sending clear /boot command sequence...\t"  + device.command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img hddrootfs.buffalo.org hddrootfs.buffalo.updated.done", 3).extraInformation);
 
             // show result of df to verify success, send packet up to 3 times
-            System.out.println("Output of df for verification...\t" + device.command("df", 3).concatenatedOutput);
+            System.out.println("Output of df for verification...\t" + device.command("df", 3).extraInformation);
         }
 
         if (_blink) {
             _state = "blink";
 
             // blink LED's and play tones via ACP-command
-            System.out.println("blinkLed...\t" + device.blinkLed().concatenatedOutput);
+            System.out.println("blinkLed...\t" + device.blinkLed().extraInformation);
         }
 
         if (_gui) {
             _state = "set webgui language";
 
             // set WebGUI language
-            System.out.println("Setting WebGUI language...\t" + device.setWebUiLanguage((byte) _setgui).concatenatedOutput);
+            System.out.println("Setting WebGUI language...\t" + device.setWebUiLanguage((byte) _setgui).extraInformation);
         }
 
         if (_emmode) {
@@ -652,7 +653,7 @@ public class AcpCommander {
             // send EM-Mode command
             System.out.println("Sending EM-Mode command...\t");
 
-            String reply = device.emMode().concatenatedOutput;
+            String reply = device.emMode().extraInformation;
 
             System.out.println(reply);
 
@@ -667,7 +668,7 @@ public class AcpCommander {
             // send Norm-Mode command
             System.out.print("Sending Norm-Mode command...\t");
 
-            String reply = device.normMode().concatenatedOutput;
+            String reply = device.normMode().extraInformation;
 
             System.out.println(reply);
 
@@ -695,7 +696,7 @@ public class AcpCommander {
             _state = "ACP_CMD";
 
             // send custom command via ACP
-            String commandResult = device.command(_cmd).concatenatedOutput;
+            String commandResult = device.command(_cmd).extraInformation;
             log.outDebug(">" + _cmd + "\n", 1);
             System.out.print(commandResult);
         }
@@ -722,7 +723,7 @@ public class AcpCommander {
                 while ((shellInput != null) && (!shellInput.equals("exit"))) {
                     // send command and display answer
                     //only first cmd working for some reason.
-                    shellOutput = device.command("cd " + currentWorkingDirectory + ";" + shellInput + "; pwd > /tmp/.pwd").concatenatedOutput;
+                    shellOutput = device.command("cd " + currentWorkingDirectory + ";" + shellInput + "; pwd > /tmp/.pwd").extraInformation;
 
                     if (shellOutput.equals("OK (ACP_STATE_OK)")) {
                         shellOutput = "";
@@ -730,7 +731,7 @@ public class AcpCommander {
 
                     System.out.print(shellOutput);
 
-                    currentWorkingDirectory = device.command("cat /tmp/.pwd").concatenatedOutput.split("\n", 2)[0];
+                    currentWorkingDirectory = device.command("cat /tmp/.pwd").extraInformation.split("\n", 2)[0];
 
                     // get next commandline
                     System.out.print(currentWorkingDirectory + ">");
@@ -847,7 +848,7 @@ public class AcpCommander {
 
             log.outDebug("File URL: " + localUrl, 1);
 
-            //start an HTTP server in the current directoy
+            //start an HTTP server in the current directory
             try {
                 HttpServer server = HttpServer.create(new InetSocketAddress(localIp, localHttpServerPort), 0);
                 server.createContext("/", new StaticFileHandler(localDirectory));
@@ -857,37 +858,37 @@ public class AcpCommander {
                 //output the contents of the directory
                 currentCommand = "ls -l " + targetDirectory;
                 log.outDebug("starting contents... " + currentCommand, 1);
-                output = device.command(currentCommand).concatenatedOutput;
+                output = device.command(currentCommand).extraInformation;
                 log.outDebug(output, 1);
 
                 //create the target directory if absent
                 currentCommand = "mkdir -p " + targetDirectory;
                 log.outDebug("creating target directory... " + currentCommand, 1);
-                output = device.command(currentCommand + "; echo $?").concatenatedOutput;
+                output = device.command(currentCommand + "; echo $?").extraInformation;
                 log.outDebug("return code: " + output, 1);
 
                 //backup file if it already exists
                 currentCommand = "cd " + targetDirectory + ";" + "mv " + fileName + " " + fileName + ".bak";
                 log.outDebug("backup file if present... " + currentCommand, 1);
-                output = device.command(currentCommand + "; echo $?").concatenatedOutput;
+                output = device.command(currentCommand + "; echo $?").extraInformation;
                 log.outDebug("return code: " + output, 1);
 
                 //download the file to the target directory
                 currentCommand = "cd " + targetDirectory + ";" + "wget " + localUrl;
                 log.outDebug("attempting transfer using wget... " + currentCommand, 1);
-                output = device.command(currentCommand + "; echo $?").concatenatedOutput;
+                output = device.command(currentCommand + "; echo $?").extraInformation;
                 log.outDebug("return code: " + output, 1);
 
                 //output the contents of the directory
                 currentCommand = "ls -l " + targetDirectory;
                 log.outDebug("ending contents... " + currentCommand, 1);
-                output = device.command(currentCommand).concatenatedOutput;
+                output = device.command(currentCommand).extraInformation;
                 log.outDebug(output, 1);
 
                 server.stop(0);
                 log.outDebug("Stopping HTTP...", 1);
-            } catch (IOException IOE) {
-                System.out.println(IOE);
+            } catch (IOException e) {
+                System.out.println(e);
                 System.exit(-1);
             }
 
@@ -903,7 +904,7 @@ public class AcpCommander {
             _state = "changeIp";
 
             try {
-                System.out.println("Changing IP:\t" + device.changeIp(InetAddress.getByName(_newip).getAddress(), new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true).concatenatedOutput);
+                System.out.println("Changing IP:\t" + device.changeIp(InetAddress.getByName(_newip).getAddress(), new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true).extraInformation);
 
                 System.out.println(
                     "\nPlease note, that the current support for the change of the IP is currently very rudimentary.\n"
@@ -919,14 +920,14 @@ public class AcpCommander {
         if (_reboot) {
             _state = "reboot";
 
-            System.out.println("Rebooting...:\t" + device.reboot().concatenatedOutput);
+            System.out.println("Rebooting...:\t" + device.reboot().extraInformation);
         }
 
         // shutdown
         if (_shutdown) {
             _state = "shutdown";
 
-            System.out.println("Sending SHUTDOWN command...:\t" + device.shutdown().concatenatedOutput);
+            System.out.println("Sending SHUTDOWN command...:\t" + device.shutdown().extraInformation);
         }
     }
 }

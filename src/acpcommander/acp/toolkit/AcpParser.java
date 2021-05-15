@@ -23,7 +23,7 @@ public class AcpParser {
         return hexString.toString().toUpperCase();
     }
 
-    // retreive errorcode out of receive buffer
+    // retrieve errorcode out of receive buffer
     public static int getErrorCodeFromPacket(byte[] packet) {
         return (packet[28] & 0xFF) + ((packet[29] & 0xFF) << 8) + ((packet[30] & 0xFF) << 16) + ((packet[31] & 0xFF) << 24);
     }
@@ -192,7 +192,7 @@ public class AcpParser {
                         return "SPECIAL_CMD_MAC_EEPROM";
 
                     case 0x12:
-                        return "SPECIAL_CMD_MUULTILANG";
+                        return "SPECIAL_CMD_MULTILANG";
 
                     default:
                         return "Unknown SPECIAL_CMD";

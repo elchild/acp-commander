@@ -45,7 +45,7 @@ public class AcpEncryption {
 
     private byte[] baseEncryptAcpPassword(byte[] password, byte[] outkey) {
         //
-        // mimmicks route from LSUpdater.exe, starting at 0x00401700
+        // mimics route from LSUpdater.exe, starting at 0x00401700
         // key is a 4 byte array (changed order, key 6ae2ad78 => (0x6a, 0xe2, 0xad, 0x78)
         // password = ap_servd, key= 6ae2ad78 gives encrypted 19:A4:F7:9B:AF:7B:C4:DD
         //

@@ -8,7 +8,7 @@ public class ParameterReader {
     }
 
     // private static boolean hasParam(String name, String[] args)
-    // checks wether parameter "name" is specified in "args"
+    // checks whether parameter "name" is specified in "args"
     public boolean hasParam(String name) {
         for (int i = 0; i < input.length; ++i) {
             if (input[i].equals(name)) {
@@ -20,7 +20,7 @@ public class ParameterReader {
     }
 
     // private static boolean hasParam(String[] names, String[] args) {
-    // checks wether one of the parameters in "names" is specified in "args"
+    // checks whether one of the parameters in "names" is specified in "args"
     public boolean hasParam(String[] names) {
         for (int i = 0; i < input.length; ++i) {
             for (int j = 0; j < names.length; ++j) {
@@ -34,7 +34,7 @@ public class ParameterReader {
     }
 
     // private static String getParamValue(String name, String[] args, String defvalue)
-    // retreive the value passed to parameter "name" within the arguments "args",
+    // retrieve the value passed to parameter "name" within the arguments "args",
     // returns "defvalue" if argument "name" could not be found.
     public String getParamValue(String name, String defaultValue) {
         // not looking at the last argument, as it would have no following parameter
