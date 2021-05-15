@@ -1,7 +1,7 @@
-package acpcommander;
+package acpcommander.acp.toolkit.reply;
 
 public class AcpReply {
-    public String tmppckttype;
+    public AcpReplyType packetType;
     public String hostname;
     public String mac;
     public String ip;

@@ -1,4 +1,6 @@
-package acpcommander.util;
+package acpcommander.acp.toolkit;
+
+import acpcommander.util.ScopedLogger;
 
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -6,15 +8,13 @@ import java.net.InetSocketAddress;
 public class AcpCommunication {
     private ScopedLogger log;
     private InetSocketAddress bindInterface;
-    private int timeout;
 
-    public AcpCommunication(ScopedLogger log, InetSocketAddress bindInterface, int timeout){
+    public AcpCommunication(ScopedLogger log, InetSocketAddress bindInterface){
         this.log = log;
         this.bindInterface = bindInterface;
-        this.timeout = timeout;
     }
 
-    public DatagramSocket getSocket() throws java.net.SocketException {
+    public DatagramSocket getSocket(int timeout) throws java.net.SocketException {
         DatagramSocket socket;
 
         if (bindInterface != null) {

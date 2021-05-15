@@ -1,4 +1,6 @@
-package acpcommander.util;
+package acpcommander.acp.toolkit;
+
+import acpcommander.util.ScopedLogger;
 
 import java.nio.charset.Charset;
 

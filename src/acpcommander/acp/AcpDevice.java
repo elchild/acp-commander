@@ -1,14 +1,16 @@
-package acpcommander;
+package acpcommander.acp;
 
+import acpcommander.acp.toolkit.reply.AcpReply;
+import acpcommander.acp.toolkit.reply.AcpReplyType;
+import acpcommander.acp.toolkit.AcpCommunication;
+import acpcommander.acp.toolkit.AcpEncryption;
+import acpcommander.acp.toolkit.AcpPacketCreator;
+import acpcommander.acp.toolkit.AcpParser;
 import acpcommander.util.*;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Beschreibung: Core class for sending ACP commands to Buffalo Linkstation (R). Out
@@ -21,32 +23,31 @@ import java.util.ArrayList;
  * @author Georg
  * @version 0.4.1 (beta)
  */
-public class ACP {
+public class AcpDevice {
+    private ScopedLogger log;
+
     private InetAddress targetIp;
-    protected Integer port = 22936;
+    public Integer port = 22936;
     private String connectionId; // connection ID, "unique" identifier for the connection
     private String targetMacAddress; // MAC address of the LS, it reacts only if correct MAC or FF:FF:FF:FF:FF:FF is set in the packet
     protected byte[] key = new byte[4]; // Key for password encryption sent in reply to ACP discovery packet
     protected String password;
-    private String apservd = "ap_servd"; //AH: This seems to be some kind of static password
-
-    public ScopedLogger log = new ScopedLogger(0);
-    private CannedMessages cannedMessages = new CannedMessages(log);
-    private AcpEncryption encryption = new AcpEncryption(Charset.forName("UTF-8"), log);
-    private AcpPacketCreator packetCreator = new AcpPacketCreator(log, Charset.forName("UTF-8"));
-    private AcpCommunication communication;
-
-    //default packet timout, overriden by most operations
-    protected int timeout = 1000;
-    protected int resendPackets = 2; // standard value for repeated sending of packets
-
+    private final String apservd = "ap_servd"; //AH: This seems to be some kind of static password
+    protected int maxPacketResendAttempts = 2; // standard value for repeated sending of packets
     protected int defaultReceiveBufferSize = 4096; // standard length of receive buffer
 
-    public ACP(String newTarget) {
+    private final CannedMessages cannedMessages = new CannedMessages(log);
+    private final AcpEncryption encryption = new AcpEncryption(StandardCharsets.UTF_8, log);
+    private final AcpPacketCreator packetCreator = new AcpPacketCreator(log, StandardCharsets.UTF_8);
+    private AcpCommunication communication = new AcpCommunication(log, null); //AH Todo: Should not need to default bind here. Should be an unassigned var
+
+    public AcpDevice(ScopedLogger log, String newTarget) {
+        this.log = log;
         setTarget(newTarget);
     }
 
-    public ACP(byte[] newTarget) {
+    public AcpDevice(ScopedLogger log, byte[] newTarget) {
+        this.log = log;
         setTarget(newTarget);
     }
 
@@ -60,7 +61,7 @@ public class ACP {
     }
 
     public String getTargetMac() {
-        return (targetMacAddress);
+        return targetMacAddress;
     }
 
     public void setTargetMac(String newTargetMac) {
@@ -81,7 +82,7 @@ public class ACP {
             targetIp = InetAddress.getByName(newTarget);
         } catch (UnknownHostException ex) {
             cannedMessages.logUnknownTargetHost();
-            log.outError(ex.toString() + " [in setTarget]");
+            log.outError(ex + " [in setTarget]");
         }
     }
 
@@ -96,13 +97,13 @@ public class ACP {
 
     public void bind(InetSocketAddress localip) {
         if (localip.isUnresolved()) {
-            log.outWarning("The bind address " + localip
-                    + " given with parameter -b could not be resolved to a local IP-Address.\n"
-                    + "You must use this parameter with a valid IP-Address that belongs to "
-                    + "the PC you run acp_commander on.\n");
+            log.outWarning(
+                "The bind address " + localip + " given with parameter \"-b\" could not be resolved to a local IP-Address.\n"
+                + "You must use this parameter with a valid IP-Address that belongs to the PC you run acp_commander on.\n"
+            );
         }
 
-        communication = new AcpCommunication(log, localip, timeout);
+        communication = new AcpCommunication(log, localip);
     }
 
     public void bind(String localip) {
@@ -120,7 +121,7 @@ public class ACP {
 
     /*public void setConnectionId(byte[] connectionid) {
         // TODO: input param checking!
-        connectionId = bufferToHex(connectionid, 0, 6);
+        connectionId = takeHexFromPacket(connectionid, 0, 6);
     }*/
 
     /*public byte[] getTargetKey() {
@@ -171,34 +172,44 @@ public class ACP {
         return doDiscover();
     }
 
+    /**
+     * AH: Send a shell command to the device
+     * @param cmd The command to send to the device
+     * @param maxResend How many attempts should be made to execute the command when no response is received
+     * @return The decoded reply received from the device
+     */
     public AcpReply command(String cmd, int maxResend) {
         // send telnet-type command cmd to Linkstation by acpcmd
         enOneCmd();
         authenticate();
 
         if (maxResend <= 0) {
-            maxResend = resendPackets;
+            maxResend = maxPacketResendAttempts;
         }
 
-        return doTransaction(packetCreator.getAcpCmdPacket(connectionId, targetMacAddress, cmd), maxResend);
+        return doTransaction(packetCreator.getAcpCmdPacket(connectionId, targetMacAddress, cmd), maxResend, 60000);
     }
 
     public AcpReply command(String cmd) {
         // send telnet-type command cmd to Linkstation by acpcmd - only send packet once!
-        timeout = 60000;
+        /*timeout = 60000;
+
         enOneCmd();
         authenticate();
-        return doTransaction(packetCreator.getAcpCmdPacket(connectionId, targetMacAddress, cmd), 1);
-    }
 
-    public AcpReply authenticate() {
-        byte[] encrypted = encryption.encryptAcpPassword(password, key);
-        return authenticate(encrypted);
+        return doTransaction(packetCreator.getAcpCmdPacket(connectionId, targetMacAddress, cmd), 1);*/
+
+        return command(cmd, 1);
     }
 
     public AcpReply authenticate(byte[] encpassword) {
         // authenticate to ACP protokoll
         return doTransaction(packetCreator.getAcpAuthPacket(connectionId, targetMacAddress, encpassword));
+    }
+
+    public AcpReply authenticate() {
+        byte[] encrypted = encryption.encryptAcpPassword(password, key);
+        return authenticate(encrypted);
     }
 
     public AcpReply shutdown() {
@@ -222,19 +233,15 @@ public class ACP {
     }
 
     public AcpReply blinkLed() {
-        int mytimeout = timeout;
-        timeout = 60000;
-        AcpReply result = doTransaction(packetCreator.getAcpBlinkLedPacket(connectionId, targetMacAddress));
-        timeout = mytimeout;
-        return result;
+        return doTransaction(packetCreator.getAcpBlinkLedPacket(connectionId, targetMacAddress), maxPacketResendAttempts, 60000);
+    }
+
+    public AcpReply enOneCmd(byte[] encPassword) {
+        return doTransaction(packetCreator.getAcpEnOneCmdPacket(connectionId, targetMacAddress, encPassword));
     }
 
     public AcpReply enOneCmd() {
-        return enOneCmdEnc(encryption.encryptAcpPassword(apservd, key));
-    }
-
-    public AcpReply enOneCmdEnc(byte[] encPassword) {
-        return doTransaction(packetCreator.getAcpEnOneCmdPacket(connectionId, targetMacAddress, encPassword));
+        return enOneCmd(encryption.encryptAcpPassword(apservd, key));
     }
 
     public AcpReply setWebUiLanguage(byte language) {
@@ -243,14 +250,14 @@ public class ACP {
         // 0 .. Japanese
         // 1 .. English
         // 2 .. German
-        // default .. English
+        // default .. English   AH: Mine defaults to Japanese. Help.
         return doTransaction(packetCreator.getAcpWebUiLanguagePacket(connectionId, targetMacAddress, language));
     }
 
-    public AcpReply changeIp(byte[] newip, byte[] newMask, boolean usedhcp) {
+    public AcpReply changeIp(byte[] newIp, byte[] newMask, boolean useDhcp) {
         // change IP address
         byte[] encrypted = encryption.encryptAcpPassword(password, key);
-        return doTransaction(packetCreator.getAcpChangeIpPacket(connectionId, targetMacAddress, newip, newMask, usedhcp, encrypted));
+        return doTransaction(packetCreator.getAcpChangeIpPacket(connectionId, targetMacAddress, newIp, newMask, useDhcp, encrypted), maxPacketResendAttempts, 10000);
     }
 
     /*public String[] saveconfig() {
@@ -283,8 +290,6 @@ public class ACP {
     //
 
     private AcpReply doDiscover() {
-        timeout = 3000; //AH: Change the response timeout
-
         String state = "[Send/Receive ACPDiscover]";
 
         byte[] discoverPacket = packetCreator.getAcpDiscoverPacket(connectionId, targetMacAddress);
@@ -302,7 +307,7 @@ public class ACP {
         DatagramPacket responsePacketReceivable = new DatagramPacket(new byte[defaultReceiveBufferSize], defaultReceiveBufferSize); //AH: Prepare a packet object into which received data will be placed
 
         try {
-            socket = communication.getSocket(); // TODO bind functionality is missing here
+            socket = communication.getSocket(3000); // TODO bind functionality is missing here
 
             //AH: Send both packets and expect only one response it seems. Probably gonna get mixed results if you have two devices which respond in different ways
             socket.send(discoverPacketTransmittable);
@@ -310,29 +315,25 @@ public class ACP {
 
             long lastSendTime = System.currentTimeMillis();
 
-            while (System.currentTimeMillis() - lastSendTime < timeout) { //AH: Whilst we still have time to keep sending discovery requests
+            while (System.currentTimeMillis() - lastSendTime < 3000) { //AH: Whilst we still have time to keep receiving discovery responses
                 socket.receive(responsePacketReceivable); //AH: Receive a packet into the prepared packet object
 
-                packetActionResult = receiveAcp(responsePacketReceivable.getData(), log.debugLevel); // get search results
+                packetActionResult = actionResponsePacket(responsePacketReceivable.getData(), log.debugLevel); // get search results
 
                 // TODO: do optional Discover event with _searchres
                 //tempres.add(packetActionResult[1]); // add formatted string to result list
                 tempReplyResult.concatenatedOutput = packetActionResult.concatenatedOutput; // add formatted string to result list
             }
-        } catch (java.net.SocketTimeoutException stoe) {
+        } catch (SocketTimeoutException e) {
             // TimeOut should be OK as we wait until Timeout if we get packets
-            log.outDebug(
-                    "Timeout reached, stop listening to further Discovery replies",
-                    2);
-        } catch (java.net.SocketException se) {
+            log.outDebug("Timeout reached, stop listening to further Discovery replies",2);
+        } catch (SocketException e) {
             // TODO: better error handling
             cannedMessages.logPortCommunicationFailure(port);
-            log.outError("Exception: SocketException (" + se.getMessage() + ") "
-                    + state);
-        } catch (java.io.IOException ioe) {
+            log.outError("Exception: SocketException (" + e.getMessage() + ") " + state);
+        } catch (IOException e) {
             // TODO: better error handling
-            log.outError("Exception: IOException (" + ioe.getMessage() + ") "
-                    + state);
+            log.outError("Exception: IOException (" + e.getMessage() + ") " + state);
         }
 
         // first check for repeated entries and delete them.
@@ -359,105 +360,107 @@ public class ACP {
         }*/
 
         //probably not good practice and should be refactored
-        if (targetIp.toString().split("/", 2)[1].equals("255.255.255.255")) {
-            return tempReplyResult;
+        if (targetIp.toString().split("/", 2)[1].equals("255.255.255.255")) { //AH: If the user has not set a target IP (therefore the default broadcast one is used)
+            return tempReplyResult; //AH: Return the the list
         }
 
-        return packetActionResult;
+        return packetActionResult; //AH: Otherwise return the reply from the specific device
     }
 
     // send ACP packet and handle answer
-    private AcpReply doTransaction(byte[] buf) {
-        return doTransaction(buf, resendPackets);
-    }
 
+    private AcpReply doTransaction(byte[] packet, int maxPacketResendAttempts, int timeout) {
+        String intendedTransaction = "[ACP Send/Receive (Packet:" + (AcpParser.takeHexFromPacket(packet, 9, 1) + AcpParser.takeHexFromPacket(packet, 8, 1)) + " = " + AcpParser.getCommandStringFromPacket(packet) + ")]";
 
-    private AcpReply doTransaction(byte[] buf, int repeatSend) {
-        String acpcmd = AcpParser.bufferToHex(buf, 9, 1) + AcpParser.bufferToHex(buf, 8, 1);
-        String state = "[ACP Send/Receive (Packet:" + acpcmd + " = "
-                + AcpParser.getCommandString(buf) + ")]";
         //String[] result;
-        AcpReply result;
-        int sendcount = 0;
-        boolean sendagain = true;
-        DatagramSocket socket;
-        DatagramPacket packet = new DatagramPacket(buf, buf.length, targetIp, port);
+        int sendCount = 0;
+        boolean sendAgain = true;
 
-        DatagramPacket receive = new DatagramPacket(new byte[defaultReceiveBufferSize], defaultReceiveBufferSize);
+        DatagramPacket transmittablePacket = new DatagramPacket(packet, packet.length, targetIp, port);
+        DatagramPacket inboundPacket = new DatagramPacket(new byte[defaultReceiveBufferSize], defaultReceiveBufferSize);
+
+        String errorMessages = "";
 
         do {
-            sendcount++;
+            sendCount++;
+
             try {
-                log.outDebug("Sending " + sendcount + "/" + repeatSend, 2);
+                log.outDebug("Sending " + sendCount + "/" + maxPacketResendAttempts, 2);
 
-                socket = communication.getSocket();
+                DatagramSocket socket = communication.getSocket(timeout);
+                socket.send(transmittablePacket);
+                socket.receive(inboundPacket);
 
-                socket.send(packet);
-                socket.receive(receive);
-
-                sendagain = false; // we received an answer
+                sendAgain = false; // we received an answer
 
                 // TODO: do optional Receive-event with result
-            } catch (java.net.SocketTimeoutException stoe) {
+            } catch (SocketTimeoutException e) {
                 // TODO: better error handling
                 /*result = new String[2];
-                if (sendcount >= repeatSend) {
-                    result[1] = "Exception: SocketTimeoutException (" + stoe.getMessage() + ") " + state;
+                if (sendCount >= maxPacketResendAttempts) {
+                    result[1] = "Exception: SocketTimeoutException (" + stoe.getMessage() + ") " + intendedTransaction;
 
                     cannedMessages.logCommunicationTimeout(port);
                     log.outError(result[1]);
                 } else {
-                    result[1] = "Timeout (" + state + " retry sending ("
-                            + sendcount + "/" + repeatSend + ")";
+                    result[1] = "Timeout (" + intendedTransaction + " retry sending ("
+                            + sendCount + "/" + maxPacketResendAttempts + ")";
                     log.outDebug(result[1], 1);
                 }*/
 
-                result = new AcpReply();
-
-                if (sendcount >= repeatSend) {
-                    result.concatenatedOutput = "Exception: SocketTimeoutException (" + stoe.getMessage() + ") " + state;
+                if (sendCount >= maxPacketResendAttempts) {
+                    String errorMessage = "Exception: SocketTimeoutException (" + e.getMessage() + ") " + intendedTransaction;
+                    errorMessages += errorMessage + "\n";
 
                     cannedMessages.logCommunicationTimeout(port);
-                    log.outError(result.concatenatedOutput);
+                    log.outError(errorMessage);
                 } else {
-                    result.concatenatedOutput = "Timeout (" + state + " retry sending ("
-                            + sendcount + "/" + repeatSend + ")";
-                    log.outDebug(result.concatenatedOutput, 1);
+                    String errorMessage = "Timeout (" + intendedTransaction + " retry sending (" + sendCount + "/" + maxPacketResendAttempts + ")";
+                    errorMessages += errorMessage + "\n";
+
+                    log.outDebug(errorMessage, 1);
                 }
-            } catch (java.net.SocketException se) {
+            } catch (SocketException e) {
                 // TODO: better error handling
                 /*result = new String[2];
-                result[1] = "Exception: SocketException (" + se.getMessage() + ") " + state;
+                result[1] = "Exception: SocketException (" + se.getMessage() + ") " + intendedTransaction;
 
                 cannedMessages.logPortCommunicationFailure(port);
                 log.outError(result[1]);*/
 
-                result = new AcpReply();
-
-                result.concatenatedOutput = "Exception: SocketException (" + se.getMessage() + ") " + state;
+                String errorMessage = "Exception: SocketException (" + e.getMessage() + ") " + intendedTransaction;
+                errorMessages += errorMessage + "\n";
 
                 cannedMessages.logPortCommunicationFailure(port);
-                log.outError(result.concatenatedOutput);
-            } catch (java.io.IOException ioe) {
+                log.outError(errorMessage);
+            } catch (IOException e) {
                 // TODO: better error handling
                 /*result = new String[2];
-                result[1] = "Exception: IOException (" + ioe.getMessage() + ") " + state;
+                result[1] = "Exception: IOException (" + ioe.getMessage() + ") " + intendedTransaction;
                 log.outError(result[1]);*/
 
-                result = new AcpReply();
+                String errorMessage = "Exception: IOException (" + e.getMessage() + ") " + intendedTransaction;
+                errorMessages += errorMessage + "\n";
 
-                result.concatenatedOutput = "Exception: IOException (" + ioe.getMessage() + ") " + state;
-
-                log.outError(result.concatenatedOutput);
+                log.outError(errorMessage);
             }
 
-        } while ((sendcount < repeatSend) && sendagain); // repeat until max retries reached
+        } while ((sendCount < maxPacketResendAttempts) && sendAgain); // repeat until max retries reached
 
-        result = receiveAcp(receive.getData(), log.debugLevel); // get search results
+        AcpReply result = actionResponsePacket(inboundPacket.getData(), log.debugLevel); // get search results
+
+        result.concatenatedOutput = errorMessages + result.concatenatedOutput; //AH: Prepend error messages to actual result. If we have a result, any error messages would have been previous to the result, hence the prepend
 
         return result;
     }
 
+    private AcpReply doTransaction(byte[] buf, int maxPacketResendAttempts){
+        return doTransaction(buf, maxPacketResendAttempts, 1000); //AH: Default to 1 second timeout
+    }
+
+    private AcpReply doTransaction(byte[] buf) {
+        return doTransaction(buf, maxPacketResendAttempts);
+    }
 
 
     //
@@ -467,38 +470,44 @@ public class ACP {
 
 
 
-    private void receiveAcpHexDump(byte[] buf) {
+    private void dumpResponsePacket(byte[] packet) {
         // very simple hex | char debug output of received packet for debugging
         try {
-            byte onebyte;
+            System.out.println("Buffer-Length: " + packet.length);
 
-            System.out.println("Buffer-Length: " + buf.length);
-            for (int j = 0; j < (buf.length / 16); j++) {
-                if (j == 0) {
-                    System.out.println("ACP-Header:");
-                }
-                if (j == 2) {
-                    System.out.println("ACP-Payload:");
+            for (int row = 0; row < (packet.length / 16); row++) { //AH: Split the packet into rows of 16 bytes
+                switch(row){
+                    case 0: //AH: Row 0 and 1 are ACP Header bytes (32 bytes)
+                        System.out.println("ACP-Header:");
+                        break;
+
+                    case 2: //AH: Row 2 and beyond are ACP Payload bytes
+                        System.out.println("ACP-Payload:");
+                        break;
                 }
 
-                System.out.print(j * 16 + "::\t");
-                for (int i = 0; i <= 15; i++) {
-                    System.out.print(AcpParser.bufferToHex(buf, j * 16 + i, 1) + " ");
-                }
-                System.out.print("\t");
+                System.out.print(row * 16 + "::\t"); //AH: Byte marker. Tells you which byte row is displayed
 
-                for (int i = 0; i <= 15; i++) {
-                    onebyte = buf[j * 16 + i];
-                    if ((onebyte != 0x0A) & (onebyte != 0x09)) {
-                        System.out.print((char) onebyte);
+                for (int hexColumn = 0; hexColumn <= 15; hexColumn++) { //AH: Take 16 bytes for the row and print each one out as hex, with a space between
+                    System.out.print(AcpParser.takeHexFromPacket(packet, row * 16 + hexColumn, 1) + " ");
+                }
+
+                System.out.print("\t"); //AH: Tab over to the character representation
+
+                for (int charColumn = 0; charColumn <= 15; charColumn++) { //AH: Take 16 bytes for the row and print each one out as raw characters
+                    byte charByte = packet[row * 16 + charColumn];
+
+                    if ((charByte != 0x0A) & (charByte != 0x09)) {
+                        System.out.print((char) charByte);
                     } else {
                         System.out.print(" ");
                     }
                 }
-                System.out.println("");
+
+                System.out.println(); //AH: Newline for the next row
             }
-        } catch (java.lang.ArrayIndexOutOfBoundsException arrayE) {
-            log.outError(arrayE.toString());
+        } catch (ArrayIndexOutOfBoundsException e) {
+            log.outError(e.toString());
         }
     }
 
@@ -519,11 +528,11 @@ public class ACP {
      *            7 - FW version
      *            8 - key (used for pwd encryption in regular authentication process)
      */
-    private AcpReply receiveAndDisassembleAcpDiscoveryResponsePacket(byte[] responsePacket) {
+    private AcpReply decodeResponsePacket(byte[] responsePacket) {
         AcpReply disassembledReply = new AcpReply();
         //String[] disassembledPacketInformation = new String[9];
 
-        /*int tmppckttype = 0; //AH: Human readable information about what disassembledPacketInformation type this is?? (assuming a disassembledPacketInformation is always a String[9])
+        /*int packetType = 0; //AH: Human readable information about what disassembledPacketInformation type this is?? (assuming a disassembledPacketInformation is always a String[9])
         int out = 1; //AH: Concatenated load of information for all of the parts of the disassembled packet
         int hostname = 2; //AH: Target's Hostname is stored in position 2
         int ip = 3; //AH: Target's IP is stored in position 3
@@ -538,56 +547,55 @@ public class ACP {
             disassembledPacketInformation[i] = "";
         }*/
 
-        //disassembledPacketInformation[tmppckttype] = "ACPdiscovery reply"; //AH: Human readable information about what disassembledPacketInformation type this is?? (assuming a disassembledPacketInformation is always a String[9])
-        disassembledReply.tmppckttype = "ACPdiscovery reply";
+        //disassembledPacketInformation[packetType] = "ACPdiscovery reply"; //AH: Human readable information about what disassembledPacketInformation type this is?? (assuming a disassembledPacketInformation is always a String[9])
+        disassembledReply.packetType = AcpReplyType.DiscoveryReply;
 
         try {
             // get IP
-            byte[] targetIp = new byte[4];
+            byte[] receivedTargetIp = new byte[4];
 
-            for (int i = 0; i <= 3; i++) {
-                targetIp[i] = responsePacket[35 - i];
+            for (int packetPos = 0; packetPos <= 3; packetPos++) {
+                receivedTargetIp[packetPos] = responsePacket[35 - packetPos]; //AH: From position 35 backwards, read the IP out of the packet and into the target IP byte array
             }
 
-            InetAddress targetAddr = InetAddress.getByAddress(targetIp);
             //disassembledPacketInformation[ip] = targetAddr.toString();
-            disassembledReply.ip = targetAddr.toString();
+            disassembledReply.ip = InetAddress.getByAddress(receivedTargetIp).toString();
 
             // get host name
             int packetPosition = 48; //AH: Start at position 48 and iterate
             while ((responsePacket[packetPosition] != 0x00) & (packetPosition < responsePacket.length)) {
                 //disassembledPacketInformation[hostname] = disassembledPacketInformation[hostname] + (char) responsePacket[packetPosition++]; //AH: Append a character from the packet buffer to the disassembledPacketInformation hostname
-                disassembledReply.hostname = disassembledReply.hostname + (char) responsePacket[packetPosition++]; //AH: Append a character from the packet buffer to the disassembledPacketInformation hostname
+                disassembledReply.hostname += (char) responsePacket[packetPosition++]; //AH: Append a character from the packet buffer to the disassembledPacketInformation hostname
             }
 
             // Product ID string starts at byte 80
             packetPosition = 80;
             while ((responsePacket[packetPosition] != 0x00) & (packetPosition < responsePacket.length)) {
                 //disassembledPacketInformation[productstr] = disassembledPacketInformation[productstr] + (char) responsePacket[packetPosition++];
-                disassembledReply.productIdString = disassembledReply.productIdString + (char) responsePacket[packetPosition++];
+                disassembledReply.productIdString += (char) responsePacket[packetPosition++];
             }
 
-            // Product ID starts at byte 192 low to high
-            for (int i = 3; i >= 0; i--) {
-                //disassembledPacketInformation[productid] = disassembledPacketInformation[productid] + responsePacket[192 + i];
-                disassembledReply.productId = disassembledReply.productId + responsePacket[192 + i];
+            //AH: Product ID starts at byte 195 and is read in reverse to byte 192
+            for (int packetPos = 3; packetPos >= 0; packetPos--) {
+                //disassembledPacketInformation[productid] = disassembledPacketInformation[productid] + responsePacket[192 + packetPos];
+                disassembledReply.productId += responsePacket[192 + packetPos];
             }
 
-            // MAC starts at byte 311
-            for (int i = 0; i <= 5; i++) {
-                //disassembledPacketInformation[mac] = disassembledPacketInformation[mac] + AcpParser.bufferToHex(responsePacket, i + 311, 1);
-                disassembledReply.mac = disassembledReply.mac + AcpParser.bufferToHex(responsePacket, i + 311, 1);
+            // MAC starts at byte 311, read out 6 bytes
+            for (int packetPos = 0; packetPos <= 5; packetPos++) {
+                //disassembledPacketInformation[mac] = disassembledPacketInformation[mac] + AcpParser.takeHexFromPacket(responsePacket, packetPos + 311, 1);
+                disassembledReply.mac += AcpParser.takeHexFromPacket(responsePacket, packetPos + 311, 1);
 
-                if (i != 5) {
+                if (packetPos != 5) {
                     //disassembledPacketInformation[mac] = disassembledPacketInformation[mac] + ":";
-                    disassembledReply.mac = disassembledReply.mac + ":";
+                    disassembledReply.mac += ":"; //AH: Place a colon after each byte, except the last one
                 }
             }
 
             // Key - changes with connectionid (everytime) -> key to password encryption?
-            for (int i = 0; i <= 3; i++) {
-                //disassembledPacketInformation[key] = disassembledPacketInformation[key] + AcpParser.bufferToHex(responsePacket, 47 - i, 1);
-                disassembledReply.key = disassembledReply.key + AcpParser.bufferToHex(responsePacket, 47 - i, 1);
+            for (int packetPos = 0; packetPos <= 3; packetPos++) {
+                //disassembledPacketInformation[key] = disassembledPacketInformation[key] + AcpParser.takeHexFromPacket(responsePacket, 47 - packetPos, 1);
+                disassembledReply.key += AcpParser.takeHexFromPacket(responsePacket, 47 - packetPos, 1);
             }
 
             // Firmware version starts at 187
@@ -611,14 +619,14 @@ public class ACP {
                         + "FW=  " + disassembledReply.firmwareVersion + "\t";
                         //+ "Key=" + disassembledPacketInformation[newkey] + "\t"
 
-        } catch (java.net.UnknownHostException unkhoste) {
-            log.outError(unkhoste.getMessage());
+        } catch (UnknownHostException e) {
+            log.outError(e.getMessage());
         }
         return disassembledReply;
     }
 
     /* Analyses incoming ACP Replys - TODO progress, still needs better handling
-     *  receiveAcp(byte[] packet, int debug)
+     *  actionResponsePacket(byte[] packet, int debug)
      *  INPUT
      *    packet      ... byte [], buffer with received data
      *    debug   ... int, debug state
@@ -628,23 +636,18 @@ public class ACP {
      *            1 - formatted output
      *             2..n - possible details (ACPdiscovery)
      */
-    private AcpReply receiveAcp(byte[] packet, int debug) {
+    private AcpReply actionResponsePacket(byte[] packet, int debug) {
         if (debug >= 3) {
-            receiveAcpHexDump(packet); //AH: Print out dump of received reply packet if the debug mode is set high enough
+            dumpResponsePacket(packet); //AH: Print out dump of received reply packet if the debug mode is set high enough
         }
 
-        AcpReply result;
-        String acpReply;
-        int replyType = 0;
-        String acpStatus;
-
         // get type of ACP answer both as long and hexstring
-        replyType = (packet[8] & 0xFF) + (packet[9] & 0xFF) * 256; // &0xFF necessary to avoid neg. values
-        acpReply = AcpParser.bufferToHex(packet, 9, 1) + AcpParser.bufferToHex(packet, 8, 1);
+        int replyType = (packet[8] & 0xFF) + (packet[9] & 0xFF) * 256; // &0xFF necessary to avoid neg. values
+        String acpReply = AcpParser.takeHexFromPacket(packet, 9, 1) + AcpParser.takeHexFromPacket(packet, 8, 1);
 
         //@georg check!
         // value = 0xFFFFFFFF if ERROR occured
-        acpStatus = AcpParser. bufferToHex(packet, 31, 1) + AcpParser.bufferToHex(packet, 30, 1) + AcpParser.bufferToHex(packet, 29, 1) + AcpParser.bufferToHex(packet, 28, 1);
+        String acpStatus = AcpParser.takeHexFromPacket(packet, 31, 1) + AcpParser.takeHexFromPacket(packet, 30, 1) + AcpParser.takeHexFromPacket(packet, 29, 1) + AcpParser.takeHexFromPacket(packet, 28, 1);
 
         if (acpStatus.equalsIgnoreCase("FFFFFFFF")) {
             log.outDebug(
@@ -653,23 +656,25 @@ public class ACP {
             1);
         }
 
+        AcpReply result;
+
         switch (replyType) {
             case 0xc020: // ACP discovery
                 log.outDebug("received ACP Discovery reply", 2);
-                result = receiveAndDisassembleAcpDiscoveryResponsePacket(packet);
+                result = decodeResponsePacket(packet);
                 break;
 
             case 0xc030: // ACP changeIP
                 /*log.outDebug("received ACP change IP reply", 2);
                 result = new String[2]; //handling needed ?
                 result[0] = "ACP change IP reply";
-                result[1] = AcpParser.getErrorMsg(packet);*/
+                result[1] = AcpParser.getErrorMessageFromPacket(packet);*/
 
                 log.outDebug("received ACP change IP reply", 2);
 
                 result = new AcpReply();
-                result.tmppckttype = "ACP change IP reply";
-                result.concatenatedOutput = AcpParser.getErrorMsg(packet);
+                result.packetType = AcpReplyType.ChangeIpReply;
+                result.concatenatedOutput = AcpParser.getErrorMessageFromPacket(packet);
 
                 break;
 
@@ -677,15 +682,15 @@ public class ACP {
                 /*log.outDebug("received ACP special command reply", 2);
                 result = new String[2]; //handling needed ?
                 result[0] = "ACP special command reply";
-                result[1] = AcpParser.getErrorMsg(packet);
+                result[1] = AcpParser.getErrorMessageFromPacket(packet);
 
                 //            result[1] = "OK"; // should be set according to acpStatus!*/
 
                 log.outDebug("received ACP special command reply", 2);
 
                 result = new AcpReply();
-                result.tmppckttype = "ACP special command reply";
-                result.concatenatedOutput = AcpParser.getErrorMsg(packet);
+                result.packetType = AcpReplyType.SpecialCommandReply;
+                result.concatenatedOutput = AcpParser.getErrorMessageFromPacket(packet);
                 break;
 
             case 0xca10: // acpcmd
@@ -702,11 +707,11 @@ public class ACP {
 
                 // filter the LSPro default answere "**no message**" as it led to some user queries/worries
                 if (result[1].equalsIgnoreCase("**no message**")) {
-                    result[1] = "OK (" + AcpParser.getErrorMsg(packet) + ")";
+                    result[1] = "OK (" + AcpParser.getErrorMessageFromPacket(packet) + ")";
                 }*/
 
                 result = new AcpReply();
-                result.tmppckttype = "acpcmd reply";
+                result.packetType = AcpReplyType.ShellCommandReply;
                 result.concatenatedOutput = "";
 
                 int index = 40;
@@ -716,14 +721,14 @@ public class ACP {
 
                 // filter the LSPro default answere "**no message**" as it led to some user queries/worries
                 if (result.concatenatedOutput.equalsIgnoreCase("**no message**")) {
-                    result.concatenatedOutput = "OK (" + AcpParser.getErrorMsg(packet) + ")";
+                    result.concatenatedOutput = "OK (" + AcpParser.getErrorMessageFromPacket(packet) + ")";
                 }
 
                 break;
 
             case 0xce00: // ACP discovery
                 log.outDebug("received ACP Discovery reply", 1);
-                result = receiveAndDisassembleAcpDiscoveryResponsePacket(packet);
+                result = decodeResponsePacket(packet);
                 break;
 
             default:
@@ -732,7 +737,7 @@ public class ACP {
                 result[1] = "Unknown ACP-Reply packet: 0x" + acpReply; // add correct status!*/
 
                 result = new AcpReply();
-                result.tmppckttype = "Unknown ACP-Reply packet: 0x" + acpReply;
+                result.packetType = AcpReplyType.UnknownReply;
                 result.concatenatedOutput = "Unknown ACP-Reply packet: 0x" + acpReply;
 
                 break;
