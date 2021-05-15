@@ -31,7 +31,7 @@ import acpcommander.acp.toolkit.AcpParser;
 import com.sun.net.httpserver.HttpServer;
 
 public class AcpCommander {
-    private static final String acpCommanderVersion = "0.6";
+    private static final String acpCommanderVersion = "0.6 (2021)";
     private static final int standardAcpPort = 22936;
 
     private static int _debug = 0; // determines degree of additional output.
@@ -94,16 +94,8 @@ public class AcpCommander {
             + "\n"
             + "This program is based on the work done at nas-central.org (linkstationwiki.net),\n"
             + "which is not related with Buffalo(R) in any way.\n"
-            + "report issues/enhancement requests at https://github.com/1000001101000/acp-commander"
+            + "Please report issues/enhancement requests at https://github.com/1000001101000/acp-commander"
         );
-    }
-
-
-    // help(), long version with explanations
-    private static void help() {
-        System.out.println("Version " + acpCommanderVersion + "\n");
-
-        outUsage();
     }
 
     private static boolean tcpTest(String host, int port) {
@@ -168,6 +160,8 @@ public class AcpCommander {
         boolean _diag = false; // run diagnostics
         boolean _test = false; // for testing purposes
 
+        System.out.println("Welcome to ACP Commander v" + acpCommanderVersion + ", the tool for Buffalo stock firmware control!\n");
+
         //
         // Parsing the command line parameters.
         //
@@ -180,7 +174,7 @@ public class AcpCommander {
             "-v", "--v", "-version", "--version"
         }))) {
 
-            help();
+            outUsage();
             return;
         }
 
@@ -493,9 +487,10 @@ public class AcpCommander {
             System.out.println("Found " + foundLS.length + " device(s).");*/
 
             AcpReply reply = device.find();
+            int deviceCount = Integer.parseInt(reply.extraInformationMetadata);
 
-            System.out.println(reply.extraInformation + "\n");
-            System.out.println("Found " + reply.extraInformationMetadata != "" ? reply.extraInformationMetadata : "1" + " device" + reply.extraInformationMetadata != "1" ? "s" : "" + ".");
+            System.out.println(reply.extraInformation += "\n");
+            System.out.println("Found " + deviceCount + " device" + (deviceCount == 1 ? "" : "s") + ".");
         }
 
         if (_authent) {

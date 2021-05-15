@@ -334,7 +334,6 @@ public class AcpDevice {
                 socket.receive(responsePacketReceivable); //AH: Receive a packet into the prepared packet object
 
                 singleDeviceResponse = actionResponsePacket(responsePacketReceivable.getData(), log.debugLevel); // get search results
-                singleDeviceResponse.extraInformationMetadata = "1";
 
                 if(knownDevices.contains(singleDeviceResponse.ip)){
                     //AH: Duplicate response from a device we already know about, skip.
@@ -345,10 +344,9 @@ public class AcpDevice {
 
                 // TODO: do optional Discover event with _searchres
                 //tempres.add(singleDeviceResponse[1]); // add formatted string to result list
-                multiDeviceResponse.extraInformation = singleDeviceResponse.extraInformation; // add formatted string to result list
+                multiDeviceResponse.extraInformation += singleDeviceResponse.extraInformation; // add formatted string to result list#
+                multiDeviceResponse.extraInformationMetadata = String.valueOf(knownDevices.size());
             }
-
-            multiDeviceResponse.extraInformationMetadata = String.valueOf(knownDevices.size());
         } catch (SocketTimeoutException e) {
             // TimeOut should be OK as we wait until Timeout if we get packets
             log.outDebug("Timeout reached, stop listening to further Discovery replies",2);
@@ -360,6 +358,18 @@ public class AcpDevice {
             // TODO: better error handling
             log.outError("Exception: IOException (" + e.getMessage() + ") " + state);
         }
+
+        if(multiDeviceResponse.extraInformationMetadata == ""){
+            //AH: We hit a catch, likely because no device responded
+            multiDeviceResponse.extraInformationMetadata = "0";
+        }
+
+        if(singleDeviceResponse.extraInformationMetadata == ""){
+            //AH: Just in case we use the single device response, set the metadata appropriately for the device count
+            singleDeviceResponse.extraInformationMetadata = singleDeviceResponse.packetType == AcpReplyType.DiscoveryReply ? "1" : "0"; //AH: Also handle the targeted device not replying
+        }
+
+        multiDeviceResponse.packetType = AcpReplyType.DiscoveryReply; //AH: Because we are forming the packet reply manually we need to set a type manually
 
         // first check for repeated entries and delete them.
         /*for (int i = 0; i < tempres.size() - 1; i++) {
