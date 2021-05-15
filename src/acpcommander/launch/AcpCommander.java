@@ -498,7 +498,7 @@ public class AcpCommander {
              * 3 - send ACPSpecial-authenticate with encrypted admin password
              */
 
-            log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd().extraInformation, 1); //AH Todo: I think this isn't quite right
+            log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd().extraInformation, 1);
 
             if (_password.equals("")) {
                 //if password blank, try "password" otherwise prompt
@@ -508,7 +508,7 @@ public class AcpCommander {
 
             device.setPassword(_password);
 
-            if (!device.authenticate().extraInformation.equals("ACP_STATE_OK")) { //AH Todo: I think this isn't quite right
+            if (!device.authenticate().extraInformation.equals("ACP_STATE_OK")) {
                 Console console = System.console();
 
                 try {
