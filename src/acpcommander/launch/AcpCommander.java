@@ -99,13 +99,11 @@ public class AcpCommander {
     }
 
     private static boolean tcpTest(String host, int port) {
-
         try (Socket _ = new Socket(host, port)) {
             return true;
         } catch (Exception e) {
             return false;
         }
-        //AH: Ignore
     }
 
     private static String getLocalIP(String ipTarget) {
@@ -479,13 +477,6 @@ public class AcpCommander {
             // discover devices by sending both types of ACP-Discover packet
             log.outDebug("Sending discovery packet...", 1);
 
-            /*String[] foundLS = device.find();
-            for (int i = 0; i < foundLS.length; i++) {
-                System.out.println(foundLS[i]);
-            }
-
-            System.out.println("Found " + foundLS.length + " device(s).");*/
-
             AcpReply reply = device.find();
             int deviceCount = Integer.parseInt(reply.extraInformationMetadata);
 
@@ -507,7 +498,6 @@ public class AcpCommander {
              * 3 - send ACPSpecial-authenticate with encrypted admin password
              */
 
-            //log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd()[1], 1);
             log.outDebug("Trying to authenticate enOneCmd...\t" + device.enOneCmd().extraInformation, 1); //AH Todo: I think this isn't quite right
 
             if (_password.equals("")) {
@@ -518,7 +508,6 @@ public class AcpCommander {
 
             device.setPassword(_password);
 
-            //if (!device.authenticate()[1].equals("ACP_STATE_OK")) {
             if (!device.authenticate().extraInformation.equals("ACP_STATE_OK")) { //AH Todo: I think this isn't quite right
                 Console console = System.console();
 
@@ -540,9 +529,6 @@ public class AcpCommander {
 
             // display status of backup jobs /etc/melco/backup*:status=
             System.out.print("status of backup jobs:\n");
-
-            /*String[] BackupState = device.command("grep status= /etc/melco/backup*", 3);
-            System.out.println(BackupState[1]);*/
 
             AcpReply BackupState = device.command("grep status= /etc/melco/backup*", 3);
             System.out.println(BackupState.extraInformation);
