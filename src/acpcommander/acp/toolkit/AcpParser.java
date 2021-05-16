@@ -24,15 +24,15 @@ public class AcpParser {
     }
 
     // retrieve errorcode outLn of receive buffer
-    public static int getErrorCodeFromPacket(byte[] packet) {
+    public static int getStatusCodeFromPacket(byte[] packet) {
         return (packet[28] & 0xFF) + ((packet[29] & 0xFF) << 8) + ((packet[30] & 0xFF) << 16) + ((packet[31] & 0xFF) << 24);
     }
 
     // Translate errorcode to meaningful string
-    public static String getErrorMessageFromPacket(byte[] packet) {
-        int errorCode = getErrorCodeFromPacket(packet);
+    public static String getStatusMessageFromPacket(byte[] packet) {
+        int statusCode = getStatusCodeFromPacket(packet);
 
-        switch (errorCode) {
+        switch (statusCode) {
             // There should be an error state ACP_OK, TODO: Test
             case 0x00000000:
                 return "ACP_STATE_OK";
@@ -97,7 +97,7 @@ public class AcpParser {
             case 0xFFFFFFFF:
                 return "ACP_STATE_FAILURE";
 
-            // unknown error, better use errorCode and format it to hex
+            // unknown error, better use statusCode and format it to hex
             default:
                 return "ACP_STATE_UNKNOWN_ERROR (" + (takeHexFromPacket(packet, 31, 1) + takeHexFromPacket(packet, 30, 1) + takeHexFromPacket(packet, 29, 1) + takeHexFromPacket(packet, 28, 1)) + ")";
         }

@@ -1,5 +1,8 @@
 package acpcommander.acp.toolkit.reply;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AcpReply {
     public AcpReplyType packetType = AcpReplyType.UnknownReply;
     public String hostname = "";
@@ -11,5 +14,6 @@ public class AcpReply {
     public String key = "";
 
     public String extraInformation = "";
-    public String extraInformationMetadata = "";
+
+    public List<AcpReply> associatedReplies = new ArrayList<>();
 }

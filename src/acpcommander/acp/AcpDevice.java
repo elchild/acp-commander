@@ -306,8 +306,9 @@ public class AcpDevice {
         byte[] discoverPacket = packetCreator.getAcpDiscoverPacket(connectionId, targetMacAddress);
         byte[] newDiscoverPacket = packetCreator.getAcpNewDiscoverPacket(connectionId, targetMacAddress);
 
-        AcpReply singleDeviceResponse = new AcpReply();
+        AcpReply singleDeviceResponse;
         AcpReply multiDeviceResponse = new AcpReply();
+
         DatagramSocket socket;
 
         DatagramPacket discoverPacketTransmittable = new DatagramPacket(discoverPacket, discoverPacket.length, targetIp, port);
@@ -318,7 +319,6 @@ public class AcpDevice {
         try {
             socket = communication.getSocket(3000); // TODO bind functionality is missing here
 
-            //AH: Send both packets and expect only one response it seems. Probably gonna get mixed results if you have two devices which respond in different ways
             socket.send(discoverPacketTransmittable);
             socket.send(newDiscoverPacketTransmittable);
 
@@ -329,7 +329,7 @@ public class AcpDevice {
             while (System.currentTimeMillis() - lastSendTime < 3000) { //AH: Whilst we still have time to keep receiving discovery responses
                 socket.receive(responsePacketReceivable); //AH: Receive a packet into the prepared packet object
 
-                singleDeviceResponse = actionResponsePacket(responsePacketReceivable.getData(), log.debugLevel); // get search results
+                singleDeviceResponse = decodeResponsePacket(responsePacketReceivable.getData(), log.debugLevel); // get search results
 
                 if(knownDevices.contains(singleDeviceResponse.ip)){
                     //AH: Duplicate response from a device we already know about, skip.
@@ -339,8 +339,8 @@ public class AcpDevice {
                 knownDevices.add(singleDeviceResponse.ip);
 
                 // TODO: do optional Discover event with _searchres
-                multiDeviceResponse.extraInformation += singleDeviceResponse.extraInformation; // add formatted string to result list#
-                multiDeviceResponse.extraInformationMetadata = String.valueOf(knownDevices.size());
+                multiDeviceResponse.extraInformation += (multiDeviceResponse.extraInformation.length() == 0 ? "" : "\n") + singleDeviceResponse.extraInformation; // add formatted string to result list
+                multiDeviceResponse.associatedReplies.add(singleDeviceResponse);
             }
         } catch (SocketTimeoutException e) {
             // TimeOut should be OK as we wait until Timeout if we get packets
@@ -354,24 +354,9 @@ public class AcpDevice {
             log.outError("Exception: IOException (" + e.getMessage() + ") " + state);
         }
 
-        if(multiDeviceResponse.extraInformationMetadata == ""){
-            //AH: We hit a catch, likely because no device responded
-            multiDeviceResponse.extraInformationMetadata = "0";
-        }
-
-        if(singleDeviceResponse.extraInformationMetadata == ""){
-            //AH: Just in case we use the single device response, set the metadata appropriately for the device count
-            singleDeviceResponse.extraInformationMetadata = singleDeviceResponse.packetType == AcpReplyType.DiscoveryReply ? "1" : "0"; //AH: Also handle the targeted device not replying
-        }
-
         multiDeviceResponse.packetType = AcpReplyType.DiscoveryReply; //AH: Because we are forming the packet reply manually we need to set a type manually
 
-        //probably not good practice and should be refactored
-        if (targetIp.toString().split("/", 2)[1].equals("255.255.255.255")) { //AH: If the user has not set a target IP (therefore the default broadcast one is used and multiple devices could respond)
-            return multiDeviceResponse; //AH: Return the the list
-        }
-
-        return singleDeviceResponse; //AH: Otherwise return the reply from any single specific device which responded
+        return multiDeviceResponse;
     }
 
     // send ACP packet and handle answer
@@ -434,7 +419,7 @@ public class AcpDevice {
 
         } while ((sendCount < maxPacketResendAttempts) && sendAgain); // repeat until max retries reached
 
-        AcpReply result = actionResponsePacket(inboundPacket.getData(), log.debugLevel); // get search results
+        AcpReply result = decodeResponsePacket(inboundPacket.getData(), log.debugLevel); // get search results
 
         result.extraInformation = errorMessages + result.extraInformation; //AH: Prepend error messages to actual result. If we have a result, any error messages would have been previous to the result, hence the prepend
 
@@ -512,7 +497,7 @@ public class AcpDevice {
      *            7 - FW version
      *            8 - key (used for pwd encryption in regular authentication process)
      */
-    private AcpReply decodeResponsePacket(byte[] responsePacket) {
+    private AcpReply decodeDiscoveryResponsePacket(byte[] responsePacket) {
         AcpReply disassembledReply = new AcpReply();
 
         disassembledReply.packetType = AcpReplyType.DiscoveryReply;
@@ -525,7 +510,7 @@ public class AcpDevice {
                 receivedTargetIp[packetPos] = responsePacket[35 - packetPos]; //AH: From position 35 backwards, read the IP outLn of the packet and into the target IP byte array
             }
 
-            disassembledReply.ip = InetAddress.getByAddress(receivedTargetIp).toString();
+            disassembledReply.ip = InetAddress.getByAddress(receivedTargetIp).toString().replace("/", "");
 
             // get host name
             int packetPosition = 48; //AH: Start at position 48 and iterate
@@ -561,12 +546,13 @@ public class AcpDevice {
             // Firmware version starts at 187
             disassembledReply.firmwareVersion = responsePacket[187] + responsePacket[188] + "." + responsePacket[189] + responsePacket[190];
 
-            disassembledReply.extraInformation = disassembledReply.hostname + "\t";
-            disassembledReply.extraInformation += disassembledReply.ip.replace("/", "") + "\t";
-            disassembledReply.extraInformation += String.format("%-" + 20 + "s", disassembledReply.productIdString) + "\t";
+            //AH: Compile all the information into a consistent syntax
+            disassembledReply.extraInformation = "Hostname: " + disassembledReply.hostname + "\t";
+            disassembledReply.extraInformation += "IP: " + disassembledReply.ip + "\t";
+            disassembledReply.extraInformation += "IDStr: " + disassembledReply.productIdString + "\t";
             disassembledReply.extraInformation += "ID: " + disassembledReply.productId + "\t";
             disassembledReply.extraInformation += "MAC: " + disassembledReply.mac + "\t";
-            disassembledReply.extraInformation += "Firmware:  " + disassembledReply.firmwareVersion + "\t";
+            disassembledReply.extraInformation += "Firmware: " + disassembledReply.firmwareVersion + "\t";
             //disassembledReply.extraInformation += "Key: " + disassembledReply.key + "\t"; //AH TODO: Add a command line switch to enable key output
 
             //AH TODO: Make a nice tabular output for this list, and add a command line switch to use the old output format instead
@@ -578,7 +564,7 @@ public class AcpDevice {
     }
 
     /* Analyses incoming ACP Replys - TODO progress, still needs better handling
-     *  actionResponsePacket(byte[] packet, int debug)
+     *  decodeResponsePacket(byte[] packet, int debug)
      *  INPUT
      *    packet      ... byte [], buffer with received data
      *    debug   ... int, debug state
@@ -588,7 +574,7 @@ public class AcpDevice {
      *            1 - formatted output
      *             2..n - possible details (ACPdiscovery)
      */
-    private AcpReply actionResponsePacket(byte[] packet, int debug) {
+    private AcpReply decodeResponsePacket(byte[] packet, int debug) {
         if (debug >= 3) {
             dumpResponsePacket(packet); //AH: Print outLn dump of received reply packet if the debug mode is set high enough
         }
@@ -608,57 +594,49 @@ public class AcpDevice {
             1);
         }
 
-        AcpReply result;
+        AcpReply result = new AcpReply();
 
         switch (replyType) {
             case 0xc020: // ACP discovery
+            case 0xce00:
                 log.outDebug("received ACP Discovery reply", 2);
-                result = decodeResponsePacket(packet);
+                result = decodeDiscoveryResponsePacket(packet);
                 break;
 
             case 0xc030: // ACP changeIP
                 log.outDebug("received ACP change IP reply", 2);
 
-                result = new AcpReply();
                 result.packetType = AcpReplyType.ChangeIpReply;
-                result.extraInformation = AcpParser.getErrorMessageFromPacket(packet);
+                result.extraInformation = AcpParser.getStatusMessageFromPacket(packet);
 
                 break;
 
             case 0xc0a0: // ACP special command
                 log.outDebug("received ACP special command reply", 2);
 
-                result = new AcpReply();
                 result.packetType = AcpReplyType.SpecialCommandReply;
-                result.extraInformation = AcpParser.getErrorMessageFromPacket(packet);
+                result.extraInformation = AcpParser.getStatusMessageFromPacket(packet);
                 break;
 
             case 0xca10: // acpcmd
                 log.outDebug("received acpcmd reply", 2);
 
-                result = new AcpReply();
                 result.packetType = AcpReplyType.ShellCommandReply;
                 result.extraInformation = "";
 
-                int index = 40;
-                while((packet[index] != 0x00) & (index < packet.length)){
-                    result.extraInformation += (char) packet[index++];
+                int packetPosition = 40;
+                while((packet[packetPosition] != 0x00) && (packetPosition < packet.length)){
+                    result.extraInformation += (char) packet[packetPosition++];
                 }
 
                 // filter the LSPro default answer "**no message**" as it led to some user queries/worries
                 if (result.extraInformation.equalsIgnoreCase("**no message**")) {
-                    result.extraInformation = "OK (" + AcpParser.getErrorMessageFromPacket(packet) + ")";
+                    result.extraInformation = "OK (" + AcpParser.getStatusMessageFromPacket(packet) + ")";
                 }
 
                 break;
 
-            case 0xce00: // ACP discovery
-                log.outDebug("received ACP Discovery reply", 1);
-                result = decodeResponsePacket(packet);
-                break;
-
             default:
-                result = new AcpReply();
                 result.packetType = AcpReplyType.UnknownReply;
                 result.extraInformation = "Unknown ACP-Reply packet: 0x" + acpReply;
 

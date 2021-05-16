@@ -469,11 +469,11 @@ public class AcpCommander {
             log.outDebug("Sending discovery packet...", 1);
 
             AcpReply reply = device.find();
-            int deviceCount = Integer.parseInt(reply.extraInformationMetadata);
 
-            log.outQuietOnly(reply.extraInformation += "\n");
+            log.outQuietOnlyLn(reply.extraInformation);
+            log.outLoudOnlyLn(ScopedLogger.buildTabularReplyTable(reply.associatedReplies));
 
-            log.outLoudOnlyLn("Found " + deviceCount + " device" + (deviceCount == 1 ? "" : "s") + ".");
+            log.outLoudOnlyLn("\nFound " + reply.associatedReplies.size() + " device" + (reply.associatedReplies.size() == 1 ? "" : "s") + ".");
         }
 
         if (_authent) {
