@@ -457,38 +457,38 @@ public class AcpDevice {
     private void dumpResponsePacket(byte[] packet) {
         // very simple hex | char debug output of received packet for debugging
         try {
-            System.out.println("Buffer-Length: " + packet.length);
+            log.outLn("Buffer-Length: " + packet.length);
 
             for (int row = 0; row < (packet.length / 16); row++) { //AH: Split the packet into rows of 16 bytes
                 switch(row){
                     case 0: //AH: Row 0 and 1 are ACP Header bytes (32 bytes)
-                        System.out.println("ACP-Header:");
+                        log.outLn("ACP-Header:");
                         break;
 
                     case 2: //AH: Row 2 and beyond are ACP Payload bytes
-                        System.out.println("ACP-Payload:");
+                        log.outLn("ACP-Payload:");
                         break;
                 }
 
-                System.out.print(row * 16 + "::\t"); //AH: Byte marker. Tells you which byte row is displayed
+                log.out(row * 16 + "::\t"); //AH: Byte marker. Tells you which byte row is displayed
 
-                for (int hexColumn = 0; hexColumn <= 15; hexColumn++) { //AH: Take 16 bytes for the row and print each one out as hex, with a space between
-                    System.out.print(AcpParser.takeHexFromPacket(packet, row * 16 + hexColumn, 1) + " ");
+                for (int hexColumn = 0; hexColumn <= 15; hexColumn++) { //AH: Take 16 bytes for the row and print each one outLn as hex, with a space between
+                    log.out(AcpParser.takeHexFromPacket(packet, row * 16 + hexColumn, 1) + " ");
                 }
 
-                System.out.print("\t"); //AH: Tab over to the character representation
+                log.out("\t"); //AH: Tab over to the character representation
 
-                for (int charColumn = 0; charColumn <= 15; charColumn++) { //AH: Take 16 bytes for the row and print each one out as raw characters
+                for (int charColumn = 0; charColumn <= 15; charColumn++) { //AH: Take 16 bytes for the row and print each one outLn as raw characters
                     byte charByte = packet[row * 16 + charColumn];
 
                     if ((charByte != 0x0A) & (charByte != 0x09)) {
-                        System.out.print((char) charByte);
+                        log.out(String.valueOf((char) charByte));
                     } else {
-                        System.out.print(" ");
+                        log.out(" ");
                     }
                 }
 
-                System.out.println(); //AH: Newline for the next row
+                log.outLn(""); //AH: Newline for the next row
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             log.outError(e.toString());
@@ -522,7 +522,7 @@ public class AcpDevice {
             byte[] receivedTargetIp = new byte[4];
 
             for (int packetPos = 0; packetPos <= 3; packetPos++) {
-                receivedTargetIp[packetPos] = responsePacket[35 - packetPos]; //AH: From position 35 backwards, read the IP out of the packet and into the target IP byte array
+                receivedTargetIp[packetPos] = responsePacket[35 - packetPos]; //AH: From position 35 backwards, read the IP outLn of the packet and into the target IP byte array
             }
 
             disassembledReply.ip = InetAddress.getByAddress(receivedTargetIp).toString();
@@ -544,7 +544,7 @@ public class AcpDevice {
                 disassembledReply.productId += responsePacket[192 + packetPos];
             }
 
-            // MAC starts at byte 311, read out 6 bytes
+            // MAC starts at byte 311, read outLn 6 bytes
             for (int packetPos = 0; packetPos <= 5; packetPos++) {
                 disassembledReply.mac += AcpParser.takeHexFromPacket(responsePacket, packetPos + 311, 1);
 
@@ -590,7 +590,7 @@ public class AcpDevice {
      */
     private AcpReply actionResponsePacket(byte[] packet, int debug) {
         if (debug >= 3) {
-            dumpResponsePacket(packet); //AH: Print out dump of received reply packet if the debug mode is set high enough
+            dumpResponsePacket(packet); //AH: Print outLn dump of received reply packet if the debug mode is set high enough
         }
 
         // get type of ACP answer both as long and hexstring

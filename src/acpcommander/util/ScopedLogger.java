@@ -2,20 +2,22 @@ package acpcommander.util;
 
 public class ScopedLogger {
     public int debugLevel;
+    public boolean quietMode;
 
-    public ScopedLogger(int debugLevel){
+    public ScopedLogger(int debugLevel, boolean quietMode){
         this.debugLevel = debugLevel;
+        this.quietMode = quietMode;
     }
 
-    public void outDebug(String message, int debuglevel) {
+    public void outDebug(String message, int requiredDebugLevel) {
         // negative debuglevels are considered as errors!
-        if (debuglevel < 0) {
+        if (requiredDebugLevel < 0) {
             outError(message);
             return;
         }
 
-        if (debuglevel <= getDebugLevel()) {
-            System.out.println(message);
+        if (requiredDebugLevel <= debugLevel) {
+            System.out.println("[DEBUG] " + message);
         }
     }
 
@@ -25,10 +27,40 @@ public class ScopedLogger {
     }
 
     public void outWarning(String message) {
-        System.out.println("[WARN] " + message);
+        if(!quietMode){
+            System.out.println("[WARN] " + message);
+        }
     }
 
-    int getDebugLevel() {
-        return debugLevel;
+    public void out(String message){
+        System.out.print(message);
+    }
+
+    public void outLn(String message){
+        out(message + "\n");
+    }
+
+    public void outLoudOnly(String message){
+        if(!quietMode){
+            out(message);
+        }
+    }
+
+    public void outLoudOnlyLn(String message){
+        if(!quietMode){
+            outLn(message);
+        }
+    }
+
+    public void outQuietOnly(String message){
+        if(quietMode){
+            out(message);
+        }
+    }
+
+    public void outQuietOnlyLn(String message){
+        if(quietMode){
+            outLn(message);
+        }
     }
 }

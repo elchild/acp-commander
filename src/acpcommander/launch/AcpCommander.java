@@ -23,6 +23,7 @@ import java.util.Random;
 
 import acpcommander.acp.AcpDevice;
 import acpcommander.acp.toolkit.reply.AcpReply;
+import acpcommander.util.NetTools;
 import acpcommander.util.ParameterReader;
 import acpcommander.util.ScopedLogger;
 import acpcommander.util.StaticFileHandler;
@@ -34,14 +35,22 @@ public class AcpCommander {
     private static final String acpCommanderVersion = "0.6 (2021)";
     private static final int standardAcpPort = 22936;
 
-    private static int _debug = 0; // determines degree of additional output.
+    //private static int _debug = 0; // determines degree of additional output.
     private static String _state; // where are we in the code.
 
     private static ParameterReader params;
-    private static ScopedLogger log = new ScopedLogger(0);
+    private static ScopedLogger log;
 
     private static void outUsage() {
-        System.out.println(
+        log.outLoudOnlyLn(
+            "    ___   __________     ______                                          __         \n" +
+            "   /   | / ____/ __ \\   / ____/___  ____ ___  ____ ___  ____ _____  ____/ /__  _____\n" +
+            "  / /| |/ /   / /_/ /  / /   / __ \\/ __ `__ \\/ __ `__ \\/ __ `/ __ \\/ __  / _ \\/ ___/\n" +
+            " / ___ / /___/ ____/  / /___/ /_/ / / / / / / / / / / / /_/ / / / / /_/ /  __/ /    \n" +
+            "/_/  |_\\____/_/       \\____/\\____/_/ /_/ /_/_/ /_/ /_/\\__,_/_/ /_/\\__,_/\\___/_/     \n\n"
+        );
+
+        log.outLn(
             "Usage:  acp_commander [options] -t target\n\n"
             + "options are:\n"
             + "   -t target .. IP or network name of the Device\n"
@@ -84,7 +93,7 @@ public class AcpCommander {
             + "\n"
             + "   -d1...-d3 .. set debug level, generate additional output\n"
             + "                debug level >= 3: HEX/ASCII dump of incoming packets\n"
-            + "   -q       ... quiet, surppress header, does not work with -h or -v\n"
+            + "   -q       ... quiet, suitable for scripts, disables friendly messages\n"
             + "   -h | -v  ... extended help (this output)\n"
             + "   -u       ... (shorter) usage \n"
             + "\n"
@@ -98,30 +107,27 @@ public class AcpCommander {
         );
     }
 
-    private static boolean tcpTest(String host, int port) {
-        try (Socket _ = new Socket(host, port)) {
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private static String getLocalIP(String ipTarget) {
-        try (final DatagramSocket socket = new DatagramSocket()) {
-            //try to open a connection to remote IP and record what local IP the OS uses for that connection
-            socket.connect(InetAddress.getByName(ipTarget), 10002);
-
-            return socket.getLocalAddress().getHostAddress();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.exit(-1);
-        }
-
-        return null; //AH: This is a compile time error. It will never get hit because of the System.exit() call
-    }
-
     public static void main(String[] args) {
         params = new ParameterReader(args);
+
+        if (params.hasParam(new String[]{"-d1", "-d2", "-d3"})) {
+            if (params.hasParam("-d1")) {
+                log = new ScopedLogger(1, params.hasParam("-q"));
+                log.outDebug("Debug level set to 1", 1);
+            }
+
+            if (params.hasParam("-d2")) {
+                log = new ScopedLogger(2, params.hasParam("-q"));
+                log.outDebug("Debug level set to 2", 1);
+            }
+
+            if (params.hasParam("-d3")) {
+                log = new ScopedLogger(3, params.hasParam("-q"));
+                log.outDebug("Debug level set to 3", 1);
+            }
+        }else{
+            log = new ScopedLogger(0, params.hasParam("-q"));
+        }
 
         // variables
         String _mac = "";
@@ -158,11 +164,12 @@ public class AcpCommander {
         boolean _diag = false; // run diagnostics
         boolean _test = false; // for testing purposes
 
-        System.out.println("Welcome to ACP Commander v" + acpCommanderVersion + ", the tool for Buffalo stock firmware control!\n");
+        log.outLoudOnlyLn("Welcome to ACP Commander v" + acpCommanderVersion + ", the tool for Buffalo stock firmware control!\n");
 
         //
         // Parsing the command line parameters.
         //
+
         _state = "CmdLnParse";
 
         // catch various standard options for help. Only -h and -v are official, though
@@ -174,22 +181,6 @@ public class AcpCommander {
 
             outUsage();
             return;
-        }
-
-        if (params.hasParam(new String[]{"-d1", "-d2", "-d3"})) {
-            if (params.hasParam("-d1")) {
-                _debug = 1;
-            }
-
-            if (params.hasParam("-d2")) {
-                _debug = 2;
-            }
-
-            if (params.hasParam("-d3")) {
-                _debug = 3;
-            }
-
-            System.out.println("Debug level set to " + _debug);
         }
 
         if (params.hasParam("-test")) {
@@ -411,7 +402,7 @@ public class AcpCommander {
                 if (_mac.length() != 12) {
                     log.outError("Given MAC has invalid length (not 6 bytes long)");
                 } else {
-                    System.out.println("Using MAC: " + _mac);
+                    log.outLoudOnlyLn("Using MAC: " + _mac);
                 }
             }
         }
@@ -435,10 +426,10 @@ public class AcpCommander {
         //
         // variable definition
         //
-        _state = "VarPrep - NewLib";
+        //_state = "VarPrep - NewLib";
 
         AcpDevice device = new AcpDevice(log, _target);
-        log.debugLevel = _debug;
+        //log.debugLevel = _debug;
         device.port = _port;
         device.setConnectionId(_connid);
         device.setTargetMac(_mac);
@@ -453,7 +444,7 @@ public class AcpCommander {
             log.outDebug("Using target:\t" + device.getTarget().getHostName() + "/" + device.getTarget().getHostAddress(), 1);
 
             if (device.port != standardAcpPort) {
-                System.out.println("Using port:\t" + device.port + "\t (this is NOT the standard port)");
+                log.outLoudOnlyLn("Using port:\t" + device.port + "\t (this is NOT the standard port)");
             } else {
                 log.outDebug("Using port:\t" + device.port, 1);
             }
@@ -480,8 +471,9 @@ public class AcpCommander {
             AcpReply reply = device.find();
             int deviceCount = Integer.parseInt(reply.extraInformationMetadata);
 
-            System.out.println(reply.extraInformation += "\n");
-            System.out.println("Found " + deviceCount + " device" + (deviceCount == 1 ? "" : "s") + ".");
+            log.outQuietOnly(reply.extraInformation += "\n");
+
+            log.outLoudOnlyLn("Found " + deviceCount + " device" + (deviceCount == 1 ? "" : "s") + ".");
         }
 
         if (_authent) {
@@ -525,52 +517,52 @@ public class AcpCommander {
             _state = "diagnostics";
 
             // do some diagnostics on LS
-            System.out.println("\nRunning diagnostics...");
+            log.outLoudOnlyLn("\nRunning diagnostics...");
 
             // display status of backup jobs /etc/melco/backup*:status=
-            System.out.print("status of backup jobs:\n");
-
-            AcpReply BackupState = device.command("grep status= /etc/melco/backup*", 3);
-            System.out.println(BackupState.extraInformation);
+            log.outLoudOnlyLn("status of backup jobs:");
+            log.outLn(device.command("grep status= /etc/melco/backup*", 3).extraInformation);
 
             // display language for WebGUI /etc/melco/info:lang=
-            System.out.print("language setting of WebGUI:\t" + device.command("grep lang= /etc/melco/info", 3).extraInformation);
+            log.outLoudOnlyLn("language setting of WebGUI:");
+            log.outLn(device.command("grep lang= /etc/melco/info", 3).extraInformation);
         }
 
         if (_test) {
             _state = "TEST"; // Test@Georg
 
-            System.out.println("Performing test sequence...");
+            log.outLoudOnlyLn("Performing test sequence...");
 
             try {
-                //System.out.println("ACPTest 8000:\t" + device.ACPTest("8000")[1]);  //no
-                //System.out.println("ACPTest 8010:\t" + device.ACPTest("8010")[1]);  //no
-                //System.out.println("ACPTest 8040:\t" + device.ACPTest("8040")[1]);  //ACP_PING
-                //System.out.println("ACPTest 80B0:\t" + device.ACPTest("80B0")[1]);  //no
-                //System.out.println("ACPTest 80E0:\t" + device.ACPTest("80E0")[1]);  //ACP_RAID_INFO
-                //System.out.println("ACPTest 80F0:\t" + device.ACPTest("80F0")[1]);  //no
-                //System.out.println("ACPTest 80C0:\t" + device.ACPTest("80C0")[1]);  //no
-                //System.out.println("ACPTest 8C00:\t" + device.ACPTest("8C00")[1]);  //ACP_Format
-                //System.out.println("ACPTest 8D00:\t" + device.ACPTest("8D00")[1]);  //ACP_ERASE_USER
-                //System.out.println("ACPTest 8E00:\t" + device.ACPTest("8E00")[1]);  //no
-                //System.out.println("ACPTest 8F00:\t" + device.ACPTest("8F00")[1]);  //no
+                //log.outLn("ACPTest 8000:\t" + device.ACPTest("8000")[1]);  //no
+                //log.outLn("ACPTest 8010:\t" + device.ACPTest("8010")[1]);  //no
+                //log.outLn("ACPTest 8040:\t" + device.ACPTest("8040")[1]);  //ACP_PING
+                //log.outLn("ACPTest 80B0:\t" + device.ACPTest("80B0")[1]);  //no
+                //log.outLn("ACPTest 80E0:\t" + device.ACPTest("80E0")[1]);  //ACP_RAID_INFO
+                //log.outLn("ACPTest 80F0:\t" + device.ACPTest("80F0")[1]);  //no
+                //log.outLn("ACPTest 80C0:\t" + device.ACPTest("80C0")[1]);  //no
+                //log.outLn("ACPTest 8C00:\t" + device.ACPTest("8C00")[1]);  //ACP_Format
+                //log.outLn("ACPTest 8D00:\t" + device.ACPTest("8D00")[1]);  //ACP_ERASE_USER
+                //log.outLn("ACPTest 8E00:\t" + device.ACPTest("8E00")[1]);  //no
+                //log.outLn("ACPTest 8F00:\t" + device.ACPTest("8F00")[1]);  //no
             } catch (Exception e) {
                 //AH: Ignore
             }
 
-            //System.out.println("debugmode:\t"+device.debugmode()[1]);
-            //System.out.println("Shutdown:\t"+device.shutdown()[1]);
+            //log.outLn("debugmode:\t"+device.debugmode()[1]);
+            //log.outLn("Shutdown:\t"+device.shutdown()[1]);
         }
 
         if (_openbox) {
             _state = "ACP_OPENBOX";
 
-            System.out.println("Reset root pwd...\t" + device.command("passwd -d root", 3).extraInformation);
+            log.outLoudOnly("Resetting root password...\t");
+            log.outLn(device.command("passwd -d root", 3).extraInformation);
 
             device.command("rm /etc/securetty", 3);
             device.command("mkdir /dev/pts; mount devpts /dev/pts -t devpts", 3);
 
-            System.out.print("Starting Telnet .");
+            log.outLoudOnlyLn("Starting telnetd...");
 
             device.command("/bin/busybox telnetd&", 3);
             device.command("chmod +x /tmp/busybox", 3);
@@ -587,9 +579,9 @@ public class AcpCommander {
                     //AH: Ignore
                 }
 
-                if (tcpTest(_target, 23)) {
-                    System.out.println(" Success!\n");
-                    System.out.println("You can now telnet to your box as user 'root' providing no / an empty password. Please change your root password to something secure.");
+                if (NetTools.tcpTest(_target, 23)) {
+                    log.outLn("Success!");
+                    log.outLoudOnlyLn("You can now telnet to your box as user 'root' providing no / an empty password. Please change your root password to something secure.");
 
                     telnetup = true;
 
@@ -598,8 +590,12 @@ public class AcpCommander {
             }
 
             if (!telnetup) {
-                System.out.print("Failed!\n");
-                System.out.println("\nUnable to detect telnet server. \nThis could be a firewall issue but more likely this model does not have a telnetd binary installed.\n Consider using \"-s\" as an alternative.");
+                log.outLn("Failed!");
+                log.outLoudOnlyLn(
+                    "Unable to detect telnet server.\n"
+                    + "This could be a firewall issue but more likely this model does not have a telnetd binary installed."
+                    + "\n Consider using \"-s\" as an alternative."
+                );
             }
         }
 
@@ -608,38 +604,42 @@ public class AcpCommander {
 
             // clear /boot; full /boot is the reason for most ACP_STATE_FAILURE messages
             // send packet up to 3 times
-            System.out.println("Sending clear /boot command sequence...\t"  + device.command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img hddrootfs.buffalo.org hddrootfs.buffalo.updated.done", 3).extraInformation);
+            log.outLoudOnly("Sending clear /boot command sequence...\t");
+            log.outLn(device.command("cd /boot; rm -rf hddrootfs.buffalo.updated hddrootfs.img hddrootfs.buffalo.org hddrootfs.buffalo.updated.done", 3).extraInformation);
 
             // show result of df to verify success, send packet up to 3 times
-            System.out.println("Output of df for verification...\t" + device.command("df", 3).extraInformation);
+            log.outLoudOnly("Output of df for verification...\t");
+            log.outLn(device.command("df", 3).extraInformation);
         }
 
         if (_blink) {
             _state = "blink";
 
             // blink LED's and play tones via ACP-command
-            System.out.println("blinkLed...\t" + device.blinkLed().extraInformation);
+            log.outLoudOnly("Sending blink request...\t");
+            log.outLn(device.blinkLed().extraInformation);
         }
 
         if (_gui) {
             _state = "set webgui language";
 
             // set WebGUI language
-            System.out.println("Setting WebGUI language...\t" + device.setWebUiLanguage((byte) _setgui).extraInformation);
+            log.outLoudOnly("Setting WebGUI language...\t");
+            log.outLn(device.setWebUiLanguage((byte) _setgui).extraInformation);
         }
 
         if (_emmode) {
             _state = "Set EM-Mode";
 
             // send EM-Mode command
-            System.out.println("Sending EM-Mode command...\t");
+            log.outLoudOnly("Sending EM-Mode command...\t");
 
             String reply = device.emMode().extraInformation;
 
-            System.out.println(reply);
+            log.outLn(reply);
 
             if (reply.equals("ACP_STATE_OK")) {
-                System.out.println("At your next reboot your device will boot into EM mode.");
+                log.outLoudOnlyLn("At your next reboot your device will boot into EM mode.");
             }
         }
 
@@ -647,14 +647,14 @@ public class AcpCommander {
             _state = "Set Norm-Mode";
 
             // send Norm-Mode command
-            System.out.print("Sending Norm-Mode command...\t");
+            log.outLoudOnly("Sending Norm-Mode command...\t");
 
             String reply = device.normMode().extraInformation;
 
-            System.out.println(reply);
+            log.outLn(reply);
 
             if (reply.equals("ACP_STATE_OK")) {
-                System.out.println("At your next reboot your device will boot into normal mode.");
+                log.outLoudOnlyLn("At your next reboot your device will boot into normal mode.");
             }
         }
 
@@ -736,7 +736,16 @@ public class AcpCommander {
 
             try {
                 serverSocket = new ServerSocket(0);
-                String localIp = getLocalIP(_target);
+
+                String localIp;
+
+                try{
+                    localIp = NetTools.getLocalIP(_target);
+                }catch(IOException e){
+                    log.outError(e.getMessage());
+                    return;
+                }
+
                 int localPort = serverSocket.getLocalPort();
 
                 device.command("bash -i >&/dev/tcp/" + localIp + "/" + localPort + " 0>&1 &");
@@ -777,7 +786,7 @@ public class AcpCommander {
                 socket.close();
                 serverSocket.close();
             } catch (Exception e) {
-                System.out.println(e);
+                log.outError(e.getMessage());
             }
         }
 
@@ -807,12 +816,16 @@ public class AcpCommander {
             File checkfile = new File(localDirectory, fileName);
 
             if (!checkfile.exists()) {
-                System.out.println("local file does not exist!");
-                System.exit(-1);
+                log.outError("local file does not exist!");
             }
 
             //open a socket to target and record the local ip address the OS used
-            localIp = getLocalIP(_target);
+            try{
+                localIp = NetTools.getLocalIP(_target);
+            }catch(IOException e){
+                log.outError(e.getMessage());
+                return;
+            }
 
             //have socket find and test a port, then free it to attach the server to
             try {
@@ -820,8 +833,7 @@ public class AcpCommander {
                 localHttpServerPort = s.getLocalPort();
                 s.close();
             } catch (IOException e) {
-                System.out.println(e);
-                System.exit(-1);
+                log.outError(e.getMessage());
             }
 
             //build the url for the device to download from
@@ -869,8 +881,7 @@ public class AcpCommander {
                 server.stop(0);
                 log.outDebug("Stopping HTTP...", 1);
             } catch (IOException e) {
-                System.out.println(e);
-                System.exit(-1);
+                log.outError(e.getMessage());
             }
 
             //somehow judge success/fail
@@ -885,9 +896,10 @@ public class AcpCommander {
             _state = "changeIp";
 
             try {
-                System.out.println("Changing IP:\t" + device.changeIp(InetAddress.getByName(_newip).getAddress(), new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true).extraInformation);
+                log.outLoudOnly("Changing IP...\t");
+                log.outLn(device.changeIp(InetAddress.getByName(_newip).getAddress(), new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 0}, true).extraInformation);
 
-                System.out.println(
+                log.outLoudOnlyLn(
                     "\nPlease note, that the current support for the change of the IP is currently very rudimentary.\n"
                     + "The IP has been set to the given fixed IP, however DNS servers and the gateway have not been set.\n"
                     + "Use the WebGUI to make appropriate settings."
@@ -901,14 +913,16 @@ public class AcpCommander {
         if (_reboot) {
             _state = "reboot";
 
-            System.out.println("Rebooting...:\t" + device.reboot().extraInformation);
+            log.outLoudOnly("Rebooting...\t");
+            log.outLn(device.reboot().extraInformation);
         }
 
         // shutdown
         if (_shutdown) {
             _state = "shutdown";
 
-            System.out.println("Sending SHUTDOWN command...:\t" + device.shutdown().extraInformation);
+            log.outLoudOnly("Sending SHUTDOWN command...\t");
+            log.outLn(device.shutdown().extraInformation);
         }
     }
 }

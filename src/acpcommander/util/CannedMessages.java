@@ -8,7 +8,7 @@ public class CannedMessages {
     }
 
     public void logCommunicationTimeout(int port) {
-        System.out.println(
+        log.outLn(
             "A SocketTimeoutException was thrown which usually indicates bad firewall settings.\n"
              + "Check that UDP port " + port + " can be used by ACP Commander to send/receive and that your device is powered on and has booted successfully."
         );
@@ -17,14 +17,14 @@ public class CannedMessages {
     }
 
     public void logPortCommunicationFailure(int port) {
-        System.out.println(
+        log.outLn(
             "A SocketException was thrown which often indicates bad firewall settings.\n"
             + "ACP Commander was unable to sent/receive on UDP port " + port + "."
         );
     }
 
     public void logUnknownTargetHost() {
-        System.out.println(
+        log.outLn(
             "An UnknownHostException was thrown, which usually indicates that the specified targetIp is not known to your PC (can not be resolved).\n"
             + "Possible reasons are typos in the targetIp parameter \"-t\", connection or name resolution problems.\n"
             + "Also make sure that the device at the targetIp is powered on and has booted successfully."

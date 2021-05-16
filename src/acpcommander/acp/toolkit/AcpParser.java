@@ -23,7 +23,7 @@ public class AcpParser {
         return hexString.toString().toUpperCase();
     }
 
-    // retrieve errorcode out of receive buffer
+    // retrieve errorcode outLn of receive buffer
     public static int getErrorCodeFromPacket(byte[] packet) {
         return (packet[28] & 0xFF) + ((packet[29] & 0xFF) << 8) + ((packet[30] & 0xFF) << 16) + ((packet[31] & 0xFF) << 24);
     }
