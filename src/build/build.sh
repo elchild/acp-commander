@@ -1,6 +1,6 @@
 mkdir acpcommander 2>/dev/null
 
-javac -d . ../*.java
+javac -d . ../acpcommander/*.java
 if [ $? -ne 0 ]; then
    echo "compile failed, quiting"
    exit 99
