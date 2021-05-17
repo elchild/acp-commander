@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="ACP Commander GUI" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="acpcommander.acp_gui" />
+    <option name="MAIN_CLASS_NAME" value="acpcommander.launch.AcpCommanderGui" />
     <module name="acp-commander" />
     <method v="2">
       <option name="Make" enabled="true" />

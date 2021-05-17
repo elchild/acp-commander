@@ -1,10 +1,9 @@
-package acpcommander;
+package acpcommander.launch;
 
 import java.awt.Button;
 import java.awt.Checkbox;
 import java.awt.CheckboxGroup;
 import java.awt.Choice;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -23,7 +22,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-public class acp_gui extends Frame implements WindowListener, ActionListener, ItemListener {
+public class AcpCommanderGui extends Frame implements WindowListener, ActionListener, ItemListener {
     TextArea textOutput;
     TextField commandTextField;
     TextField targetHostTextField;
@@ -68,7 +67,7 @@ public class acp_gui extends Frame implements WindowListener, ActionListener, It
     Font header;
     Font normal;
 
-    public acp_gui() {
+    public AcpCommanderGui() {
         super("ACP_Commander");
 
         createLayoutMain();
@@ -292,7 +291,7 @@ public class acp_gui extends Frame implements WindowListener, ActionListener, It
     }
 
     public static void main(String[] args) {
-        new acp_gui();
+        new AcpCommanderGui();
     }
 
     //================== ActionListener ==============================

@@ -1,5 +1,5 @@
 /* Copyright rememberjava.com. Licensed under GPL 3. See http://rememberjava.com/license */
-package acpcommander;
+package acpcommander.util;
 
 import java.io.File;
 import java.io.IOException;
