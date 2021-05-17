@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ACP Commander CLI" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="acpcommander.acp_commander" />
+    <module name="acp-commander" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

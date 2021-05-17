@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ACP Commander GUI">
+    <output-path>$PROJECT_DIR$/out/artifacts/ACP_Commander_GUI</output-path>
+    <root id="archive" name="acp_commander_gui.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/GUI-META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="acp-commander" />
+    </root>
+  </artifact>
+</component>
