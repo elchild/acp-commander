@@ -1,6 +1,6 @@
 mkdir acpcommander 2>/dev/null
 
-find ../src -name "*.java" > sources.txt
+find ./src -name "*.java" > sources.txt
 
 javac -d . @sources.txt
 if [ $? -ne 0 ]; then
