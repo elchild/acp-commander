@@ -23,7 +23,7 @@ jobs:
             - name: Build
               run: ./build/standalone-build.sh
             - name: Run
-              run: java -jar ./build/acp_commander.jar -f
+              run: java -jar ./acp_commander.jar -f
     
     #AH: Disabled release of built jar. Should be done manually using GitHub releases so tags can be applied appropriately
     
