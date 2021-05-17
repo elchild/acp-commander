@@ -7,7 +7,7 @@ import java.net.Socket;
 
 public class NetTools {
     public static boolean tcpTest(String host, int port) {
-        try (Socket _ = new Socket(host, port)) {
+        try (Socket s = new Socket(host, port)) {
             return true;
         } catch (Exception e) {
             return false;
