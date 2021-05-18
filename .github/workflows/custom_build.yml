@@ -28,26 +28,24 @@ jobs:
     
     #AH: Disabled release of built jar. Should be done manually using GitHub releases so tags can be applied appropriately
     
-    #deploy:
-    #    runs-on: ubuntu-latest
-    #    needs: build
-    #    steps:
-    #        - uses: actions/checkout@v1
-    #        - name: setup oldest supported JDK for build
-    #          uses: actions/setup-java@v1
-    #          with:
-    #            java-version: 1.7
-    #            github-token: "${{ secrets.GITHUB_TOKEN }}"
-    #
-    #        - name: Build
-    #          run: cd src/build/; ./build.sh
-    #        - name: copy
-    #          run: cp src/build/acp_commander.jar .
-    #        - name: set git user name
-    #          run: git config user.name "workflow@github"
-    #        - name: set git user email
-    #          run: git config user.email "workflow@github"
-    #        - name: commit
-    #          run: git commit -m "generate jar from latest source" acp_commander.jar
-    #        - name: push
-    #          run: git push https://${{github.actor}}:${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}}.git HEAD:master
+    deploy:
+        runs-on: ubuntu-latest
+        needs: build
+        steps:
+            - uses: actions/checkout@v1
+            - name: setup oldest supported JDK for build
+              uses: actions/setup-java@v1
+              with:
+                java-version: 1.7
+                github-token: "${{ secrets.GITHUB_TOKEN }}"
+    
+            - name: Build
+              run: ./build/standalone-build.sh
+            - name: set git user name
+              run: git config user.name "workflow@github"
+            - name: set git user email
+              run: git config user.email "workflow@github"
+            - name: commit
+              run: git commit -m "generate jar from latest source" acp_commander.jar
+            - name: push
+              run: git push https://${{github.actor}}:${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}}.git HEAD:master
