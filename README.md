@@ -10,9 +10,7 @@ You may also have a look at our Wiki at https://buffalonas.miraheze.org and join
 
 To allow easy compiling from source, this repo contains a standalone build script you may run from the `build` directory and full build/run/artifacting configurations for JetBrains IDEA.
 
-## Releases and Usage
-
-You may find fully compiled, stable release jarfiles on the releases page found at https://github.com/1000001101000/acp-commander/releases
+## Usage
 
 Full usage details can be seen by running: `java -jar acp_commander.jar`
 
