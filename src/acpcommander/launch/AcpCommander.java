@@ -137,7 +137,7 @@ public class AcpCommander {
         String _connid = "";
         String _target = "";
         int _port = standardAcpPort;
-        int _bport;
+        int _bport = 0;
         String _bind = null;
 
         String _cmd = "";
