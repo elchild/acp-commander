@@ -25,7 +25,7 @@ public class AcpCommunication {
         if (socket != null) {
             // reuse existing socket
             log.outDebug("Reusing open socket.\n", 1);
-	} else if (bindInterface != null) {
+        } else if (bindInterface != null) {
             // bind socket to a local address (-b)
             // Create a socket address from a hostname (_bind) and a port number. A port number
             // of zero will let the system pick up an ephemeral port in a bind operation.
