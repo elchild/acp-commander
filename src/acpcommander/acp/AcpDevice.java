@@ -29,7 +29,7 @@ public class AcpDevice {
     private ScopedLogger log;
 
     private InetAddress targetIp;
-    public Integer bindPort = 0;
+    public Integer discoveryPort = 0;
     public Integer port = 22936;
     private String connectionId; // connection ID, "unique" identifier for the connection
     private String targetMacAddress; // MAC address of the LS, it reacts only if correct MAC or FF:FF:FF:FF:FF:FF is set in the packet
@@ -121,7 +121,7 @@ public class AcpDevice {
 
     public void bind(String localip) {
         if(localip == "" || localip == null){
-            communication = new AcpCommunication(log, bindPort);
+            communication = new AcpCommunication(log, discoveryPort);
             return;
         }
 
@@ -129,7 +129,7 @@ public class AcpDevice {
         // Create a socket address from a hostname (_bind) and a port number. A port number
         // of zero (default) will let the system pick up an ephemeral port in a bind operation.
         if (!localip.equalsIgnoreCase("")) {
-            bind(new InetSocketAddress(localip, bindPort));
+            bind(new InetSocketAddress(localip, discoveryPort));
         }
     }
 

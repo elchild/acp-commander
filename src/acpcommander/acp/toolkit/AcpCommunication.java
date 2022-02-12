@@ -8,16 +8,16 @@ import java.net.InetSocketAddress;
 public class AcpCommunication {
     private ScopedLogger log;
     private InetSocketAddress bindInterface;
-    private Integer bindPort;
+    private Integer port;
 
     public AcpCommunication(ScopedLogger log, InetSocketAddress bindInterface){
         this.log = log;
         this.bindInterface = bindInterface;
     }
 
-    public AcpCommunication(ScopedLogger log, Integer bindPort){
+    public AcpCommunication(ScopedLogger log, Integer port){
         this.log = log;
-        this.bindPort = bindPort;
+        this.port = port;
     }
 
     public DatagramSocket getSocket(int timeout) throws java.net.SocketException {
@@ -30,10 +30,10 @@ public class AcpCommunication {
             log.outDebug("Binding socket to: " + bindInterface + "\n", 1);
 
             socket = new DatagramSocket(bindInterface);
-        } else if (bindPort != 0) {
+        } else if (port != 0) {
             // Create a socket from a port number.
-            socket = new DatagramSocket(bindPort);
-            log.outDebug("Binding socket to port: " + bindPort + "\n", 1);
+            socket = new DatagramSocket(port);
+            log.outDebug("Binding socket to port: " + port + "\n", 1);
         } else {
             socket = new DatagramSocket();
         }

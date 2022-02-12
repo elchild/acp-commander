@@ -69,7 +69,7 @@ public class AcpCommander {
             + "   -p port  ... define alternative target port, default = " + standardAcpPort + "\n"
             + "   -b localip.. bind socket to local address. Use if acp_commander\n"
             + "                can not find your device (might use wrong adapter).\n"
-            + "   -bp port ... define port to bind socket. Use if acp_commander is behind a\n"
+            + "   -dp port ... define discovery port. Use if acp_commander is behind a\n"
             + "                firewall and you have to allow a specific port.\n"
             + "                By default acp_commander will use a dynamic ephimeral port.\n"
             + "\n"
@@ -137,7 +137,7 @@ public class AcpCommander {
         String _connid = "";
         String _target = "";
         int _port = standardAcpPort;
-        int _bport = 0;
+        int _dport = 0;
         String _bind = null;
 
         String _cmd = "";
@@ -309,10 +309,10 @@ public class AcpCommander {
             }
         }
 
-        if (params.hasParam("-bp")) {
-            log.outDebug("Bind port parameter -bp given", 2);
+        if (params.hasParam("-dp")) {
+            log.outDebug("Discovery port parameter -dp given", 2);
 
-            _bport = Integer.parseInt(params.getParamValue("-bp", Integer.toString(_bport)));
+            _dport = Integer.parseInt(params.getParamValue("-dp", Integer.toString(_dport)));
         }
 
         if (params.hasParam("-blink")) {
@@ -441,7 +441,7 @@ public class AcpCommander {
         AcpDevice device = new AcpDevice(log, _target);
         //log.debugLevel = _debug;
         device.port = _port;
-        device.bindPort = _bport;
+        device.discoveryPort = _dport;
         device.setConnectionId(_connid);
         device.setTargetMac(_mac);
         device.bind(_bind);
