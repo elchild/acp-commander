@@ -137,6 +137,7 @@ public class AcpCommander {
         String _connid = "";
         String _target = "";
         int _port = standardAcpPort;
+        int _bport = null;
         String _bind = null;
 
         String _cmd = "";
@@ -440,6 +441,7 @@ public class AcpCommander {
         AcpDevice device = new AcpDevice(log, _target);
         //log.debugLevel = _debug;
         device.port = _port;
+        device.bindPort = _bport;
         device.setConnectionId(_connid);
         device.setTargetMac(_mac);
         device.bind(_bind);
