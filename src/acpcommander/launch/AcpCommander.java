@@ -71,7 +71,7 @@ public class AcpCommander {
             + "                can not find your device (might use wrong adapter).\n"
             + "   -dp port ... define discovery port. Use if acp_commander is behind a\n"
             + "                firewall and you have to allow a specific port.\n"
-            + "                By default acp_commander will use a dynamic ephimeral port.\n"
+            + "                By default acp_commander will use a dynamic ephemeral port.\n"
             + "\n"
             + "   -f       ... find device(s) by sending an ACP_DISCOVER package\n"
             + "   -o       ... open the device by sending 'telnetd' and 'passwd -d root',\n"
