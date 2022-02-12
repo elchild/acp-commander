@@ -69,6 +69,9 @@ public class AcpCommander {
             + "   -p port  ... define alternative target port, default = " + standardAcpPort + "\n"
             + "   -b localip.. bind socket to local address. Use if acp_commander\n"
             + "                can not find your device (might use wrong adapter).\n"
+            + "   -bp port ... define port to bind socket. Use if acp_commander is behind a\n"
+            + "                firewall and you have to allow a specific port.\n"
+            + "                By default acp_commander will use a dynamic ephimeral port.\n"
             + "\n"
             + "   -f       ... find device(s) by sending an ACP_DISCOVER package\n"
             + "   -o       ... open the device by sending 'telnetd' and 'passwd -d root',\n"
@@ -303,6 +306,12 @@ public class AcpCommander {
                 log.outError("You didn't specify a (correct) local address for parameter '-b'");
                 return;
             }
+        }
+
+        if (params.hasParam("-bp")) {
+            log.outDebug("Bind port parameter -bp given", 2);
+
+            _bport = Integer.parseInt(params.getParamValue("-bp", Integer.toString(_bport)));
         }
 
         if (params.hasParam("-blink")) {
